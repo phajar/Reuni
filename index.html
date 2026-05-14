@@ -521,11 +521,28 @@
               </div>
           </div>
 
-          <!-- KLASEMEN ANGKATAN -->
-          <div class="glass p-6 rounded-[2.5rem] border border-white/5">
-              <h3 class="text-sm font-black uppercase text-amber-500 mb-4"><i class="fas fa-trophy mr-2"></i> Klasemen Donasi Angkatan</h3>
-              <div id="leaderboard-list" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <!-- Javascript akan mengisi klasemen di sini -->
+          <!-- KLASEMEN DONASI -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <!-- Klasemen Angkatan -->
+              <div class="glass p-6 rounded-[2.5rem] border border-white/5">
+                  <h3 class="text-sm font-black uppercase text-amber-500 mb-4"><i class="fas fa-trophy mr-2"></i> Donasi Angkatan</h3>
+                  <div id="leaderboard-angkatan" class="space-y-3">
+                      <!-- Javascript akan mengisi klasemen di sini -->
+                  </div>
+              </div>
+              <!-- Klasemen Kecamatan -->
+              <div class="glass p-6 rounded-[2.5rem] border border-white/5">
+                  <h3 class="text-sm font-black uppercase text-amber-500 mb-4"><i class="fas fa-map-marker-alt mr-2"></i> Donasi Kecamatan</h3>
+                  <div id="leaderboard-kecamatan" class="space-y-3">
+                      <!-- Javascript akan mengisi klasemen di sini -->
+                  </div>
+              </div>
+              <!-- Klasemen Kabupaten -->
+              <div class="glass p-6 rounded-[2.5rem] border border-white/5">
+                  <h3 class="text-sm font-black uppercase text-amber-500 mb-4"><i class="fas fa-map mr-2"></i> Donasi Kabupaten</h3>
+                  <div id="leaderboard-kabupaten" class="space-y-3">
+                      <!-- Javascript akan mengisi klasemen di sini -->
+                  </div>
               </div>
           </div>
       </div>
@@ -1114,17 +1131,59 @@
 
     function renderLeaderboard() {
         const angkatanMap = {};
+        const kecamatanMap = {};
+        const kabupatenMap = {};
+
         STATE.finance.forEach(f => {
             if(f.status === 'pemasukan' && f.ref_alumni_id) {
                 const alumni = STATE.alumni.find(a => a.id === f.ref_alumni_id);
-                if(alumni && alumni.angkatan) { const angk = alumni.angkatan; angkatanMap[angk] = (angkatanMap[angk] || 0) + (Number(f.nominal) || 0); }
+                if(alumni) { 
+                    const nominal = Number(f.nominal) || 0;
+                    if(alumni.angkatan) {
+                        angkatanMap[alumni.angkatan] = (angkatanMap[alumni.angkatan] || 0) + nominal; 
+                    }
+                    if(alumni.kecamatan) {
+                        const kec = String(alumni.kecamatan).toUpperCase();
+                        kecamatanMap[kec] = (kecamatanMap[kec] || 0) + nominal;
+                    }
+                    if(alumni.kabupaten) {
+                        const kab = String(alumni.kabupaten).toUpperCase();
+                        kabupatenMap[kab] = (kabupatenMap[kab] || 0) + nominal;
+                    }
+                }
             }
         });
-        const sorted = Object.keys(angkatanMap).map(k => ({ angkatan: k, total: angkatanMap[k] })).sort((a,b) => b.total - a.total).slice(0, 3);
-        const container = document.getElementById('leaderboard-list'); if(!container) return;
-        if(sorted.length === 0) { container.innerHTML = `<div class="col-span-full text-center text-slate-500 text-xs italic py-4">Belum ada data donasi per angkatan.</div>`; return; }
-        const medals = ['text-yellow-400', 'text-slate-300', 'text-amber-600']; const borderColors = ['border-yellow-400/30', 'border-slate-300/30', 'border-amber-600/30'];
-        container.innerHTML = sorted.map((s, i) => `<div class="flex items-center justify-between p-4 bg-black/20 rounded-[1.5rem] border ${borderColors[i]} shadow-lg"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-black ${medals[i]} bg-white/5"><i class="fas fa-medal"></i></div><div><div class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Angkatan</div><div class="text-lg font-black ${isLightMode ? 'text-slate-800' : 'text-white'}">${s.angkatan}</div></div></div><div class="text-sm font-black text-emerald-500">${formatRupiah(s.total)}</div></div>`).join('');
+
+        const renderTop3 = (mapData, containerId, labelTitle) => {
+            const sorted = Object.keys(mapData).map(k => ({ label: k, total: mapData[k] })).sort((a,b) => b.total - a.total).slice(0, 3);
+            const container = document.getElementById(containerId); 
+            if(!container) return;
+            
+            if(sorted.length === 0) { 
+                container.innerHTML = `<div class="text-center text-slate-500 text-xs italic py-4">Belum ada data donasi.</div>`; 
+                return; 
+            }
+            
+            const medals = ['text-yellow-400', 'text-slate-300', 'text-amber-600']; 
+            const borderColors = ['border-yellow-400/30', 'border-slate-300/30', 'border-amber-600/30'];
+            
+            container.innerHTML = sorted.map((s, i) => `
+                <div class="flex items-center justify-between p-3 bg-black/20 rounded-2xl border ${borderColors[i]} shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black ${medals[i]} bg-white/5"><i class="fas fa-medal"></i></div>
+                        <div>
+                            <div class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">${labelTitle}</div>
+                            <div class="text-sm font-black ${isLightMode ? 'text-slate-800' : 'text-white'} truncate max-w-[120px]" title="${s.label}">${s.label}</div>
+                        </div>
+                    </div>
+                    <div class="text-xs font-black text-emerald-500">${formatRupiah(s.total)}</div>
+                </div>
+            `).join('');
+        };
+
+        renderTop3(angkatanMap, 'leaderboard-angkatan', 'Angkatan');
+        renderTop3(kecamatanMap, 'leaderboard-kecamatan', 'Kecamatan');
+        renderTop3(kabupatenMap, 'leaderboard-kabupaten', 'Kabupaten');
     }
 
     function renderRABTable() {
