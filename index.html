@@ -52,13 +52,14 @@
   <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none"></div>
 
   <!-- PWA INSTALL BANNER -->
-  <div id="pwa-banner" class="fixed -bottom-32 left-0 right-0 z-[1000] p-4 flex justify-center">
-      <div class="glass p-4 rounded-2xl shadow-2xl flex items-center justify-between w-full max-w-md border border-indigo-500/30">
+  <div id="pwa-banner" class="fixed -bottom-32 left-0 right-0 z-[1000] p-4 flex justify-center transition-all duration-500">
+      <div class="glass p-4 rounded-2xl shadow-2xl flex items-center justify-between w-full max-w-md border border-indigo-500/30 relative">
+          <button id="btn-close-pwa" class="absolute -top-3 -right-2 w-7 h-7 bg-slate-800 text-slate-400 hover:text-white rounded-full flex items-center justify-center border border-white/10 text-[10px] shadow-lg z-10"><i class="fas fa-times"></i></button>
           <div class="flex items-center gap-3">
               <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><i class="fas fa-download"></i></div>
               <div>
                   <h4 class="font-bold text-sm text-white">Install Aplikasi</h4>
-                  <p class="text-[10px] text-slate-400">Tambahkan portal ini ke layar utama Anda</p>
+                  <p class="text-[10px] text-slate-400">Tambahkan portal ini ke layar utama</p>
               </div>
           </div>
           <button id="btn-install-pwa" class="bg-indigo-600 text-white hover:bg-indigo-500 px-4 py-2 rounded-lg font-bold text-[10px] uppercase">Install</button>
@@ -138,6 +139,33 @@
               <input type="text" id="set-event-guest" class="input-field text-sm py-2" placeholder="Kyai/Ustadz/Tokoh..." />
           </div>
           <button type="submit" class="w-full mt-4 bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-bold transition-all uppercase text-[10px] text-white tracking-widest"><i class="fas fa-save mr-2"></i> Simpan Info</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL RUNDOWN ACARA (BARU) -->
+  <div id="modal-rundown" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-rundown')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-indigo-500/20">
+      <div class="flex justify-between items-center mb-6">
+        <h3 id="modal-rundown-title" class="text-lg font-black uppercase text-indigo-400">Tambah Rundown</h3>
+        <button onclick="closeModal('modal-rundown')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <form onsubmit="handleRundownSubmit(event)" id="form-rundown" class="space-y-4">
+        <input type="hidden" name="id" id="rnd-id">
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Waktu (Cth: 08:00 - 09:00)</label>
+            <input type="text" name="waktu" id="rnd-waktu" class="input-field" required placeholder="08:00 - 09:00" />
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nama Kegiatan</label>
+            <input type="text" name="kegiatan" id="rnd-kegiatan" class="input-field" required placeholder="Cth: Sambutan Ketua Panitia" />
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Keterangan (Opsional)</label>
+            <textarea name="keterangan" id="rnd-keterangan" class="input-field h-24 resize-none" placeholder="Deskripsi singkat kegiatan..."></textarea>
+        </div>
+        <button type="submit" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white"><i class="fas fa-save mr-2"></i> Simpan Rundown</button>
       </form>
     </div>
   </div>
@@ -262,7 +290,7 @@
         </div>
         <div>
             <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Jabatan / Divisi</label>
-            <select id="panitia-jabatan" class="input-field" onchange="checkCustomJabatan(this)">
+            <select id="panitia-jabatan" class="input-field" onchange="checkCustomJabatanPanitia(this)">
                 <option value="Ketua Panitia">Ketua Panitia</option>
                 <option value="Wakil Ketua">Wakil Ketua</option>
                 <option value="Sekretaris">Sekretaris</option>
@@ -455,6 +483,7 @@
         <button onclick="showTab('home')" id="btn-home" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-th-large"></i> <span class="hidden md:block">Beranda</span></button>
         <button onclick="showTab('alumni')" id="btn-alumni" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-users"></i> <span class="hidden md:block">Alumni</span></button>
         <button onclick="showTab('panitia')" id="btn-panitia" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-id-badge"></i> <span class="hidden md:block">Kepanitiaan</span></button>
+        <button onclick="showTab('rundown')" id="btn-rundown" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-list-ol"></i> <span class="hidden md:block">Rundown</span></button>
         <button onclick="showTab('rab')" id="btn-rab" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-clipboard-list"></i> <span class="hidden md:block">RAB Acara</span></button>
         <button onclick="showTab('rekap')" id="btn-rekap" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-map-marked-alt"></i> <span class="hidden md:block">Wilayah</span></button>
         <button onclick="showTab('requests')" id="btn-requests" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400 relative"><i class="fas fa-user-check"></i> <span class="hidden md:block">Verifikasi</span><span id="badge-requests" class="hidden absolute top-2 right-4 w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white">0</span></button>
@@ -523,26 +552,17 @@
 
           <!-- KLASEMEN DONASI -->
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <!-- Klasemen Angkatan -->
               <div class="glass p-6 rounded-[2.5rem] border border-white/5">
                   <h3 class="text-sm font-black uppercase text-amber-500 mb-4"><i class="fas fa-trophy mr-2"></i> Donasi Angkatan</h3>
-                  <div id="leaderboard-angkatan" class="space-y-3">
-                      <!-- Javascript akan mengisi klasemen di sini -->
-                  </div>
+                  <div id="leaderboard-angkatan" class="space-y-3"></div>
               </div>
-              <!-- Klasemen Kecamatan -->
               <div class="glass p-6 rounded-[2.5rem] border border-white/5">
                   <h3 class="text-sm font-black uppercase text-amber-500 mb-4"><i class="fas fa-map-marker-alt mr-2"></i> Donasi Kecamatan</h3>
-                  <div id="leaderboard-kecamatan" class="space-y-3">
-                      <!-- Javascript akan mengisi klasemen di sini -->
-                  </div>
+                  <div id="leaderboard-kecamatan" class="space-y-3"></div>
               </div>
-              <!-- Klasemen Kabupaten -->
               <div class="glass p-6 rounded-[2.5rem] border border-white/5">
                   <h3 class="text-sm font-black uppercase text-amber-500 mb-4"><i class="fas fa-map mr-2"></i> Donasi Kabupaten</h3>
-                  <div id="leaderboard-kabupaten" class="space-y-3">
-                      <!-- Javascript akan mengisi klasemen di sini -->
-                  </div>
+                  <div id="leaderboard-kabupaten" class="space-y-3"></div>
               </div>
           </div>
       </div>
@@ -598,6 +618,28 @@
                         </tr>
                     </thead>
                     <tbody id="panitia-list" class="divide-y divide-white/5"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+      <!-- TAB RUNDOWN (BARU) -->
+      <div id="tab-rundown" class="tab-content hidden space-y-4">
+        <div class="flex flex-col lg:flex-row justify-between gap-4">
+            <button id="btn-add-rundown" onclick="openModalRundown()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white w-fit"><i class="fas fa-plus mr-2"></i> Tambah Rundown</button>
+        </div>
+        <div class="glass rounded-[2rem] overflow-hidden border border-white/5">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase">
+                        <tr>
+                            <th class="p-5">Waktu</th>
+                            <th class="p-5">Kegiatan</th>
+                            <th class="p-5">Keterangan</th>
+                            <th class="p-5 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rundown-list" class="divide-y divide-white/5"></tbody>
                 </table>
             </div>
         </div>
@@ -697,13 +739,13 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxBjVjkxc0FIOftOlASh7Ksuw4rNjso7QDN6WI4l9n1hkQf733amPnHOU74LVA9IrUx/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwV94SDHu0oKV_ezmg3dAyd17lJgyyPupdIuBqf2svIL53eVjA9qibAkfim-VZWcejy/exec";
     
     // Variabel Global Data
     let STATE = { 
         token: localStorage.getItem('af_token'), 
         user: JSON.parse(localStorage.getItem('af_user') || 'null'), 
-        alumni: [], finance: [], rab: [], panitia: [], requests: [], users: [], eventDate: "", eventTime: "", eventGuest: "" 
+        alumni: [], finance: [], rab: [], panitia: [], rundown: [], requests: [], users: [], eventDate: "", eventTime: "", eventGuest: "" 
     };
 
     let financeChart = null; 
@@ -961,6 +1003,7 @@
             const resReq = await fetch(`${API_URL}?action=listrequests&t=${ts}`); const req = await resReq.json();
             const resPan = await fetch(`${API_URL}?action=listpanitia&t=${ts}`); const pan = await resPan.json();
             const resEvt = await fetch(`${API_URL}?action=geteventinfo&t=${ts}`); const evt = await resEvt.json();
+            const resRnd = await fetch(`${API_URL}?action=getrundown&t=${ts}`); const rnd = await resRnd.json();
 
             // Set Tanggal & Info Event
             STATE.eventDate = evt.date || "2026-12-31T08:00:00";
@@ -970,6 +1013,7 @@
             const allFinance = fin.rows || [];
             
             STATE.panitia = pan.rows || [];
+            STATE.rundown = rnd.rows || [];
             STATE.rab = allFinance.filter(f => String(f.kategori).toUpperCase() === 'RAB');
             STATE.finance = allFinance.filter(f => f.status === 'pemasukan' || f.status === 'pengeluaran');
             STATE.alumni = alm.rows || []; 
@@ -1024,6 +1068,35 @@
             document.getElementById('modal-rab-title').innerText = "Tambah Item RAB";
         }
         openModal('modal-rab');
+    }
+
+    function openModalRundown(dataStr = null) {
+        const form = document.getElementById('form-rundown'); form.reset();
+        if(dataStr) {
+            const data = JSON.parse(decodeURIComponent(dataStr));
+            document.getElementById('rnd-id').value = data.id || '';
+            document.getElementById('rnd-waktu').value = data.waktu || '';
+            document.getElementById('rnd-kegiatan').value = data.kegiatan || '';
+            document.getElementById('rnd-keterangan').value = data.keterangan || '';
+            document.getElementById('modal-rundown-title').innerText = "Edit Rundown";
+        } else {
+            document.getElementById('rnd-id').value = "";
+            document.getElementById('modal-rundown-title').innerText = "Tambah Rundown";
+        }
+        openModal('modal-rundown');
+    }
+
+    async function handleRundownSubmit(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true;
+        try {
+            const fd = new FormData(e.target); const data = Object.fromEntries(fd.entries());
+            const isEdit = data.id !== ""; const action = isEdit ? 'updaterundown' : 'addrundown';
+            toggleLoading(true, isEdit ? 'Menyimpan...' : 'Menambahkan...');
+            const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: action, data: JSON.stringify(data) }) }).then(r => r.json());
+            if(res.ok) { closeModal('modal-rundown'); notify('Rundown tersimpan!', 'success'); loadData(); e.target.reset(); }
+            else notify(res.error, 'error');
+        } catch (err) { notify('Gagal simpan', 'error'); } finally { toggleLoading(false); btn.disabled = false; }
     }
     
     async function toggleRABStatus(id, isPaidCurrently) {
@@ -1185,6 +1258,36 @@
         renderTop3(kabupatenMap, 'leaderboard-kabupaten', 'Kabupaten');
     }
 
+    function renderRundownTable() {
+        const tbody = document.getElementById('rundown-list');
+        const role = STATE.user ? STATE.user.role : 'user';
+        const canManage = role === 'admin_utama' || role === 'sekretaris';
+        if(!tbody) return;
+
+        let sortedData = [...STATE.rundown].sort((a,b) => String(a.waktu).localeCompare(String(b.waktu)));
+
+        tbody.innerHTML = sortedData.map(r => {
+            const safeStr = encodeURIComponent(JSON.stringify(r));
+            let actions = '-';
+            if(canManage) {
+                actions = `<div class="flex justify-center gap-2">
+                    <button onclick="openModalRundown('${safeStr}')" class="w-7 h-7 bg-indigo-500/10 text-indigo-500 rounded hover:bg-indigo-500 hover:text-white transition-all" title="Edit"><i class="fas fa-edit text-[10px]"></i></button>
+                    <button onclick="handleDelete('deleterundown', '${r.id}')" class="w-7 h-7 bg-red-500/10 text-red-500 rounded hover:bg-red-500 hover:text-white transition-all" title="Hapus"><i class="fas fa-trash-alt text-[10px]"></i></button>
+                </div>`;
+            }
+            return `<tr class="hover:bg-black/5 transition-colors">
+                <td class="p-5 font-black text-indigo-400 whitespace-nowrap">${r.waktu}</td>
+                <td class="p-5 font-bold ${isLightMode ? 'text-slate-800' : 'text-white'}">${r.kegiatan}</td>
+                <td class="p-5 text-xs text-slate-500 leading-relaxed">${r.keterangan || '-'}</td>
+                <td class="p-5 text-center">${actions}</td>
+            </tr>`;
+        }).join('');
+
+        if(STATE.rundown.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500 text-xs italic">Belum ada rundown acara.</td></tr>`;
+        }
+    }
+
     function renderRABTable() {
         const tbody = document.getElementById('rab-list'); const totalDisplay = document.getElementById('rab-total-display'); const role = STATE.user ? STATE.user.role : 'user'; const canManageFinance = role === 'admin_utama' || role === 'bendahara';
         if(!tbody) return;
@@ -1242,7 +1345,7 @@
         const targetProgress = document.getElementById('target-progress');
         if(targetProgress) { targetProgress.style.width = pct + '%'; document.getElementById('target-percentage').innerText = pct + '%'; document.getElementById('target-current').innerText = formatRupiah(pin); document.getElementById('target-max').innerText = totalRAB > 0 ? `Target RAB: ${formatRupiah(totalRAB)}` : 'RAB Belum Diatur'; }
         
-        renderRABTable(); renderPanitiaTable(); sortAlumni(sortConfig.alumni.key, true); renderLeaderboard();
+        renderRABTable(); renderPanitiaTable(); sortAlumni(sortConfig.alumni.key, true); renderLeaderboard(); renderRundownTable();
         
         const role = STATE.user ? STATE.user.role : 'user'; const canManageAlumni = role === 'admin_utama' || role === 'sekretaris';
         const pending = STATE.requests.filter(r => String(r.status || '').trim().toLowerCase() === 'pending');
@@ -1323,12 +1426,14 @@
             document.getElementById('btn-requests').classList.add('hidden'); 
             document.getElementById('btn-add-alumni').classList.add('hidden'); 
             document.getElementById('btn-import-alumni').classList.add('hidden'); 
-            document.getElementById('btn-panitia').classList.add('hidden'); // Hide panitia tab if not admin/sekretaris
+            document.getElementById('btn-panitia').classList.add('hidden');
+            document.getElementById('btn-add-rundown').classList.add('hidden'); // Sembunyikan tombol tambah rundown
         } else { 
             document.getElementById('btn-requests').classList.remove('hidden'); 
             document.getElementById('btn-add-alumni').classList.remove('hidden'); 
             document.getElementById('btn-import-alumni').classList.remove('hidden'); 
             document.getElementById('btn-panitia').classList.remove('hidden');
+            document.getElementById('btn-add-rundown').classList.remove('hidden');
         } 
         
         if (!canManageFinance) { document.getElementById('btn-add-finance').classList.add('hidden'); document.getElementById('btn-add-rab').classList.add('hidden'); } else { document.getElementById('btn-add-finance').classList.remove('hidden'); document.getElementById('btn-add-rab').classList.remove('hidden'); } 
@@ -1355,6 +1460,16 @@
     }
 
     function checkCustomJabatan(el) {
+        if(el.value === 'custom') {
+            document.getElementById('idcard-jabatan-custom').classList.remove('hidden');
+            document.getElementById('idcard-jabatan-custom').required = true;
+        } else {
+            document.getElementById('idcard-jabatan-custom').classList.add('hidden');
+            document.getElementById('idcard-jabatan-custom').required = false;
+        }
+    }
+
+    function checkCustomJabatanPanitia(el) {
         if(el.value === 'custom') {
             document.getElementById('panitia-jabatan-custom').classList.remove('hidden');
             document.getElementById('panitia-jabatan-custom').required = true;
@@ -1425,6 +1540,24 @@
 
         doc.save(`IDCard_Panitia_${p.nama}.pdf`); 
         notify("ID Card Panitia berhasil dicetak!", "success"); 
+    }
+
+    function handlePrintIDCardPanitia(e) {
+        e.preventDefault();
+        const nama = document.getElementById('idcard-nama').value;
+        let jabatan = document.getElementById('idcard-jabatan').value;
+        if(jabatan === 'custom') jabatan = document.getElementById('idcard-jabatan-custom').value;
+        
+        const data = { nama: nama, jabatan: jabatan };
+        printIDCard(encodeURIComponent(JSON.stringify(data)));
+        closeModal('modal-idcard');
+    }
+
+    function openModalIDCard() {
+        document.getElementById('idcard-nama').value = '';
+        document.getElementById('idcard-jabatan').value = 'Ketua Panitia';
+        document.getElementById('idcard-jabatan-custom').classList.add('hidden');
+        openModal('modal-idcard');
     }
 
     function printReceipt(dataStr) { const data = JSON.parse(decodeURIComponent(dataStr)); const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', [105, 148]); doc.setDrawColor(99, 102, 241); doc.setLineWidth(1); doc.roundedRect(5, 5, 95, 138, 3, 3); doc.setFillColor(99, 102, 241); doc.roundedRect(5, 5, 95, 25, 3, 3, 'F'); doc.rect(5, 15, 95, 15, 'F'); doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.text("PANITIA REUNI AKBAR", 52.5, 13, { align: "center" }); doc.setFontSize(13); doc.text("PONDOK PESANTREN AL-FATAH", 52.5, 20, { align: "center" }); doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.text("Bukti Penerimaan Dana Sah", 52.5, 26, { align: "center" }); doc.setTextColor(30, 41, 59); doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text("BUKTI TRANSAKSI (KWITANSI)", 52.5, 38, { align: "center" }); doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.text(`No. Ref  : TRX-${String(data.id || '').substring(0, 8).toUpperCase()}`, 10, 46); doc.text(`Tanggal  : ${String(data.tanggal||'-').split(',')[0]}`, 10, 50); doc.setDrawColor(203, 213, 225); doc.setLineWidth(0.5); doc.line(10, 53, 95, 53); doc.text("Telah diterima dari:", 10, 60); doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.text(`${data.nama_pembayar || 'Hamba Allah'}`, 10, 65); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text("Untuk Keperluan:", 10, 73); doc.setFont("helvetica", "bold"); doc.text(`${data.kategori || '-'}`, 10, 78); doc.setFillColor(241, 245, 249); doc.roundedRect(10, 85, 85, 15, 2, 2, 'F'); doc.setTextColor(16, 185, 129); doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.text(`${formatRupiah(data.nominal)}`, 52.5, 95, { align: "center" }); doc.setTextColor(30, 41, 59); doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.text("Disahkan oleh,", 75, 110, { align: "center" }); doc.setFont("helvetica", "bold"); doc.text("Bendahara Panitia", 75, 125, { align: "center" }); doc.setFont("helvetica", "normal"); doc.setFontSize(6); doc.setTextColor(100, 116, 139); doc.text(`Kwitansi ini dibuat otomatis oleh sistem. Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 52.5, 138, { align: "center" }); doc.save(`Kwitansi_Reuni_${data.nama_pembayar}_${String(data.id).substring(0,6)}.pdf`); notify("Kwitansi PDF berhasil dicetak!", "success"); }
@@ -1502,13 +1635,42 @@
     function exportAlumniCSV() { let csv = "ID,Nama Lengkap,Angkatan,No WA,Kabupaten,Kecamatan,Desa,Alamat\n"; STATE.alumni.forEach(r => csv += [r.id, r.nama, r.angkatan, r.nowa, r.kabupaten, r.kecamatan, r.desa, r.alamat].map(v => `"${String(v||'').replace(/"/g, '""')}"`).join(",") + "\n"); downloadCSV(csv, `Alumni.csv`); closeModal('modal-export'); }
     function exportFinanceToCSV() { let csv = "Tanggal,Kategori,Nama,Status,Nominal\n"; STATE.finance.forEach(r => csv += [String(r.tanggal||'-').split(',')[0], r.kategori, r.nama_pembayar, r.status, r.nominal].map(v => `"${String(v||'').replace(/"/g, '""')}"`).join(",") + "\n"); downloadCSV(csv, `Keuangan.csv`); }
 
+    // Cek apakah aplikasi sudah diinstall (berjalan di mode standalone)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
+    const isDismissed = localStorage.getItem('pwa_dismissed') === 'true';
+
     function resetIdleTimer() { idleTime = 0; }
     window.addEventListener('load', () => {
         applyTheme();
         const manifestBlob = new Blob([JSON.stringify({ "name": "Portal Panitia Reuni", "short_name": "Reuni Al-Fatah", "start_url": ".", "display": "standalone", "background_color": "#060813", "theme_color": "#6366f1", "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/1903/1903162.png", "sizes": "512x512", "type": "image/png"}] })], {type: 'application/json'});
         document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
-        let dp; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); dp = e; setTimeout(() => { document.getElementById('pwa-banner').style.bottom = '20px'; }, 3000); });
-        document.getElementById('btn-install-pwa').addEventListener('click', async () => { if (dp) { document.getElementById('pwa-banner').style.bottom = '-150px'; dp.prompt(); await dp.userChoice; dp = null; } });
+        
+        let dp; 
+        window.addEventListener('beforeinstallprompt', (e) => { 
+            e.preventDefault(); 
+            if (isStandalone || isDismissed) return; // Jangan tampilkan jika sudah install atau pernah ditutup
+            dp = e; 
+            setTimeout(() => { document.getElementById('pwa-banner').style.bottom = '20px'; }, 3000); 
+        });
+        
+        document.getElementById('btn-install-pwa').addEventListener('click', async () => { 
+            if (dp) { 
+                document.getElementById('pwa-banner').style.bottom = '-150px'; 
+                dp.prompt(); 
+                await dp.userChoice; 
+                dp = null; 
+            } 
+        });
+
+        // Tambahkan event listener untuk tombol tutup (X)
+        const btnClosePwa = document.getElementById('btn-close-pwa');
+        if(btnClosePwa) {
+            btnClosePwa.addEventListener('click', () => {
+                document.getElementById('pwa-banner').style.bottom = '-150px';
+                localStorage.setItem('pwa_dismissed', 'true'); // Simpan preferensi agar tidak spam
+            });
+        }
+
         if(STATE.token) initDashboard(); 
         document.body.addEventListener('mousemove', resetIdleTimer); document.body.addEventListener('keypress', resetIdleTimer); document.body.addEventListener('touchstart', resetIdleTimer); document.body.addEventListener('click', resetIdleTimer);
         setInterval(() => { if(STATE.token && !document.getElementById('dashboard-screen').classList.contains('hidden')) { idleTime++; if (idleTime >= IDLE_LIMIT) logout(true); } }, 60000);
