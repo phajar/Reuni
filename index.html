@@ -13,7 +13,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Library Tesseract untuk Scan AI OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js/dist/tesseract.min.js"></script>
 
   <style>
@@ -127,7 +126,7 @@
     </div>
   </div>
 
-  <!-- MODAL RUNDOWN ACARA (BARU) -->
+  <!-- MODAL RUNDOWN ACARA -->
   <div id="modal-rundown" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
     <div onclick="closeModal('modal-rundown')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
     <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-indigo-500/20">
@@ -414,7 +413,7 @@
   <!-- AUTH SCREEN -->
   <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 relative">
     
-    <!-- MENU NAVIGASI PUBLIK (Muncul di layar login) -->
+    <!-- MENU NAVIGASI PUBLIK -->
     <nav class="absolute top-0 left-0 w-full p-4 z-50 flex justify-between items-center">
         <a href="countdown.html" class="flex items-center gap-3 group">
             <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
@@ -559,7 +558,8 @@
             <div class="flex gap-2">
                 <button id="btn-add-alumni" onclick="openModalAlumni()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white"><i class="fas fa-plus mr-2"></i> Tambah</button>
                 <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleCSVUpload(event)">
-                <button id="btn-import-alumni" onclick="document.getElementById('csv-upload').click()" class="bg-amber-600 hover:bg-amber-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white" title="Import File Excel CSV"><i class="fas fa-upload mr-2"></i> Import</button>
+                <button id="btn-import-alumni" onclick="document.getElementById('csv-upload').click()" class="bg-amber-600 hover:bg-amber-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white" title="Import Menggunakan AI cerdas"><i class="fas fa-magic mr-2"></i> Smart Import</button>
+                <button onclick="downloadTemplateCSV()" class="bg-slate-600 hover:bg-slate-500 px-4 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white hidden md:block" title="Download Format Excel"><i class="fas fa-file-csv mr-2"></i> Template</button>
             </div>
             <div class="relative flex-1 max-w-md"><i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i><input type="text" onkeyup="searchAlumni(this.value)" placeholder="Cari Nama/Angkatan..." class="glass pl-10 pr-4 py-3 rounded-xl text-xs outline-none border border-white/10 w-full" /></div>
         </div>
@@ -609,7 +609,7 @@
         </div>
       </div>
 
-      <!-- TAB RUNDOWN (BARU) -->
+      <!-- TAB RUNDOWN -->
       <div id="tab-rundown" class="tab-content hidden space-y-4">
         <div class="flex flex-col lg:flex-row justify-between gap-4">
             <button id="btn-add-rundown" onclick="openModalRundown()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white w-fit"><i class="fas fa-plus mr-2"></i> Tambah Rundown</button>
@@ -664,9 +664,9 @@
       <!-- TAB REKAP WILAYAH -->
       <div id="tab-rekap" class="tab-content hidden space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <select id="filter-kab" onchange="applyWilayahFilter()" class="input-field"><option value="">Semua Kabupaten</option></select>
-              <select id="filter-kec" onchange="applyWilayahFilter()" class="input-field"><option value="">Semua Kecamatan</option></select>
-              <select id="filter-desa" onchange="applyWilayahFilter()" class="input-field"><option value="">Semua Desa</option></select>
+              <select id="filter-kab" onchange="applyWilayahFilter('kab')" class="input-field"><option value="">Semua Kabupaten</option></select>
+              <select id="filter-kec" onchange="applyWilayahFilter('kec')" class="input-field"><option value="">Semua Kecamatan</option></select>
+              <select id="filter-desa" onchange="applyWilayahFilter('desa')" class="input-field"><option value="">Semua Desa</option></select>
               <button onclick="openModal('modal-export')" class="bg-emerald-600 hover:bg-emerald-500 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all text-white"><i class="fas fa-file-export mr-2"></i> Export Data</button>
           </div>
           <div class="glass rounded-[2.5rem] overflow-hidden border border-white/5">
@@ -725,7 +725,7 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwV94SDHu0oKV_ezmg3dAyd17lJgyyPupdIuBqf2svIL53eVjA9qibAkfim-VZWcejy/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwyyP7aUtEsz0LgHWiLQgVh03gMfZrZeuj242I1cj5AbDmaAATrMIfVpNFRq1lTutiT/exec";
     
     // Variabel Global Data
     let STATE = { 
@@ -921,22 +921,207 @@
         catch(e) { notify('Gagal mengubah role', 'error'); } finally { toggleLoading(false); }
     }
 
-    function parseCSV(text) {
-        let rows = text.split('\n');
-        return rows.map(row => { const cols = []; let inQuotes = false; let col = ''; for(let i=0; i<row.length; i++) { if(row[i] === '"') { inQuotes = !inQuotes; continue; } if(row[i] === ',' && !inQuotes) { cols.push(col.trim()); col=''; continue; } col += row[i]; } cols.push(col.trim()); return cols; }).filter(r => r.length > 1);
-    }
-    
+    // ==========================================
+    // ALGORITMA SMART IMPORT CSV / EXCEL AI
+    // ==========================================
     async function handleCSVUpload(event) {
-        const file = event.target.files[0]; if(!file) return; const reader = new FileReader();
+        const file = event.target.files[0]; 
+        if(!file) return; 
+        
+        const reader = new FileReader();
         reader.onload = async (e) => {
-            const text = e.target.result; const rows = parseCSV(text);
-            if(rows.length < 2) return notify('File CSV kosong atau tidak valid', 'error');
-            const dataToUpload = [];
-            for(let i=1; i<rows.length; i++) { const cols = rows[i]; if(cols.length >= 2 && cols[1] !== '') dataToUpload.push({ nama: cols[1]||'', angkatan: cols[2]||'', nowa: cols[3]||'', kabupaten: cols[4]||'', kecamatan: cols[5]||'', desa: cols[6]||'', alamat: cols[7]||'' }); }
-            if(dataToUpload.length === 0) return notify('Tidak ada baris data yang valid ditemukan.', 'error');
-            toggleLoading(true, `Mengimpor ${dataToUpload.length} Data Alumni...`);
-            try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'bulkalumni', rows: JSON.stringify(dataToUpload), mode: 'append' }) }).then(r => r.json()); if(res.ok) { notify(`Berhasil mengimpor ${res.count} data!`); loadData(); } else notify(res.error, 'error'); } 
-            catch(err) { notify('Koneksi terputus saat import.', 'error'); } finally { toggleLoading(false); event.target.value = ''; }
+            const text = e.target.result;
+            
+            // 1. Auto-Detect Delimiter (Koma vs Titik Koma)
+            let sep = ',';
+            const firstLine = text.split('\n')[0] || "";
+            if ((firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length) sep = ';';
+            
+            // 2. Parse text ke dalam Array 2D
+            let rawRows = text.split('\n');
+            let rows = rawRows.map(row => { 
+                let cols = []; let inQuotes = false; let col = ''; 
+                for(let i=0; i<row.length; i++) { 
+                    if(row[i] === '"') { inQuotes = !inQuotes; continue; } 
+                    if(row[i] === sep && !inQuotes) { cols.push(col.trim()); col=''; continue; } 
+                    col += row[i]; 
+                } 
+                cols.push(col.trim()); 
+                // Buang petik ganda berlebih
+                return cols.map(c => c.replace(/^"|"$/g, '').trim()); 
+            }).filter(r => r.length > 0 && r.join('').trim() !== '');
+
+            if(rows.length < 1) return notify('File CSV kosong atau tidak terbaca', 'error');
+
+            let dataToUpload = [];
+
+            // 3. SCAN HEADER DINAMIS (Cari di 5 baris pertama)
+            let headers = rows[0].map(h => h.toLowerCase().trim());
+            let headerRowIndex = 0;
+
+            for(let i=0; i<Math.min(5, rows.length); i++) {
+                let tempH = rows[i].map(h => h.toLowerCase().trim());
+                if(tempH.some(h => h.includes('nama') || h.includes('telp') || h.includes('wa'))) {
+                    headers = tempH;
+                    headerRowIndex = i;
+                    break;
+                }
+            }
+
+            // 4. MAPPING HEADER KATA KUNCI
+            let map = {
+                nama: headers.findIndex(h => h.includes('nama') && !h.includes('kab') && !h.includes('kec')),
+                nowa: headers.findIndex(h => h.includes('wa') || h.includes('telp') || h.includes('hp')),
+                alamat: headers.findIndex(h => h.includes('alamat') || h.includes('domisili')),
+                angkatan: headers.findIndex(h => h.includes('angkat') || h.includes('lulus')),
+                kabupaten: headers.findIndex(h => h.includes('kab') || h.includes('kota')),
+                kecamatan: headers.findIndex(h => h.includes('kec')),
+                desa: headers.findIndex(h => h.includes('desa') || (h.includes('kel') && !h.includes('kelamin')))
+            };
+
+            // 5. DETEKSI MODE: HORIZONTAL EXCEL (Ada Angkatan 1, Angkatan 2 menyamping)
+            let isHorizontal = headers.some(h => h.match(/angkatan\s*\d+/));
+
+            if (isHorizontal) {
+                // Eksekusi Pemetaan Horizontal
+                for(let c=0; c<headers.length; c++) {
+                    if(headers[c].match(/angkatan\s*\d+/)) {
+                        let angkNum = headers[c].match(/\d+/)[0];
+                        // Asumsi struktur kolom berdekatan: Nama, No Telp, Alamat
+                        let colNama = c+1, colTelp = c+2, colAlamat = c+3;
+                        for(let r = headerRowIndex + 1; r < rows.length; r++) {
+                            if (!rows[r]) continue;
+                            let nama = rows[r][colNama] || "";
+                            if(nama.trim() !== "") {
+                                dataToUpload.push({
+                                    nama: nama, angkatan: angkNum, 
+                                    nowa: rows[r][colTelp] || "", alamat: rows[r][colAlamat] || "",
+                                    kabupaten: '', kecamatan: '', desa: ''
+                                });
+                            }
+                        }
+                    }
+                }
+            } 
+            // 6. DETEKSI MODE: VERTIKAL NORMAL (Meskipun urutan acak, tapi ada header yang valid)
+            else if (map.nama !== -1) {
+                for(let r = headerRowIndex + 1; r < rows.length; r++) {
+                    let row = rows[r];
+                    let nama = map.nama !== -1 ? row[map.nama] : "";
+                    if(nama && nama.trim() !== "") {
+                        dataToUpload.push({
+                            nama: nama,
+                            nowa: map.nowa !== -1 ? row[map.nowa] : "",
+                            alamat: map.alamat !== -1 ? row[map.alamat] : "",
+                            angkatan: map.angkatan !== -1 ? row[map.angkatan] : "",
+                            kabupaten: map.kabupaten !== -1 ? row[map.kabupaten] : "",
+                            kecamatan: map.kecamatan !== -1 ? row[map.kecamatan] : "",
+                            desa: map.desa !== -1 ? row[map.desa] : ""
+                        });
+                    }
+                }
+            } 
+            // 7. DETEKSI MODE: DATA HANCUR (Titik Koma Berantakan, Tidak Ada Header Valid)
+            // Menggunakan AI Heuristic (Regex Scanner)
+            else {
+                // Leburkan semua data menjadi teks murni per kotak (cell)
+                let rawCells = text.split(/[\\n;,]/).map(s => s.replace(/^"|"$/g, '').trim()).filter(s => s !== '');
+                let currentName = "Alumni", currentTelp = "", currentAlamat = "";
+                
+                for(let i=0; i<rawCells.length; i++) {
+                    let cell = rawCells[i];
+                    // Deteksi jika cell ini adalah Nomor HP (Polanya: 08 atau 628 diikuti angka)
+                    let isPhone = /(?:08|628|\\+628)[\\d\\-\\s]{8,15}/.test(cell);
+                    
+                    if(isPhone) {
+                        currentTelp = cell.match(/(?:08|628|\\+628)[\\d\\-\\s]{8,15}/)[0];
+                        
+                        // Heuristik: Nama biasanya terletak tepat 1 kotak sebelum nomor HP
+                        if(i > 0 && !/(?:08|628|\\+628)/.test(rawCells[i-1])) {
+                            currentName = rawCells[i-1];
+                        }
+                        
+                        // Heuristik: Alamat biasanya panjang dan terletak di sekitarnya
+                        if(i > 1 && rawCells[i-2].length > 5 && !/(?:08|628|\\+628)/.test(rawCells[i-2])) {
+                            currentAlamat = rawCells[i-2];
+                        } else if (i < rawCells.length -1 && !/(?:08|628|\\+628)/.test(rawCells[i+1]) && rawCells[i+1].length > 5) {
+                            currentAlamat = rawCells[i+1];
+                        }
+                        
+                        dataToUpload.push({
+                            nama: currentName, nowa: currentTelp, alamat: currentAlamat, 
+                            angkatan: "", kabupaten: "", kecamatan: "", desa: ""
+                        });
+                        
+                        // Reset vars
+                        currentName = "Alumni"; currentTelp = ""; currentAlamat = "";
+                    }
+                }
+            }
+
+            // --- AI DUPLICATE CHECKER ---
+            let uniqueDataToUpload = [];
+            let duplicateCount = 0;
+            
+            // Fungsi pembersih string (menghapus spasi, huruf kecil semua, membuang simbol)
+            const normalize = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+            dataToUpload.forEach(newItem => {
+                const normNama = normalize(newItem.nama);
+                const normAngkatan = normalize(newItem.angkatan);
+                const normWa = normalize(newItem.nowa);
+
+                // 1. Cek duplikat terhadap database yang sudah ada di Dashboard (STATE.alumni)
+                const isDbDuplicate = STATE.alumni.some(existingItem => {
+                    const matchNama = normalize(existingItem.nama) === normNama;
+                    const matchAngkatan = normAngkatan !== '' && normalize(existingItem.angkatan) === normAngkatan;
+                    const matchWa = normWa !== '' && normalize(existingItem.nowa) === normWa;
+                    
+                    if (matchNama) {
+                        if (matchAngkatan || matchWa) return true; // Nama & (Angkatan / WA) kembar
+                        if (normAngkatan === '' && normWa === '') return true; // Minim info, anggap orang yg sama
+                    }
+                    return false;
+                });
+
+                // 2. Cek duplikat internal (barangkali di file Excel itu sendiri ada nama yg ketik 2 kali)
+                const isBatchDuplicate = uniqueDataToUpload.some(batchItem => {
+                    const matchNama = normalize(batchItem.nama) === normNama;
+                    const matchAngkatan = normAngkatan !== '' && normalize(batchItem.angkatan) === normAngkatan;
+                    const matchWa = normWa !== '' && normalize(batchItem.nowa) === normWa;
+                    
+                    if (matchNama) {
+                        if (matchAngkatan || matchWa) return true;
+                        if (normAngkatan === '' && normWa === '') return true;
+                    }
+                    return false;
+                });
+
+                // Jika terdeteksi kembar, abaikan. Jika unik, masukkan ke antrean upload.
+                if (isDbDuplicate || isBatchDuplicate) {
+                    duplicateCount++;
+                } else {
+                    uniqueDataToUpload.push(newItem);
+                }
+            });
+
+            if(uniqueDataToUpload.length === 0) {
+                if (duplicateCount > 0) return notify(`Semua data (${duplicateCount}) terdeteksi sebagai duplikat dan diabaikan.`, 'error');
+                return notify('Tidak ada data yang bisa diekstrak oleh Smart Parser.', 'error');
+            }
+            
+            toggleLoading(true, `AI Smart Import: Memproses ${uniqueDataToUpload.length} Data Baru...`);
+            try { 
+                const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'bulkalumni', rows: JSON.stringify(uniqueDataToUpload), mode: 'append' }) }).then(r => r.json()); 
+                if(res.ok) { 
+                    let msg = `Berhasil mengimpor ${res.count} data baru!`;
+                    if(duplicateCount > 0) msg += ` (${duplicateCount} data duplikat diabaikan)`;
+                    notify(msg, 'success'); 
+                    loadData(); 
+                } else notify(res.error, 'error'); 
+            } 
+            catch(err) { notify('Koneksi terputus saat import.', 'error'); } 
+            finally { toggleLoading(false); event.target.value = ''; }
         };
         reader.readAsText(file);
     }
@@ -980,45 +1165,49 @@
       }
     }
 
+    // ==========================================
+    // SISTEM PENGAMBILAN DATA SUPER CEPAT (CACHING)
+    // ==========================================
     async function loadData() {
         toggleLoading(true, 'Sinkronisasi Data...');
         try {
             const ts = new Date().getTime(); 
-            const resAlm = await fetch(`${API_URL}?action=listalumni&t=${ts}`); const alm = await resAlm.json();
-            const resFin = await fetch(`${API_URL}?action=listfinance&t=${ts}`); const fin = await resFin.json();
-            const resReq = await fetch(`${API_URL}?action=listrequests&t=${ts}`); const req = await resReq.json();
-            const resPan = await fetch(`${API_URL}?action=listpanitia&t=${ts}`); const pan = await resPan.json();
-            const resEvt = await fetch(`${API_URL}?action=geteventinfo&t=${ts}`); const evt = await resEvt.json();
-            const resRnd = await fetch(`${API_URL}?action=getrundown&t=${ts}`); const rnd = await resRnd.json();
+            // 💡 HANYA 1 KALI FETCH API untuk ambil SEMUA data!
+            const res = await fetch(`${API_URL}?action=get_all_data&t=${ts}`);
+            const data = await res.json();
 
             // Set Tanggal & Info Event
-            STATE.eventDate = evt.date || "2026-12-31T08:00:00";
-            STATE.eventTime = evt.time || "";
-            STATE.eventGuest = evt.guest || "";
+            STATE.eventDate = (data.event && data.event.date) ? data.event.date : "2026-12-31T08:00:00";
+            STATE.eventTime = (data.event && data.event.time) ? data.event.time : "";
+            STATE.eventGuest = (data.event && data.event.guest) ? data.event.guest : "";
 
-            const allFinance = fin.rows || [];
+            const allFinance = data.finance || [];
             
-            STATE.panitia = pan.rows || [];
-            STATE.rundown = rnd.rows || [];
+            STATE.panitia = data.panitia || [];
+            STATE.rundown = data.rundown || [];
             STATE.rab = allFinance.filter(f => String(f.kategori).toUpperCase() === 'RAB');
             STATE.finance = allFinance.filter(f => f.status === 'pemasukan' || f.status === 'pengeluaran');
-            STATE.alumni = alm.rows || []; 
-            STATE.requests = req.rows || [];
+            STATE.alumni = data.alumni || []; 
+            STATE.requests = data.requests || [];
             
             STATE.alumni = STATE.alumni.map(a => {
                 const totalD = STATE.finance.filter(f => f.ref_alumni_id === a.id && f.status === 'pemasukan').reduce((s,c) => s + (Number(c.nominal) || 0), 0);
                 return {...a, totalDonasi: totalD};
             });
 
-            updateFilterOptions(); populateAlumniSelect();
+            applyWilayahFilter('init'); populateAlumniSelect();
             filteredAlumniData = [...STATE.alumni]; currentAlumniPage = 1;
             
             sortAlumni(sortConfig.alumni.key, true); 
             applyFinanceFilter(); 
 
             renderAll();
-        } catch(e) { console.error("Gagal sinkronisasi:", e); notify('Gagal memuat: ' + e.message, 'error'); } 
-        finally { toggleLoading(false); }
+        } catch(e) { 
+            console.error("Gagal sinkronisasi:", e); 
+            notify('Gagal memuat: ' + e.message, 'error'); 
+        } finally { 
+            toggleLoading(false); 
+        }
     }
 
     function populateAlumniSelect() { const sel = document.getElementById('fin-ref-id'); sel.innerHTML = '<option value="">Pilih Alumni (Opsional)</option>' + STATE.alumni.map(a => `<option value="${a.id}" data-name="${a.nama}">${a.nama} (${a.angkatan})</option>`).join(''); }
@@ -1106,15 +1295,42 @@
         openModal('modal-history');
     }
 
-    function updateFilterOptions() {
-        const populate = (id, list, p) => { const el = document.getElementById(id); if(el) el.innerHTML = `<option value="">${p}</option>` + list.map(v => `<option value="${v}">${v}</option>`).join(''); };
-        populate('filter-kab', [...new Set(STATE.alumni.map(a => String(a.kabupaten || '')))].filter(Boolean).sort(), 'Semua Kabupaten'); 
-        populate('filter-kec', [...new Set(STATE.alumni.map(a => String(a.kecamatan || '')))].filter(Boolean).sort(), 'Semua Kecamatan'); 
-        populate('filter-desa', [...new Set(STATE.alumni.map(a => String(a.desa || '')))].filter(Boolean).sort(), 'Semua Desa');
-    }
+    function applyWilayahFilter(changedLevel = 'init') {
+        const kabSelect = document.getElementById('filter-kab');
+        const kecSelect = document.getElementById('filter-kec');
+        const desaSelect = document.getElementById('filter-desa');
 
-    function applyWilayahFilter() {
-        const kab = document.getElementById('filter-kab').value.toLowerCase(); const kec = document.getElementById('filter-kec').value.toLowerCase(); const desa = document.getElementById('filter-desa').value.toLowerCase();
+        // Jika Kabupaten diubah, reset opsi Kecamatan dan Desa di bawahnya
+        if (changedLevel === 'kab') {
+            kecSelect.value = '';
+            desaSelect.value = '';
+        } 
+        // Jika Kecamatan diubah, reset opsi Desa di bawahnya
+        else if (changedLevel === 'kec') {
+            desaSelect.value = '';
+        }
+
+        const populate = (id, list, p, currentVal) => { 
+            const el = document.getElementById(id); 
+            if(el) {
+                el.innerHTML = `<option value="">${p}</option>` + list.map(v => `<option value="${v}" ${v === currentVal ? 'selected' : ''}>${v}</option>`).join(''); 
+            }
+        };
+
+        // Filter opsi list berdasarkan parent-nya
+        let availableKec = STATE.alumni;
+        if (kabSelect.value) availableKec = availableKec.filter(a => String(a.kabupaten||'') === kabSelect.value);
+        
+        let availableDesa = availableKec;
+        if (kecSelect.value) availableDesa = availableDesa.filter(a => String(a.kecamatan||'') === kecSelect.value);
+
+        // Update isi dropdown secara dinamis
+        if (changedLevel === 'init') populate('filter-kab', [...new Set(STATE.alumni.map(a => String(a.kabupaten || '')))].filter(Boolean).sort(), 'Semua Kabupaten', kabSelect.value); 
+        if (changedLevel === 'init' || changedLevel === 'kab') populate('filter-kec', [...new Set(availableKec.map(a => String(a.kecamatan || '')))].filter(Boolean).sort(), 'Semua Kecamatan', kecSelect.value); 
+        if (changedLevel === 'init' || changedLevel === 'kab' || changedLevel === 'kec') populate('filter-desa', [...new Set(availableDesa.map(a => String(a.desa || '')))].filter(Boolean).sort(), 'Semua Desa', desaSelect.value);
+
+        // Terapkan filter ke tampilan tabel data
+        const kab = kabSelect.value.toLowerCase(); const kec = kecSelect.value.toLowerCase(); const desa = desaSelect.value.toLowerCase();
         const filteredRekap = STATE.alumni.filter(a => (!kab || String(a.kabupaten||'').toLowerCase() === kab) && (!kec || String(a.kecamatan||'').toLowerCase() === kec) && (!desa || String(a.desa||'').toLowerCase() === desa));
         renderRekapTable(filteredRekap);
     }
@@ -1413,7 +1629,7 @@
             document.getElementById('btn-add-alumni').classList.add('hidden'); 
             document.getElementById('btn-import-alumni').classList.add('hidden'); 
             document.getElementById('btn-panitia').classList.add('hidden');
-            document.getElementById('btn-add-rundown').classList.add('hidden'); // Sembunyikan tombol tambah rundown
+            document.getElementById('btn-add-rundown').classList.add('hidden'); 
         } else { 
             document.getElementById('btn-requests').classList.remove('hidden'); 
             document.getElementById('btn-add-alumni').classList.remove('hidden'); 
@@ -1620,6 +1836,15 @@
     function downloadCSV(csv, filename) { let dl = document.createElement("a"); dl.download = filename; dl.href = window.URL.createObjectURL(new Blob([csv], {type: "text/csv;charset=utf-8;"})); dl.style.display="none"; document.body.appendChild(dl); dl.click(); document.body.removeChild(dl); }
     function exportAlumniCSV() { let csv = "ID,Nama Lengkap,Angkatan,No WA,Kabupaten,Kecamatan,Desa,Alamat\n"; STATE.alumni.forEach(r => csv += [r.id, r.nama, r.angkatan, r.nowa, r.kabupaten, r.kecamatan, r.desa, r.alamat].map(v => `"${String(v||'').replace(/"/g, '""')}"`).join(",") + "\n"); downloadCSV(csv, `Alumni.csv`); closeModal('modal-export'); }
     function exportFinanceToCSV() { let csv = "Tanggal,Kategori,Nama,Status,Nominal\n"; STATE.finance.forEach(r => csv += [String(r.tanggal||'-').split(',')[0], r.kategori, r.nama_pembayar, r.status, r.nominal].map(v => `"${String(v||'').replace(/"/g, '""')}"`).join(",") + "\n"); downloadCSV(csv, `Keuangan.csv`); }
+
+    function downloadTemplateCSV() {
+        let csv = "ID,Nama Lengkap,Angkatan,No WA,Kabupaten,Kecamatan,Desa,Alamat\n";
+        csv += ",Amabar Bursa,1,,,,,Bungur sarang\n";
+        csv += ",Ahmad kusaeri ci dongkol,2,,,,,Cidongkol\n";
+        csv += ",OJAK,3,,,,,Tegallega karawang\n";
+        downloadCSV(csv, `Template_Import_Alumni.csv`);
+        notify("Template CSV diunduh! Silakan isi menggunakan Excel lalu Import.", "success");
+    }
 
     function resetIdleTimer() { idleTime = 0; }
     window.addEventListener('load', () => {
