@@ -29,7 +29,6 @@
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #2d3663; border-radius: 10px; }
     .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3); }
-    #pwa-banner { transition: bottom 0.5s ease-in-out; }
     .sort-icon { opacity: 0.3; transition: all 0.2s; }
     .sort-icon.active { opacity: 1; color: #818cf8; }
 
@@ -50,21 +49,6 @@
 <body class="min-h-screen custom-scrollbar">
 
   <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none"></div>
-
-  <!-- PWA INSTALL BANNER -->
-  <div id="pwa-banner" class="fixed -bottom-32 left-0 right-0 z-[1000] p-4 flex justify-center transition-all duration-500">
-      <div class="glass p-4 rounded-2xl shadow-2xl flex items-center justify-between w-full max-w-md border border-indigo-500/30 relative">
-          <button id="btn-close-pwa" class="absolute -top-3 -right-2 w-7 h-7 bg-slate-800 text-slate-400 hover:text-white rounded-full flex items-center justify-center border border-white/10 text-[10px] shadow-lg z-10"><i class="fas fa-times"></i></button>
-          <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><i class="fas fa-download"></i></div>
-              <div>
-                  <h4 class="font-bold text-sm text-white">Install Aplikasi</h4>
-                  <p class="text-[10px] text-slate-400">Tambahkan portal ini ke layar utama</p>
-              </div>
-          </div>
-          <button id="btn-install-pwa" class="bg-indigo-600 text-white hover:bg-indigo-500 px-4 py-2 rounded-lg font-bold text-[10px] uppercase">Install</button>
-      </div>
-  </div>
 
   <!-- LOADING OVERLAY -->
   <div id="loading-overlay" class="hidden fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center">
@@ -1635,42 +1619,12 @@
     function exportAlumniCSV() { let csv = "ID,Nama Lengkap,Angkatan,No WA,Kabupaten,Kecamatan,Desa,Alamat\n"; STATE.alumni.forEach(r => csv += [r.id, r.nama, r.angkatan, r.nowa, r.kabupaten, r.kecamatan, r.desa, r.alamat].map(v => `"${String(v||'').replace(/"/g, '""')}"`).join(",") + "\n"); downloadCSV(csv, `Alumni.csv`); closeModal('modal-export'); }
     function exportFinanceToCSV() { let csv = "Tanggal,Kategori,Nama,Status,Nominal\n"; STATE.finance.forEach(r => csv += [String(r.tanggal||'-').split(',')[0], r.kategori, r.nama_pembayar, r.status, r.nominal].map(v => `"${String(v||'').replace(/"/g, '""')}"`).join(",") + "\n"); downloadCSV(csv, `Keuangan.csv`); }
 
-    // Cek apakah aplikasi sudah diinstall (berjalan di mode standalone)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || document.referrer.includes('android-app://');
-    const isDismissed = localStorage.getItem('pwa_dismissed') === 'true';
-
     function resetIdleTimer() { idleTime = 0; }
     window.addEventListener('load', () => {
         applyTheme();
         const manifestBlob = new Blob([JSON.stringify({ "name": "Portal Panitia Reuni", "short_name": "Reuni Al-Fatah", "start_url": ".", "display": "standalone", "background_color": "#060813", "theme_color": "#6366f1", "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/1903/1903162.png", "sizes": "512x512", "type": "image/png"}] })], {type: 'application/json'});
         document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
         
-        let dp; 
-        window.addEventListener('beforeinstallprompt', (e) => { 
-            e.preventDefault(); 
-            if (isStandalone || isDismissed) return; // Jangan tampilkan jika sudah install atau pernah ditutup
-            dp = e; 
-            setTimeout(() => { document.getElementById('pwa-banner').style.bottom = '20px'; }, 3000); 
-        });
-        
-        document.getElementById('btn-install-pwa').addEventListener('click', async () => { 
-            if (dp) { 
-                document.getElementById('pwa-banner').style.bottom = '-150px'; 
-                dp.prompt(); 
-                await dp.userChoice; 
-                dp = null; 
-            } 
-        });
-
-        // Tambahkan event listener untuk tombol tutup (X)
-        const btnClosePwa = document.getElementById('btn-close-pwa');
-        if(btnClosePwa) {
-            btnClosePwa.addEventListener('click', () => {
-                document.getElementById('pwa-banner').style.bottom = '-150px';
-                localStorage.setItem('pwa_dismissed', 'true'); // Simpan preferensi agar tidak spam
-            });
-        }
-
         if(STATE.token) initDashboard(); 
         document.body.addEventListener('mousemove', resetIdleTimer); document.body.addEventListener('keypress', resetIdleTimer); document.body.addEventListener('touchstart', resetIdleTimer); document.body.addEventListener('click', resetIdleTimer);
         setInterval(() => { if(STATE.token && !document.getElementById('dashboard-screen').classList.contains('hidden')) { idleTime++; if (idleTime >= IDLE_LIMIT) logout(true); } }, 60000);
