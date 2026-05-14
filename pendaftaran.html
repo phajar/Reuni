@@ -45,39 +45,8 @@
           <div class="inline-block p-4 rounded-3xl glass shadow-2xl border border-indigo-500/30 mb-6 bg-gradient-animate">
               <i class="fas fa-mosque text-4xl text-white"></i>
           </div>
-          <h1 class="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight uppercase">Reuni Akbar <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Al-Fatah</span></h1>
+          <h1 class="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight uppercase">Registrasi <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Reuni</span></h1>
           <p class="text-sm md:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">Mari kembali menyambung tali silaturahmi, mengenang masa-masa indah, dan merajut ukhuwah islamiyah bersama keluarga besar Pondok Pesantren Al-Fatah.</p>
-      </div>
-
-      <!-- COUNTDOWN TIMER -->
-      <div class="glass p-6 md:p-8 rounded-[2.5rem] border border-white/10 shadow-2xl mb-12 w-full">
-          <h2 id="countdown-title" class="text-center text-xs md:text-sm font-bold uppercase tracking-widest text-indigo-400 mb-2"><i class="fas fa-hourglass-half mr-2"></i> Menuju Hari-H Acara</h2>
-          
-          <!-- Elemen teks tanggal acara (Hanya menampilkan tanggal, tanpa jam) -->
-          <p id="event-date-display" class="text-center text-sm md:text-base font-black text-amber-400 tracking-wide"></p>
-          
-          <!-- Elemen Info Waktu & Pengisi Acara -->
-          <div class="flex flex-col md:flex-row justify-center items-center gap-3 md:gap-6 mt-4 mb-8">
-              <div class="flex items-center gap-2 bg-indigo-500/10 px-4 py-2 rounded-xl border border-indigo-500/20">
-                  <i class="fas fa-clock text-indigo-400"></i>
-                  <!-- Default text diubah menjadi Menunggu Info Panitia -->
-                  <span id="event-time-display" class="text-xs font-bold text-indigo-200">Menunggu Info Panitia</span>
-              </div>
-              <div class="flex items-center gap-2 bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20">
-                  <i class="fas fa-star text-emerald-400"></i>
-                  <span id="event-guest-display" class="text-xs font-bold text-emerald-200">Menunggu Info Panitia</span>
-              </div>
-          </div>
-          
-          <div class="flex justify-center gap-3 md:gap-6 text-center">
-              <div class="flex flex-col"><div class="w-16 h-16 md:w-24 md:h-24 glass rounded-2xl md:rounded-[2rem] flex items-center justify-center text-2xl md:text-4xl font-black text-white shadow-inner" id="cd-days">00</div><span class="text-[10px] md:text-xs mt-2 font-bold uppercase text-slate-500">Hari</span></div>
-              <div class="text-2xl md:text-4xl font-black text-slate-600 mt-3 md:mt-6">:</div>
-              <div class="flex flex-col"><div class="w-16 h-16 md:w-24 md:h-24 glass rounded-2xl md:rounded-[2rem] flex items-center justify-center text-2xl md:text-4xl font-black text-white shadow-inner" id="cd-hours">00</div><span class="text-[10px] md:text-xs mt-2 font-bold uppercase text-slate-500">Jam</span></div>
-              <div class="text-2xl md:text-4xl font-black text-slate-600 mt-3 md:mt-6">:</div>
-              <div class="flex flex-col"><div class="w-16 h-16 md:w-24 md:h-24 glass rounded-2xl md:rounded-[2rem] flex items-center justify-center text-2xl md:text-4xl font-black text-white shadow-inner" id="cd-minutes">00</div><span class="text-[10px] md:text-xs mt-2 font-bold uppercase text-slate-500">Menit</span></div>
-              <div class="text-2xl md:text-4xl font-black text-slate-600 mt-3 md:mt-6 hidden md:block">:</div>
-              <div class="flex flex-col hidden md:flex"><div class="w-16 h-16 md:w-24 md:h-24 glass rounded-2xl md:rounded-[2rem] flex items-center justify-center text-2xl md:text-4xl font-black text-indigo-400 shadow-inner" id="cd-seconds">00</div><span class="text-[10px] md:text-xs mt-2 font-bold uppercase text-slate-500">Detik</span></div>
-          </div>
       </div>
 
       <!-- FORM PENDAFTARAN -->
@@ -150,7 +119,7 @@
               <h2 class="text-2xl font-black uppercase text-white mb-3">Pendaftaran Berhasil!</h2>
               <p class="text-slate-400 mb-8 max-w-md mx-auto">Terima kasih telah mendaftar. Data Anda sedang ditinjau oleh panitia untuk proses verifikasi. Kami akan segera menghubungi Anda melalui WhatsApp.</p>
               <button onclick="window.location.reload()" class="bg-white/10 hover:bg-white/20 text-white py-3 px-8 rounded-xl font-bold text-xs uppercase tracking-widest transition-colors border border-white/10">
-                  Kembali ke Beranda
+                  Kirim Data Baru
               </button>
           </div>
 
@@ -167,99 +136,7 @@
     // ==========================================
     
     // GANTI STRING DI BAWAH INI DENGAN URL GOOGLE APPS SCRIPT (API_URL) ANDA!
-    const API_URL = "https://script.google.com/macros/s/AKfycbwfpxodH3EpG_YI59Ws_XW8lGxBrYdScwhTodSmTqElFDWDb8ExhrD3KtFZ4LrL1VAo/exec"; 
-    
-    let timer;
-
-    async function initCountdown() {
-        try {
-            // Tampilkan status loading pada judul hitung mundur
-            document.getElementById("countdown-title").innerHTML = "<i class='fas fa-spinner fa-spin mr-2'></i> Mengambil Data Acara...";
-            
-            // Cek jika ada URL Parameter (opsional override, misal: ?date=2026-11-20T08:00)
-            const urlParams = new URLSearchParams(window.location.search);
-            const dateParam = urlParams.get('date');
-            
-            let eventDateString;
-            
-            if (dateParam && !isNaN(new Date(dateParam).getTime())) {
-                eventDateString = dateParam;
-            } else {
-                // Tarik data tanggal acara langsung dari Google Apps Script
-                const res = await fetch(API_URL + "?action=geteventinfo").then(r => r.json());
-                if (res.ok && res.date) {
-                    eventDateString = res.date;
-                    
-                    // Gunakan fallback "Menunggu Info Panitia" jika jam tidak diatur
-                    document.getElementById("event-time-display").innerText = res.time || "Menunggu Info Panitia";
-                    document.getElementById("event-guest-display").innerText = res.guest || "Menunggu Info Panitia";
-                } else {
-                    eventDateString = "TBD"; // Fallback default jika gagal
-                }
-            }
-
-            // Jika status tanggal belum ditentukan (TBD)
-            if (eventDateString === "TBD" || !eventDateString) {
-                document.getElementById("countdown-title").innerHTML = "<i class='fas fa-clock mr-2'></i> Waktu Acara";
-                document.getElementById("event-date-display").innerText = "Menunggu Info Panitia";
-                
-                // Ubah angka hitung mundur menjadi strip (-)
-                document.getElementById("cd-days").innerText = "-";
-                document.getElementById("cd-hours").innerText = "-";
-                document.getElementById("cd-minutes").innerText = "-";
-                if(document.getElementById("cd-seconds")) document.getElementById("cd-seconds").innerText = "-";
-                
-                return; // Hentikan fungsi di sini, jangan jalankan hitung mundur
-            }
-
-            const EVENT_DATE = new Date(eventDateString).getTime();
-            document.getElementById("countdown-title").innerHTML = "<i class='fas fa-hourglass-half mr-2'></i> Menuju Hari-H Acara";
-
-            // Format dan tampilkan tanggal acara dalam Bahasa Indonesia HANYA HARI DAN TANGGAL (Tanpa Jam)
-            const eventDateObj = new Date(eventDateString);
-            const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-            const formattedDate = eventDateObj.toLocaleDateString('id-ID', options);
-            document.getElementById("event-date-display").innerText = formattedDate;
-
-            // Logika Hitung Mundur (Countdown)
-            timer = setInterval(function() {
-                const now = new Date().getTime();
-                const distance = EVENT_DATE - now;
-
-                if (distance < 0) {
-                    clearInterval(timer);
-                    document.getElementById("cd-days").innerText = "00";
-                    document.getElementById("cd-hours").innerText = "00";
-                    document.getElementById("cd-minutes").innerText = "00";
-                    if(document.getElementById("cd-seconds")) document.getElementById("cd-seconds").innerText = "00";
-                    
-                    // Ubah judul jika acara sudah dimulai
-                    const titleEl = document.getElementById("countdown-title");
-                    if (titleEl) titleEl.innerHTML = "<i class='fas fa-glass-cheers mr-2'></i> Acara Sedang Berlangsung!";
-                    document.getElementById("event-date-display").innerText = "Selamat Datang di Reuni Akbar!";
-                    
-                    return;
-                }
-
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                document.getElementById("cd-days").innerText = days.toString().padStart(2, '0');
-                document.getElementById("cd-hours").innerText = hours.toString().padStart(2, '0');
-                document.getElementById("cd-minutes").innerText = minutes.toString().padStart(2, '0');
-                if(document.getElementById("cd-seconds")) document.getElementById("cd-seconds").innerText = seconds.toString().padStart(2, '0');
-            }, 1000);
-
-        } catch (error) {
-            console.error("Gagal mengambil tanggal dari GAS:", error);
-            document.getElementById("countdown-title").innerHTML = "<i class='fas fa-exclamation-triangle mr-2 text-red-500'></i> Gagal memuat data.";
-        }
-    }
-
-    // Jalankan hitung mundur
-    initCountdown();
+    const API_URL = "https://script.google.com/macros/s/AKfycbxo19MF5hSTFQgU3SDAxJfWPg3stsC-VIpRcFq659J3BtIEwSJhndR1BPgRM1XNShlr/exec"; 
 
     // Fungsi Notifikasi (Toast)
     function notify(message, type = 'success') {
@@ -271,10 +148,8 @@
         
         container.appendChild(toast);
         
-        // Animate in
         setTimeout(() => { toast.classList.remove('translate-x-full', 'opacity-0'); }, 10);
         
-        // Animate out and remove
         setTimeout(() => {
             toast.classList.add('translate-x-full', 'opacity-0');
             setTimeout(() => toast.remove(), 300);
