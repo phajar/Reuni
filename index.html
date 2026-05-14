@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#060813" />
+  <title>Panitia Reuni Akbar AL-FATAH</title>
+  
+  <link rel="manifest" id="manifest-link">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Library Tesseract untuk Scan AI OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js/dist/tesseract.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+    :root { --bg: #060813; --primary: #6366f1; }
+    body { background-color: var(--bg); color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; transition: background-color 0.3s; }
+    .glass { background: rgba(14, 18, 37, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s; }
+    .stat-value { font-size: clamp(1.1rem, 4vw, 1.6rem); word-break: break-all; font-weight: 900; line-height: 1.2; }
+    .input-field { width: 100%; padding: 12px 16px; border-radius: 12px; background: #1e2548; border: 1px solid #2d3663; color: white; outline: none; transition: all 0.3s; font-size: 14px; }
+    .input-field:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+    .nav-btn.active { background: rgba(99, 102, 241, 0.15); color: #818cf8; border-bottom: 3px solid #6366f1; }
+    @media (min-width: 768px) { .nav-btn.active { border-bottom: 0; border-right: 3px solid #6366f1; } }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #2d3663; border-radius: 10px; }
+    .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3); }
+    #pwa-banner { transition: bottom 0.5s ease-in-out; }
+    .sort-icon { opacity: 0.3; transition: all 0.2s; }
+    .sort-icon.active { opacity: 1; color: #818cf8; }
+
+    /* --- LIGHT MODE OVERRIDES --- */
+    body.light-theme { --bg: #f8fafc; color: #1e293b; }
+    body.light-theme .glass { background: rgba(255, 255, 255, 0.95); border: 1px solid rgba(0, 0, 0, 0.1); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+    body.light-theme .text-white { color: #0f172a; }
+    body.light-theme .text-slate-400 { color: #64748b; }
+    body.light-theme .text-slate-500 { color: #475569; }
+    body.light-theme .bg-white\/5 { background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; }
+    body.light-theme .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(0,0,0,0.1); }
+    body.light-theme .border-white\/10, body.light-theme .border-white\/5 { border-color: rgba(0,0,0,0.1); }
+    body.light-theme .bg-black\/20 { background-color: #f1f5f9; border: 1px solid #cbd5e1; }
+    body.light-theme input, body.light-theme select { background-color: #ffffff; border-color: #cbd5e1; color: #0f172a; }
+    body.light-theme input::placeholder { color: #94a3b8; }
+  </style>
+</head>
+<body class="min-h-screen custom-scrollbar">
+
+  <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none"></div>
+
+  <!-- PWA INSTALL BANNER -->
+  <div id="pwa-banner" class="fixed -bottom-32 left-0 right-0 z-[1000] p-4 flex justify-center">
+      <div class="glass p-4 rounded-2xl shadow-2xl flex items-center justify-between w-full max-w-md border border-indigo-500/30">
+          <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><i class="fas fa-download"></i></div>
+              <div>
+                  <h4 class="font-bold text-sm text-white">Install Aplikasi</h4>
+                  <p class="text-[10px] text-slate-400">Tambahkan portal ini ke layar utama Anda</p>
+              </div>
+          </div>
+          <button id="btn-install-pwa" class="bg-indigo-600 text-white hover:bg-indigo-500 px-4 py-2 rounded-lg font-bold text-[10px] uppercase">Install</button>
+      </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div id="loading-overlay" class="hidden fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center">
+    <div class="p-8 glass rounded-[2.5rem] flex flex-col items-center shadow-2xl border border-indigo-500/20">
+      <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      <p id="loading-text" class="mt-4 text-[10px] font-black uppercase tracking-widest text-indigo-400">Memproses...</p>
+    </div>
+  </div>
+
+  <!-- MODAL SMART MESSAGE AI -->
+  <div id="modal-ai-message" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-ai-message')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-lg rounded-[2rem] p-8 shadow-2xl border border-indigo-500/20">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-black uppercase text-indigo-400"><i class="fas fa-magic mr-2"></i> Smart Message AI</h3>
+        <button onclick="closeModal('modal-ai-message')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <p class="text-xs text-slate-400 mb-4">Draf pesan profesional siap dikirim ke alumni.</p>
+      <textarea id="ai-message-box" class="w-full h-48 input-field resize-none text-sm p-4 leading-relaxed custom-scrollbar mb-4"></textarea>
+      <div class="flex gap-3">
+        <button id="btn-copy-ai" class="flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 transition-all uppercase text-xs text-slate-300"><i class="fas fa-copy mr-2"></i> Salin</button>
+        <button id="btn-send-wa-ai" class="flex-1 py-3 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 transition-all uppercase text-xs text-white"><i class="fab fa-whatsapp mr-2"></i> Kirim WA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PENGATURAN AKUN -->
+  <div id="modal-settings" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-settings')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-indigo-500/20">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-black uppercase text-white">Pengaturan Profil</h3>
+        <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <form onsubmit="handleUpdateProfile(event)" class="space-y-4">
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nama Tampilan</label><input type="text" id="set-name" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">PIN Lama (Wajib)</label><input type="password" id="set-old-pin" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">PIN Baru (Opsional)</label><input type="password" id="set-new-pin" class="input-field" placeholder="Kosongkan jika tidak diubah" /></div>
+        <button type="submit" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-bold transition-all uppercase text-xs text-white">Simpan Profil</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL PENGATURAN INFO ACARA (KHUSUS ADMIN) -->
+  <div id="modal-event-settings" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-event-settings')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-amber-500/30">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-black uppercase text-amber-400"><i class="fas fa-calendar-alt mr-2"></i> Info Acara</h3>
+        <button onclick="closeModal('modal-event-settings')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <p class="text-xs text-slate-400 mb-6">Data ini akan otomatis diperbarui di halaman pendaftaran publik.</p>
+      
+      <form onsubmit="handleUpdateEventInfo(event)" class="space-y-4">
+          <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Tanggal Acara Reuni</label>
+              <input type="datetime-local" id="set-event-date" class="input-field text-sm py-2" />
+              <div class="mt-2 mb-1">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="set-event-tbd" onchange="document.getElementById('set-event-date').disabled = this.checked; if(this.checked) document.getElementById('set-event-date').value='';" class="w-4 h-4 text-amber-500 rounded border-white/10 bg-white/5" />
+                      <span class="text-[10px] font-bold text-amber-500/80 uppercase">Menunggu Info Panitia</span>
+                  </label>
+              </div>
+          </div>
+          <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Jam Acara (Contoh: 08:00 s/d Selesai)</label>
+              <input type="text" id="set-event-time" class="input-field text-sm py-2" placeholder="08:00 WIB s/d Selesai" />
+          </div>
+          <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Pengisi Acara / Tamu Undangan</label>
+              <input type="text" id="set-event-guest" class="input-field text-sm py-2" placeholder="Kyai/Ustadz/Tokoh..." />
+          </div>
+          <button type="submit" class="w-full mt-4 bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-bold transition-all uppercase text-[10px] text-white tracking-widest"><i class="fas fa-save mr-2"></i> Simpan Info</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL MANAJEMEN USER -->
+  <div id="modal-users" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-users')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl border border-indigo-500/20 max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-black uppercase text-indigo-400">Manajemen Pengguna</h3>
+        <button onclick="closeModal('modal-users')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <p class="text-xs text-slate-400 mb-4">Ubah role (hak akses) petugas. "Admin" memiliki akses penuh.</p>
+      <div class="overflow-y-auto custom-scrollbar flex-1 border border-white/5 rounded-xl bg-black/20">
+        <table class="w-full text-left">
+          <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase sticky top-0 backdrop-blur-md">
+            <tr><th class="p-4">Nama & Email</th><th class="p-4">Role Saat Ini</th><th class="p-4 text-center">Ubah Role</th></tr>
+          </thead>
+          <tbody id="users-list" class="divide-y divide-white/5 text-xs text-slate-300">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KONFIRMASI HAPUS -->
+  <div id="modal-delete" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-delete')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center border border-red-500/20">
+      <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fas fa-exclamation-triangle"></i></div>
+      <h3 class="text-lg font-black uppercase mb-2 text-white">Konfirmasi Hapus</h3>
+      <p class="text-slate-400 text-sm mb-8">Tindakan ini tidak dapat dibatalkan.</p>
+      <div class="flex gap-3">
+        <button onclick="closeModal('modal-delete')" class="flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 transition-all uppercase text-xs text-white">Batal</button>
+        <button id="confirm-delete-btn" class="flex-1 py-3 rounded-xl font-bold bg-red-600 hover:bg-red-500 transition-all uppercase text-xs text-white">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KONFIRMASI LOGOUT -->
+  <div id="modal-logout" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-logout')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center border border-indigo-500/20">
+      <div class="w-16 h-16 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl"><i class="fas fa-sign-out-alt"></i></div>
+      <h3 class="text-lg font-black uppercase mb-2 text-white" id="logout-title">Keluar Sistem?</h3>
+      <p class="text-slate-400 text-sm mb-8" id="logout-desc">Sesi Anda akan diakhiri.</p>
+      <div class="flex gap-3">
+        <button id="btn-cancel-logout" onclick="closeModal('modal-logout')" class="flex-1 py-3 rounded-xl font-bold bg-white/5 hover:bg-white/10 transition-all uppercase text-xs text-white">Batal</button>
+        <button onclick="confirmLogout()" class="flex-1 py-3 rounded-xl font-bold bg-red-600 hover:bg-red-500 transition-all uppercase text-xs text-white">Keluar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EXPORT -->
+  <div id="modal-export" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-export')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-white/10 text-center">
+      <h3 class="text-lg font-black uppercase mb-6 text-indigo-400">Export Laporan</h3>
+      <div class="space-y-3">
+        <button onclick="exportToPDF('a4')" class="w-full py-4 rounded-xl font-bold bg-white/5 hover:bg-indigo-600 transition-all flex items-center justify-center gap-3"><i class="fas fa-file-pdf"></i> PDF A4 (Alumni)</button>
+        <button onclick="exportAlumniCSV()" class="w-full py-4 rounded-xl font-bold bg-white/5 hover:bg-emerald-600 transition-all flex items-center justify-center gap-3"><i class="fas fa-file-excel"></i> Excel (CSV)</button>
+        
+        <div class="border-t border-white/10 my-3"></div>
+        
+        <button onclick="exportDaftarHadirPDF()" class="w-full py-4 rounded-xl font-bold bg-white/5 hover:bg-amber-600 transition-all flex items-center justify-center gap-3"><i class="fas fa-clipboard-list"></i> Cetak Daftar Hadir (PDF)</button>
+        <button onclick="openModalIDCard()" class="w-full py-4 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 text-white"><i class="fas fa-id-badge"></i> Cetak ID Card Panitia</button>
+        
+        <button onclick="closeModal('modal-export')" class="w-full py-2 mt-4 text-slate-500 font-bold uppercase text-[10px]">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CETAK ID CARD PANITIA -->
+  <div id="modal-idcard" class="hidden fixed inset-0 z-[300] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-idcard')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-indigo-500/20">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-black uppercase text-white">ID Card Panitia</h3>
+        <button onclick="closeModal('modal-idcard')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <form onsubmit="handlePrintIDCardPanitia(event)" class="space-y-4">
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nama Panitia</label>
+            <input type="text" id="idcard-nama" class="input-field" required placeholder="Cth: Ahmad Fulan" />
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Jabatan / Divisi</label>
+            <select id="idcard-jabatan" class="input-field" onchange="checkCustomJabatan(this)">
+                <option value="Ketua Panitia">Ketua Panitia</option>
+                <option value="Wakil Ketua">Wakil Ketua</option>
+                <option value="Sekretaris">Sekretaris</option>
+                <option value="Bendahara">Bendahara</option>
+                <option value="Seksi Humas">Seksi Humas</option>
+                <option value="Seksi Acara">Seksi Acara</option>
+                <option value="Seksi Publikasi">Seksi Publikasi</option>
+                <option value="Seksi Dekorasi">Seksi Dekorasi</option>
+                <option value="Seksi Dokumentasi">Seksi Dokumentasi</option>
+                <option value="Seksi Konsumsi">Seksi Konsumsi</option>
+                <option value="Seksi Keamanan">Seksi Keamanan</option>
+                <option value="custom">Lainnya (Ketik Sendiri)...</option>
+            </select>
+            <input type="text" id="idcard-jabatan-custom" class="input-field mt-2 hidden" placeholder="Ketik jabatan panitia..." />
+        </div>
+        <button type="submit" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white"><i class="fas fa-print mr-2"></i> Cetak PDF</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH PANITIA (DATABASE) -->
+  <div id="modal-panitia" class="hidden fixed inset-0 z-[300] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-panitia')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-indigo-500/20">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-black uppercase text-indigo-400">Tambah Panitia</h3>
+        <button onclick="closeModal('modal-panitia')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+      </div>
+      <p class="text-xs text-slate-400 mb-4">Simpan data panitia ke database untuk dicetak.</p>
+      <form onsubmit="handlePanitiaSubmit(event)" class="space-y-4">
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nama Lengkap</label>
+            <input type="text" id="panitia-nama" class="input-field" required placeholder="Cth: Ahmad Fulan" />
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Jabatan / Divisi</label>
+            <select id="panitia-jabatan" class="input-field" onchange="checkCustomJabatan(this)">
+                <option value="Ketua Panitia">Ketua Panitia</option>
+                <option value="Wakil Ketua">Wakil Ketua</option>
+                <option value="Sekretaris">Sekretaris</option>
+                <option value="Bendahara">Bendahara</option>
+                <option value="Seksi Acara">Seksi Acara</option>
+                <option value="Seksi Humas">Seksi Humas</option>
+                <option value="Seksi Publikasi">Seksi Publikasi</option>
+                <option value="Seksi Dekorasi">Seksi Dekorasi</option>
+                <option value="Seksi Dokumentasi">Seksi Dokumentasi</option>
+                <option value="Seksi Konsumsi">Seksi Konsumsi</option>
+                <option value="Seksi Keamanan">Seksi Keamanan</option>
+                <option value="custom">Lainnya (Ketik Sendiri)...</option>
+            </select>
+            <input type="text" id="panitia-jabatan-custom" class="input-field mt-2 hidden" placeholder="Ketik jabatan..." />
+        </div>
+        <button type="submit" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white"><i class="fas fa-save mr-2"></i> Simpan Panitia</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL INPUT ITEM RAB -->
+  <div id="modal-rab" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-rab')" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border border-indigo-500/20">
+      <h2 id="modal-rab-title" class="text-xl font-black uppercase mb-6 text-indigo-400">Input Item RAB</h2>
+      <form id="form-rab" class="space-y-4">
+        <input type="hidden" name="id" id="rab-id" />
+        <input type="hidden" name="status" id="rab-status" value="rab_belum" />
+        <input type="hidden" name="kategori" value="RAB" />
+        
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nama Item (Misal: Sewa Gedung)</label><input type="text" name="nama_pembayar" id="rab-nama" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Anggaran / Nominal (Rp)</label><input type="number" name="nominal" id="rab-nominal" class="input-field" required /></div>
+        <button type="submit" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white">Simpan Anggaran</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL ALUMNI FORM -->
+  <div id="modal-alumni" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-alumni')" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="glass relative w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <h2 id="modal-alumni-title" class="text-xl font-black uppercase mb-6 text-indigo-400">Data Profil</h2>
+      <form id="form-alumni" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="hidden" name="id" id="alm-id" />
+        <div class="md:col-span-2"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nama Lengkap</label><input type="text" name="nama" id="alm-nama" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Angkatan</label><input type="number" name="angkatan" id="alm-angkatan" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp</label><input type="text" name="nowa" id="alm-nowa" class="input-field" placeholder="Misal: 0812345678" /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kabupaten</label><input type="text" name="kabupaten" id="alm-kabupaten" class="input-field" /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kecamatan</label><input type="text" name="kecamatan" id="alm-kecamatan" class="input-field" /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Desa</label><input type="text" name="desa" id="alm-desa" class="input-field" /></div>
+        <div class="md:col-span-2"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Alamat Lengkap</label><input type="text" name="alamat" id="alm-alamat" class="input-field" /></div>
+        <button type="submit" class="md:col-span-2 mt-4 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white">Simpan Perubahan</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL RIWAYAT DONASI -->
+  <div id="modal-history" class="hidden fixed inset-0 z-[160] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-history')" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="glass relative w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center mb-6">
+        <h2 id="history-modal-title" class="text-xl font-black uppercase text-amber-400">Riwayat Transaksi</h2>
+        <button onclick="closeModal('modal-history')" class="text-slate-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <div class="overflow-y-auto custom-scrollbar flex-1 border border-white/5 rounded-xl bg-black/20">
+        <table class="w-full text-left">
+          <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase sticky top-0 backdrop-blur-md">
+            <tr><th class="p-4">Tanggal</th><th class="p-4">Kategori</th><th class="p-4 text-right">Nominal</th><th class="p-4 text-center">Aksi</th></tr>
+          </thead>
+          <tbody id="history-list" class="divide-y divide-white/5 text-xs text-slate-300"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KEUANGAN FORM -->
+  <div id="modal-finance" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-finance')" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="glass relative w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl">
+      <h2 id="modal-finance-title" class="text-xl font-black uppercase mb-6 text-emerald-400">Input Transaksi</h2>
+      <form id="form-finance" class="space-y-4">
+        <input type="hidden" name="id" id="fin-id" />
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nama / Keterangan</label>
+            <select name="ref_alumni_id" id="fin-ref-id" class="input-field mb-2" onchange="syncFinanceName(this)"><option value="">Pilih Alumni (Opsional)</option></select>
+            <input type="text" name="nama_pembayar" id="fin-nama" class="input-field" placeholder="Nama pengirim / deskripsi pengeluaran" required />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div id="fin-nominal-container" class="col-span-1"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nominal</label><input type="number" name="nominal" id="fin-nominal" class="input-field" required /></div>
+            <div id="fin-status-container" class="col-span-1"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Status</label>
+                <select name="status" id="fin-status" class="input-field"><option value="pemasukan">Pemasukan</option><option value="pengeluaran">Pengeluaran</option></select>
+            </div>
+        </div>
+        <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kategori</label>
+            <select name="kategori" id="fin-kategori" class="input-field">
+                <option value="Donasi">Donasi</option><option value="Iuran Bulanan">Iuran Bulanan</option><option value="Kas Sosial">Kas Sosial</option><option value="Infaq">Infaq</option><option value="Operasional">Operasional</option><option value="Lainnya">Lainnya</option>
+            </select>
+        </div>
+        <div id="fin-file-container">
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Bukti Gambar / Struk</label>
+            <div class="flex gap-2 mt-1">
+                <input type="file" id="fin-file" accept="image/*" class="input-field flex-1" />
+                <button type="button" onclick="scanReceiptTesseract()" id="btn-scan-struk" class="px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[10px] font-black uppercase transition-all shadow-lg flex items-center justify-center whitespace-nowrap"><i class="fas fa-magic mr-2"></i> Scan AI</button>
+            </div>
+            <p id="fin-file-help" class="text-[9px] text-slate-500 mt-1 hidden">Biarkan kosong jika tidak ingin mengubah bukti saat ini.</p>
+        </div>
+        <button type="submit" class="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white">Simpan Transaksi</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- AUTH & REGISTER MODALS -->
+  <div id="modal-public-register" class="hidden fixed inset-0 z-[600] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-public-register')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar border border-indigo-500/20">
+      <h2 class="text-xl font-black uppercase mb-2 text-indigo-400">Registrasi Alumni</h2>
+      <p class="text-xs text-slate-400 mb-6">Silakan isi data diri Anda. Data akan diverifikasi sebelum masuk ke database utama Panitia.</p>
+      <form id="form-public-register" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nama Lengkap</label><input type="text" name="nama" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Angkatan</label><input type="number" name="angkatan" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp</label><input type="text" name="nowa" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kabupaten</label><input type="text" name="kabupaten" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kecamatan</label><input type="text" name="kecamatan" class="input-field" required /></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Desa</label><input type="text" name="desa" class="input-field" required /></div>
+        <div class="md:col-span-2"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Alamat Lengkap</label><input type="text" name="alamat" class="input-field" required /></div>
+        <div class="md:col-span-2 mt-4 flex gap-3">
+          <button type="button" onclick="closeModal('modal-public-register')" class="flex-1 py-4 rounded-2xl font-bold bg-white/5 hover:bg-white/10 transition-all uppercase text-xs text-white">Batal</button>
+          <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white">Kirim Pengajuan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-register-account" class="hidden fixed inset-0 z-[600] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-register-account')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl text-center border border-indigo-500/20">
+      <h2 class="text-xl font-black uppercase mb-2 text-indigo-400">Daftar Akun Portal</h2>
+      <form onsubmit="handleRegisterAccount(event)" class="space-y-4 mt-6">
+        <input type="email" id="reg-email" class="input-field text-center" placeholder="Email Anda" required />
+        <input type="password" id="reg-pin" class="input-field text-center" placeholder="Buat PIN" required />
+        <div class="flex gap-2"><button type="button" onclick="closeModal('modal-register-account')" class="flex-1 py-4 rounded-2xl font-bold bg-white/5 hover:bg-white/10 transition-all uppercase text-xs text-white">Batal</button><button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white">Daftar</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-forgot-pin" class="hidden fixed inset-0 z-[600] flex items-center justify-center p-4">
+    <div onclick="closeModal('modal-forgot-pin')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+    <div class="glass relative w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl text-center border border-indigo-500/20">
+      <h2 class="text-xl font-black uppercase mb-2 text-indigo-400">Lupa PIN</h2>
+      <p class="text-xs text-slate-400 mb-6">PIN baru akan dikirimkan otomatis ke email Anda.</p>
+      <form onsubmit="handleForgotPin(event)" class="space-y-4">
+        <input type="email" id="forgot-email" class="input-field text-center" placeholder="Email Terdaftar" required />
+        <div class="flex gap-2"><button type="button" onclick="closeModal('modal-forgot-pin')" class="flex-1 py-4 rounded-2xl font-bold bg-white/5 hover:bg-white/10 transition-all uppercase text-xs text-white">Batal</button><button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white">Reset PIN</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 relative">
+    <button onclick="toggleTheme()" class="absolute top-6 right-6 w-12 h-12 glass rounded-full flex items-center justify-center text-slate-400 hover:text-indigo-400 transition-colors z-50">
+        <i id="theme-icon-auth" class="fas fa-moon"></i>
+    </button>
+    <div class="glass p-10 rounded-[3rem] w-full max-w-md shadow-2xl text-center">
+      <div class="w-16 h-16 bg-indigo-600 rounded-2xl mx-auto mb-6 flex items-center justify-center"><i class="fas fa-lock text-xl text-white"></i></div>
+      <h1 class="text-xl font-black mb-2 uppercase tracking-widest text-white">Admin Portal</h1>
+      <p class="text-xs text-slate-400 mb-8 font-bold">PANITIA REUNI AKBAR AL-FATAH</p>
+      
+      <input type="email" id="login-email" class="input-field mb-4 text-center" placeholder="Email" />
+      <input type="password" id="login-pin" class="input-field mb-2 text-center" placeholder="PIN" />
+      <div class="text-right mb-6"><button onclick="openModal('modal-forgot-pin')" class="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-widest transition-all">Lupa PIN?</button></div>
+      <div class="flex gap-2">
+          <button onclick="handleLogin()" class="flex-1 bg-indigo-600 py-4 rounded-2xl font-bold uppercase text-xs tracking-widest btn-hover text-white">Masuk</button>
+          <button onclick="openModal('modal-register-account')" class="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all text-indigo-400 border border-indigo-500/20">Buat Akun</button>
+      </div>
+      <div class="mt-8 border-t border-white/10 pt-6">
+        <p class="text-[10px] text-slate-400 font-bold uppercase mb-3 tracking-widest">Alumni Baru?</p>
+        <button onclick="openModal('modal-public-register')" class="w-full bg-white/5 hover:bg-white/10 py-3 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all text-indigo-400 border border-indigo-500/20">Registrasi Data Diri</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard-screen" class="hidden min-h-screen flex flex-col md:flex-row">
+    <aside class="fixed bottom-0 left-0 right-0 z-[100] md:relative md:w-64 glass p-3 md:p-8 flex md:flex-col shadow-2xl overflow-y-auto custom-scrollbar h-auto md:h-screen">
+      <div class="hidden md:block mb-8 text-center font-black italic text-white leading-tight">
+          PANITIA REUNI<br><span class="text-indigo-400 text-sm">AL-FATAH</span>
+      </div>
+      <nav class="flex md:flex-col w-full md:space-y-1">
+        <button onclick="showTab('home')" id="btn-home" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-th-large"></i> <span class="hidden md:block">Beranda</span></button>
+        <button onclick="showTab('alumni')" id="btn-alumni" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-users"></i> <span class="hidden md:block">Alumni</span></button>
+        <button onclick="showTab('panitia')" id="btn-panitia" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-id-badge"></i> <span class="hidden md:block">Kepanitiaan</span></button>
+        <button onclick="showTab('rab')" id="btn-rab" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-clipboard-list"></i> <span class="hidden md:block">RAB Acara</span></button>
+        <button onclick="showTab('rekap')" id="btn-rekap" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-map-marked-alt"></i> <span class="hidden md:block">Wilayah</span></button>
+        <button onclick="showTab('requests')" id="btn-requests" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400 relative"><i class="fas fa-user-check"></i> <span class="hidden md:block">Verifikasi</span><span id="badge-requests" class="hidden absolute top-2 right-4 w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white">0</span></button>
+        <button onclick="showTab('finance')" id="btn-finance" class="nav-btn flex-1 md:flex-none flex flex-col md:flex-row items-center gap-3 p-4 rounded-2xl font-bold text-[10px] uppercase text-slate-400"><i class="fas fa-wallet"></i> <span class="hidden md:block">Keuangan</span></button>
+        
+        <div class="hidden md:block mt-auto pt-8 space-y-2 border-t border-white/10 mt-10">
+            <button id="btn-manage-users" onclick="openModalUsers()" class="hidden w-full text-left p-4 rounded-2xl text-slate-400 hover:bg-white/5 font-bold text-[10px] uppercase transition-all"><i class="fas fa-user-shield w-5"></i> Manajemen User</button>
+            <button onclick="openSettings()" class="w-full text-left p-4 rounded-2xl text-slate-400 hover:bg-white/5 font-bold text-[10px] uppercase transition-all"><i class="fas fa-cog w-5"></i> Pengaturan</button>
+            <button onclick="logout()" class="w-full text-left p-4 rounded-2xl text-red-400 hover:bg-red-500/10 font-bold text-[10px] uppercase transition-all"><i class="fas fa-power-off w-5"></i> Keluar</button>
+        </div>
+        
+        <!-- Mobile Setup Icons -->
+        <button id="btn-manage-users-mobile" onclick="openModalUsers()" class="md:hidden hidden flex-1 p-4 rounded-2xl text-slate-400 font-bold text-[10px] uppercase"><i class="fas fa-user-shield"></i></button>
+        <button onclick="openSettings()" class="md:hidden flex-1 p-4 rounded-2xl text-slate-400 font-bold text-[10px] uppercase"><i class="fas fa-cog"></i></button>
+        <button onclick="logout()" class="md:hidden flex-1 p-4 rounded-2xl text-red-400 font-bold text-[10px] uppercase"><i class="fas fa-power-off"></i></button>
+      </nav>
+    </aside>
+
+    <main class="flex-1 p-6 md:p-12 pb-32 md:pb-12 overflow-y-auto max-h-screen custom-scrollbar relative">
+      <header class="flex justify-between items-center mb-8">
+        <div>
+          <h1 id="page-title" class="text-2xl font-black uppercase tracking-tight text-white">Dashboard</h1>
+          <p id="greeting" class="text-slate-500 text-[10px] font-black uppercase mt-1"></p>
+        </div>
+        <div class="flex gap-2">
+            <button id="btn-event-settings" onclick="openEventSettings()" class="hidden w-10 h-10 glass hover:bg-white/10 rounded-xl flex items-center justify-center transition-all text-amber-400" title="Atur Info Acara"><i class="fas fa-calendar-alt"></i></button>
+            <button onclick="toggleTheme()" class="w-10 h-10 glass hover:bg-white/10 rounded-xl flex items-center justify-center transition-all text-slate-400" title="Ubah Tema"><i id="theme-icon-dash" class="fas fa-moon"></i></button>
+            <button onclick="loadData()" class="w-10 h-10 glass hover:bg-white/10 rounded-xl flex items-center justify-center transition-all text-slate-400"><i class="fas fa-sync-alt text-xs"></i></button>
+        </div>
+      </header>
+
+      <!-- TAB BERANDA -->
+      <div id="tab-home" class="tab-content space-y-6">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div class="glass p-6 rounded-[2rem] border-l-4 border-emerald-500"><p class="text-[9px] font-bold text-slate-500 mb-1 uppercase">Pemasukan</p><div id="stat-in" class="stat-value text-emerald-500">Rp 0</div></div>
+              <div class="glass p-6 rounded-[2rem] border-l-4 border-red-500"><p class="text-[9px] font-bold text-slate-500 mb-1 uppercase">Pengeluaran</p><div id="stat-out" class="stat-value text-red-500">Rp 0</div></div>
+              <div class="glass p-6 rounded-[2rem] border-l-4 border-indigo-500"><p class="text-[9px] font-bold text-slate-500 mb-1 uppercase">Saldo Kas</p><div id="stat-balance" class="stat-value text-indigo-500">Rp 0</div></div>
+              <div class="glass p-6 rounded-[2rem] border-l-4 border-amber-500"><p class="text-[9px] font-bold text-slate-500 mb-1 uppercase">Total Alumni</p><div id="stat-alumni" class="stat-value text-amber-500">0</div></div>
+          </div>
+          
+          <!-- TARGET PENDANAAN -->
+          <div class="glass p-6 rounded-[2.5rem] border border-white/5">
+              <div class="flex justify-between items-end mb-2">
+                  <h3 class="text-sm font-black uppercase text-indigo-500"><i class="fas fa-bullseye mr-2"></i> Progress Pendanaan Acara</h3>
+                  <span class="text-xl font-black text-indigo-400" id="target-percentage">0%</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-4 mb-3 overflow-hidden border border-white/5">
+                  <div id="target-progress" class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+              </div>
+              <div class="flex justify-between text-[10px] font-bold">
+                  <span class="text-emerald-500 text-xs" id="target-current">Rp 0</span>
+                  <span class="text-slate-500 text-xs" id="target-max">Target: Rp 0 (Atur di Menu RAB)</span>
+              </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="glass p-6 rounded-[2.5rem] border border-white/5 lg:col-span-2">
+                  <h3 class="text-sm font-black uppercase text-indigo-500 mb-4"><i class="fas fa-chart-bar mr-2"></i> Grafik Arus Kas</h3>
+                  <div class="relative h-64 w-full"><canvas id="financeChart"></canvas></div>
+              </div>
+              <div class="glass p-6 rounded-[2.5rem] border border-white/5 lg:col-span-1">
+                  <h3 class="text-sm font-black uppercase text-indigo-500 mb-4"><i class="fas fa-chart-pie mr-2"></i> Kategori Masuk</h3>
+                  <div class="relative h-64 w-full"><canvas id="pieChart"></canvas></div>
+              </div>
+          </div>
+
+          <!-- KLASEMEN ANGKATAN -->
+          <div class="glass p-6 rounded-[2.5rem] border border-white/5">
+              <h3 class="text-sm font-black uppercase text-amber-500 mb-4"><i class="fas fa-trophy mr-2"></i> Klasemen Donasi Angkatan</h3>
+              <div id="leaderboard-list" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- Javascript akan mengisi klasemen di sini -->
+              </div>
+          </div>
+      </div>
+
+      <!-- TAB ALUMNI (PESERTA) -->
+      <div id="tab-alumni" class="tab-content hidden space-y-4">
+        <div class="flex flex-col lg:flex-row justify-between gap-4">
+            <div class="flex gap-2">
+                <button id="btn-add-alumni" onclick="openModalAlumni()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white"><i class="fas fa-plus mr-2"></i> Tambah</button>
+                <input type="file" id="csv-upload" accept=".csv" class="hidden" onchange="handleCSVUpload(event)">
+                <button id="btn-import-alumni" onclick="document.getElementById('csv-upload').click()" class="bg-amber-600 hover:bg-amber-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white" title="Import File Excel CSV"><i class="fas fa-upload mr-2"></i> Import</button>
+            </div>
+            <div class="relative flex-1 max-w-md"><i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i><input type="text" onkeyup="searchAlumni(this.value)" placeholder="Cari Nama/Angkatan..." class="glass pl-10 pr-4 py-3 rounded-xl text-xs outline-none border border-white/10 w-full" /></div>
+        </div>
+        <div class="glass rounded-[2rem] overflow-hidden border border-white/5">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase">
+                        <tr>
+                            <th class="p-5 cursor-pointer hover:text-indigo-400 transition-colors" onclick="sortAlumni('nama')">Profil <i id="sort-alm-nama" class="fas fa-sort sort-icon ml-1"></i></th>
+                            <th class="p-5 text-center cursor-pointer hover:text-indigo-400 transition-colors" onclick="sortAlumni('angkatan')">Angkatan <i id="sort-alm-angkatan" class="fas fa-sort sort-icon ml-1"></i></th>
+                            <th class="p-5 cursor-pointer hover:text-indigo-400 transition-colors" onclick="sortAlumni('kabupaten')">Lokasi <i id="sort-alm-kabupaten" class="fas fa-sort sort-icon ml-1"></i></th>
+                            <th class="p-5 text-center cursor-pointer hover:text-indigo-400 transition-colors" onclick="sortAlumni('totalDonasi')">Kontribusi <i id="sort-alm-totalDonasi" class="fas fa-sort sort-icon ml-1"></i></th>
+                            <th class="p-5 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alumni-list" class="divide-y divide-white/5"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="flex justify-between items-center mt-2 px-2">
+            <span id="page-info" class="text-[10px] text-slate-400 font-bold uppercase">Halaman 1 dari 1</span>
+            <div class="flex gap-2">
+                <button onclick="changePage(-1)" class="glass px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/10 transition-colors text-slate-300">&lt; Prev</button>
+                <button onclick="changePage(1)" class="glass px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/10 transition-colors text-slate-300">Next &gt;</button>
+            </div>
+        </div>
+      </div>
+
+      <!-- TAB PANITIA (DATABASE & CETAK ID CARD) -->
+      <div id="tab-panitia" class="tab-content hidden space-y-4">
+        <div class="flex flex-col lg:flex-row justify-between gap-4">
+            <button id="btn-add-panitia" onclick="openModalAddPanitia()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white w-fit"><i class="fas fa-plus mr-2"></i> Tambah Panitia</button>
+        </div>
+        <div class="glass rounded-[2rem] overflow-hidden border border-white/5">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase">
+                        <tr>
+                            <th class="p-5">Nama Lengkap</th>
+                            <th class="p-5">Divisi / Jabatan</th>
+                            <th class="p-5 text-center">Aksi ID Card</th>
+                        </tr>
+                    </thead>
+                    <tbody id="panitia-list" class="divide-y divide-white/5"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+      <!-- TAB RAB (RENCANA ANGGARAN BIAYA) -->
+      <div id="tab-rab" class="tab-content hidden space-y-4">
+        <div class="flex flex-col lg:flex-row justify-between gap-4">
+            <div class="flex gap-2">
+                <button id="btn-add-rab" onclick="openModalRAB()" class="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white w-fit"><i class="fas fa-plus mr-2"></i> Tambah Item Anggaran</button>
+                <button onclick="exportRABToPDF()" class="bg-amber-600 hover:bg-amber-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white w-fit" title="Cetak Laporan RAB"><i class="fas fa-file-pdf mr-2"></i> Cetak RAB</button>
+            </div>
+            
+            <div class="glass px-6 py-3 rounded-xl border border-indigo-500/30 flex items-center justify-between min-w-[250px]">
+                <span class="text-[10px] text-slate-400 font-bold uppercase mr-2">Total Anggaran Acara:</span>
+                <span class="text-lg font-black text-indigo-400" id="rab-total-display">Rp 0</span>
+            </div>
+        </div>
+        <div class="glass rounded-[2rem] overflow-hidden border border-white/5">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase">
+                        <tr>
+                            <th class="p-4">Nama Item / Keperluan</th>
+                            <th class="p-4">Anggaran</th>
+                            <th class="p-4 text-center">Status</th>
+                            <th class="p-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rab-list" class="divide-y divide-white/5"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+      <!-- TAB REKAP WILAYAH -->
+      <div id="tab-rekap" class="tab-content hidden space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <select id="filter-kab" onchange="applyWilayahFilter()" class="input-field"><option value="">Semua Kabupaten</option></select>
+              <select id="filter-kec" onchange="applyWilayahFilter()" class="input-field"><option value="">Semua Kecamatan</option></select>
+              <select id="filter-desa" onchange="applyWilayahFilter()" class="input-field"><option value="">Semua Desa</option></select>
+              <button onclick="openModal('modal-export')" class="bg-emerald-600 hover:bg-emerald-500 py-3 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all text-white"><i class="fas fa-file-export mr-2"></i> Export Data</button>
+          </div>
+          <div class="glass rounded-[2.5rem] overflow-hidden border border-white/5">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase">
+                        <tr><th class="p-5">Nama Alumni</th><th class="p-4 text-center">Angk.</th><th class="p-5">Alamat Lengkap</th><th class="p-5 text-center">Aksi</th></tr>
+                    </thead>
+                    <tbody id="rekap-list" class="divide-y divide-white/5"></tbody>
+                </table>
+              </div>
+          </div>
+      </div>
+
+      <!-- TAB KEUANGAN -->
+      <div id="tab-finance" class="tab-content hidden space-y-4">
+          <div class="flex flex-col lg:flex-row justify-between gap-4">
+              <button id="btn-add-finance" onclick="openModalFinance()" class="bg-emerald-600 hover:bg-emerald-500 px-8 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white"><i class="fas fa-plus mr-2"></i> Tambah Transaksi</button>
+              
+              <div class="flex flex-wrap items-center gap-2">
+                <input type="date" id="fin-start-date" class="input-field py-3 text-xs w-auto bg-white/5" onchange="applyFinanceFilter()" title="Mulai Tanggal">
+                <span class="text-slate-500 text-xs font-bold">-</span>
+                <input type="date" id="fin-end-date" class="input-field py-3 text-xs w-auto bg-white/5" onchange="applyFinanceFilter()" title="Sampai Tanggal">
+                <select id="fin-type-filter" class="input-field py-3 text-xs w-auto bg-white/5" onchange="applyFinanceFilter()">
+                    <option value="all">Semua Tipe</option><option value="pemasukan">Masuk</option><option value="pengeluaran">Keluar</option>
+                </select>
+                <div class="flex gap-2">
+                    <button onclick="exportFinanceToPDF()" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white" title="Export Laporan PDF"><i class="fas fa-file-pdf"></i></button>
+                    <button onclick="exportFinanceToCSV()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-3 rounded-xl text-[10px] font-black uppercase transition-all shadow-lg text-white" title="Export Excel (CSV)"><i class="fas fa-file-excel"></i></button>
+                </div>
+              </div>
+          </div>
+          <div class="glass rounded-[2rem] overflow-hidden border border-white/5">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase">
+                        <tr>
+                            <th class="p-5 cursor-pointer hover:text-indigo-400 transition-colors" onclick="sortFinance('tanggal')">Tanggal <i id="sort-fin-tanggal" class="fas fa-sort sort-icon ml-1"></i></th>
+                            <th class="p-5 cursor-pointer hover:text-indigo-400 transition-colors" onclick="sortFinance('nama_pembayar')">Keterangan <i id="sort-fin-nama_pembayar" class="fas fa-sort sort-icon ml-1"></i></th>
+                            <th class="p-5 cursor-pointer hover:text-indigo-400 transition-colors" onclick="sortFinance('nominal')">Nominal <i id="sort-fin-nominal" class="fas fa-sort sort-icon ml-1"></i></th>
+                            <th class="p-5 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finance-list" class="divide-y divide-white/5"></tbody>
+                </table>
+            </div>
+          </div>
+      </div>
+
+      <!-- TAB VERIFIKASI -->
+      <div id="tab-requests" class="tab-content hidden">
+          <div class="glass rounded-[2rem] overflow-hidden border border-white/5"><div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase"><tr><th class="p-5">Nama</th><th class="p-5">Angkatan</th><th class="p-5">Status</th><th class="p-5 text-center">Aksi</th></tr></thead><tbody id="request-list" class="divide-y divide-white/5"></tbody></table></div></div>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxBjVjkxc0FIOftOlASh7Ksuw4rNjso7QDN6WI4l9n1hkQf733amPnHOU74LVA9IrUx/exec";
+    
+    // Variabel Global Data
+    let STATE = { 
+        token: localStorage.getItem('af_token'), 
+        user: JSON.parse(localStorage.getItem('af_user') || 'null'), 
+        alumni: [], finance: [], rab: [], panitia: [], requests: [], users: [], eventDate: "", eventTime: "", eventGuest: "" 
+    };
+
+    let financeChart = null; 
+    let pieChart = null;
+    let currentAlumniPage = 1;
+    const ALUMNI_PER_PAGE = 10;
+    let TARGET_DANA = 100000000; 
+    
+    let filteredAlumniData = [];
+    let currentFinanceData = [];
+    let sortConfig = {
+        alumni: { key: 'created_at', dir: 'desc' },
+        finance: { key: 'tanggal', dir: 'desc' }
+    };
+    
+    let isLightMode = localStorage.getItem('af_theme') === 'light';
+    let idleTime = 0;
+    const IDLE_LIMIT = 15; 
+
+    /** UI & LOGIC CORE **/
+    function toggleLoading(s, t='Memuat...') { 
+        document.getElementById('loading-text').innerText = t;
+        document.getElementById('loading-overlay').classList.toggle('hidden', !s); 
+    }
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function formatRupiah(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(n) || 0); }
+    function notify(m, t='success') {
+        const c = document.getElementById('toast-container');
+        const d = document.createElement('div');
+        d.className = `p-4 mb-2 rounded-xl glass border-l-4 ${t==='error'?'border-red-500':'border-emerald-500'} font-bold text-[10px] uppercase shadow-2xl transition-all duration-300`;
+        d.innerText = m; c.appendChild(d);
+        setTimeout(() => { d.style.opacity = '0'; setTimeout(() => d.remove(), 300); }, 3000);
+    }
+
+    function applyTheme() {
+        if(isLightMode) {
+            document.body.classList.add('light-theme');
+            document.getElementById('theme-icon-auth').className = "fas fa-sun";
+            if(document.getElementById('theme-icon-dash')) document.getElementById('theme-icon-dash').className = "fas fa-sun";
+        } else {
+            document.body.classList.remove('light-theme');
+            document.getElementById('theme-icon-auth').className = "fas fa-moon";
+            if(document.getElementById('theme-icon-dash')) document.getElementById('theme-icon-dash').className = "fas fa-moon";
+        }
+        if(financeChart) renderFinanceChart(); 
+    }
+
+    function toggleTheme() {
+        isLightMode = !isLightMode;
+        localStorage.setItem('af_theme', isLightMode ? 'light' : 'dark');
+        applyTheme();
+    }
+
+    function getWALink(number, name) {
+        if(number == null) return '<span class="text-slate-500">-</span>';
+        let strNum = String(number).trim(); 
+        if(strNum === '') return '<span class="text-slate-500">-</span>';
+        let num = strNum.replace(/\D/g, ''); 
+        if(num === '') return '<span class="text-slate-500">-</span>';
+        if(num.startsWith('0')) num = '62' + num.substring(1);
+        return `<a href="https://wa.me/${num}" target="_blank" class="text-emerald-500 hover:text-emerald-400 font-bold transition-colors flex items-center justify-center gap-1" title="Chat WhatsApp"><i class="fab fa-whatsapp text-sm"></i> ${strNum}</a>`;
+    }
+
+    function generateAIMessage(nama, nowa) {
+        let strNum = String(nowa || '').trim().replace(/\D/g, ''); 
+        if(!strNum || strNum === '') { return notify('Nomor WhatsApp alumni tidak valid atau kosong!', 'error'); }
+        if(strNum.startsWith('0')) strNum = '62' + strNum.substring(1);
+        const aiText = `Assalamu'alaikum wr. wb.\n\nHalo *${nama}*, perkenalkan kami dari Panitia Reuni Akbar Pondok Pesantren AL-FATAH.\n\nSemoga Kakak senantiasa dalam keadaan sehat dan lancar rezekinya. Kami ingin mengundang Kakak untuk ikut berpartisipasi dan memeriahkan acara Reuni Akbar kita.\n\nBerapapun sumbangsih dan kontribusi Kakak akan sangat berarti bagi kelancaran acara silaturahmi besar almamater tercinta kita.\n\nTerima kasih atas waktu dan perhatiannya. Wassalamu'alaikum wr. wb.`;
+        document.getElementById('ai-message-box').value = aiText;
+        document.getElementById('btn-copy-ai').onclick = () => { document.getElementById('ai-message-box').select(); document.execCommand('copy'); notify('Pesan disalin ke clipboard!'); };
+        document.getElementById('btn-send-wa-ai').onclick = () => { window.open(`https://wa.me/${strNum}?text=${encodeURIComponent(document.getElementById('ai-message-box').value)}`, '_blank'); };
+        openModal('modal-ai-message');
+    }
+
+    async function scanReceiptTesseract() {
+        const fileInput = document.getElementById('fin-file');
+        if (fileInput.files.length === 0) return notify('Pilih file gambar struk terlebih dahulu!', 'error');
+        const btn = document.getElementById('btn-scan-struk'); btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Membaca...'; toggleLoading(true, 'AI sedang memindai struk (Butuh beberapa detik)...');
+        try {
+            const file = fileInput.files[0]; const { createWorker } = Tesseract;
+            const worker = await createWorker('eng', 1, { logger: m => { if (m.status === 'recognizing text' && m.progress) document.getElementById('loading-text').innerText = `Membaca teks: ${Math.round(m.progress * 100)}%`; } });
+            const { data: { text } } = await worker.recognize(file); await worker.terminate();
+            const matchNominal = text.match(/(?:Rp\.?\s?|\bIDR\s?)([\d.,]+)/i) || text.match(/\b(\d{1,3}(?:[.,]\d{3})+)\b/);
+            if (matchNominal) {
+                let rawNum = matchNominal[1].trim().replace(/[.,]\d{2}$/, '');
+                document.getElementById('fin-nominal').value = rawNum.replace(/\D/g, '');
+            }
+            const banks = ['BCA', 'BRI', 'BNI', 'MANDIRI', 'BSI', 'CIMB', 'DANA', 'OVO', 'GOPAY', 'SHOPEEPAY'];
+            let detectedBank = banks.find(b => text.toUpperCase().includes(b));
+            if (detectedBank && document.getElementById('fin-nama').value === '') document.getElementById('fin-nama').value = `Transfer via ${detectedBank}`;
+            notify('Scan selesai! Silakan periksa hasil isian.', 'success');
+        } catch (err) { notify('Gagal membaca teks dari gambar.', 'error'); } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-magic mr-2"></i> Scan AI'; toggleLoading(false); }
+    }
+
+    function openSettings() {
+        document.getElementById('set-name').value = STATE.user.nama || ''; 
+        document.getElementById('set-old-pin').value = ''; 
+        document.getElementById('set-new-pin').value = '';
+        openModal('modal-settings');
+    }
+
+    function openEventSettings() {
+        if(STATE.eventDate === 'TBD') {
+            document.getElementById('set-event-tbd').checked = true;
+            document.getElementById('set-event-date').disabled = true;
+            document.getElementById('set-event-date').value = '';
+        } else {
+            document.getElementById('set-event-tbd').checked = false;
+            document.getElementById('set-event-date').disabled = false;
+            if(STATE.eventDate) document.getElementById('set-event-date').value = STATE.eventDate.substring(0, 16);
+        }
+        
+        if(STATE.eventTime) document.getElementById('set-event-time').value = STATE.eventTime;
+        if(STATE.eventGuest) document.getElementById('set-event-guest').value = STATE.eventGuest;
+        
+        openModal('modal-event-settings');
+    }
+
+    async function handleUpdateEventInfo(e) {
+        e.preventDefault();
+        const isTbd = document.getElementById('set-event-tbd').checked;
+        const newDate = document.getElementById('set-event-date').value;
+        const newTime = document.getElementById('set-event-time').value;
+        const newGuest = document.getElementById('set-event-guest').value;
+        
+        let formattedDate = "TBD";
+        if(!isTbd) {
+            if(!newDate) return notify('Tanggal acara harus diisi jika sudah ditentukan!', 'error');
+            formattedDate = newDate.length === 16 ? newDate + ':00' : newDate;
+        }
+        
+        toggleLoading(true, 'Menyimpan Info Acara...');
+        try {
+            const res = await fetch(API_URL, { 
+                method: 'POST', 
+                body: new URLSearchParams({ action: 'seteventinfo', event_date: formattedDate, event_time: newTime, event_guest: newGuest }) 
+            }).then(r => r.json());
+            
+            if(res.ok) { 
+                STATE.eventDate = formattedDate;
+                STATE.eventTime = newTime;
+                STATE.eventGuest = newGuest;
+                closeModal('modal-event-settings');
+                notify('Info acara berhasil diperbarui!', 'success');
+            } else {
+                notify(res.error, 'error');
+            }
+        } catch (err) { 
+            notify('Gagal terhubung server.', 'error'); 
+        } finally { 
+            toggleLoading(false); 
+        }
+    }
+    
+    async function handleUpdateProfile(e) {
+        e.preventDefault(); const newName = document.getElementById('set-name').value; const oldPin = document.getElementById('set-old-pin').value; const newPin = document.getElementById('set-new-pin').value;
+        toggleLoading(true, 'Memperbarui Profil...');
+        try {
+            const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updateprofile', email: STATE.user.email, oldPin, newPin, newName }) }).then(r => r.json());
+            if(res.ok) { 
+                closeModal('modal-settings'); STATE.user.nama = newName; localStorage.setItem('af_user', JSON.stringify(STATE.user));
+                let roleName = 'Viewer'; if(STATE.user.role === 'admin_utama') roleName = 'Admin'; else if(STATE.user.role === 'bendahara') roleName = 'Bendahara'; else if(STATE.user.role === 'sekretaris') roleName = 'Sekretaris';
+                document.getElementById('greeting').innerText = `Petugas: ${STATE.user.nama} | ${roleName}`; notify('Profil berhasil diperbarui!', 'success');
+            } else notify(res.error, 'error');
+        } catch (err) { notify('Gagal terhubung server.', 'error'); } finally { toggleLoading(false); }
+    }
+
+    async function openModalUsers() {
+        toggleLoading(true, 'Memuat Data Pengguna...');
+        try { const ts = new Date().getTime(); const res = await fetch(`${API_URL}?action=listusers&t=${ts}`).then(r => r.json()); if (res.ok) { STATE.users = res.data || []; renderUsers(); openModal('modal-users'); } else notify(res.error, 'error'); } 
+        catch(e) { notify('Gagal memuat daftar pengguna.', 'error'); } finally { toggleLoading(false); }
+    }
+    
+    function renderUsers() {
+        const tbody = document.getElementById('users-list');
+        tbody.innerHTML = STATE.users.map(u => {
+            let roleLabel = 'Viewer'; let roleColor = 'bg-slate-500/20 text-slate-500';
+            if(u.role === 'admin_utama') { roleLabel = 'Admin'; roleColor = 'bg-indigo-500/20 text-indigo-500'; } else if(u.role === 'bendahara') { roleLabel = 'Bendahara'; roleColor = 'bg-emerald-500/20 text-emerald-500'; } else if(u.role === 'sekretaris') { roleLabel = 'Sekretaris'; roleColor = 'bg-amber-500/20 text-amber-500'; }
+            return `<tr class="hover:bg-black/5 transition-colors"><td class="p-4"><div class="font-bold ${isLightMode ? 'text-slate-800' : 'text-white'}">${u.name || '-'}</div><div class="text-[9px] text-slate-500">${u.email}</div></td><td class="p-4"><span class="px-2 py-1 rounded-md text-[9px] font-black uppercase ${roleColor}">${roleLabel}</span></td><td class="p-4 text-center"><select onchange="updateUserRole('${u.email}', this.value)" class="input-field py-2 text-[10px] w-auto ${u.email === STATE.user.email ? 'hidden' : ''}"><option value="user" ${u.role === 'user' || !u.role ? 'selected' : ''}>Jadikan Viewer</option><option value="sekretaris" ${u.role === 'sekretaris' ? 'selected' : ''}>Jadikan Sekretaris</option><option value="bendahara" ${u.role === 'bendahara' ? 'selected' : ''}>Jadikan Bendahara</option><option value="admin_utama" ${u.role === 'admin_utama' ? 'selected' : ''}>Jadikan Admin Utama</option></select></td></tr>`
+        }).join('');
+    }
+    
+    async function updateUserRole(email, newRole) {
+        toggleLoading(true, 'Mengubah Role...');
+        try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'setrole', identifier: email, newRole: newRole }) }).then(r => r.json()); if (res.ok) { notify('Role pengguna berhasil diubah!', 'success'); const userIndex = STATE.users.findIndex(u => u.email === email); if(userIndex !== -1) STATE.users[userIndex].role = newRole; renderUsers(); } else notify(res.error, 'error'); } 
+        catch(e) { notify('Gagal mengubah role', 'error'); } finally { toggleLoading(false); }
+    }
+
+    function parseCSV(text) {
+        let rows = text.split('\n');
+        return rows.map(row => { const cols = []; let inQuotes = false; let col = ''; for(let i=0; i<row.length; i++) { if(row[i] === '"') { inQuotes = !inQuotes; continue; } if(row[i] === ',' && !inQuotes) { cols.push(col.trim()); col=''; continue; } col += row[i]; } cols.push(col.trim()); return cols; }).filter(r => r.length > 1);
+    }
+    
+    async function handleCSVUpload(event) {
+        const file = event.target.files[0]; if(!file) return; const reader = new FileReader();
+        reader.onload = async (e) => {
+            const text = e.target.result; const rows = parseCSV(text);
+            if(rows.length < 2) return notify('File CSV kosong atau tidak valid', 'error');
+            const dataToUpload = [];
+            for(let i=1; i<rows.length; i++) { const cols = rows[i]; if(cols.length >= 2 && cols[1] !== '') dataToUpload.push({ nama: cols[1]||'', angkatan: cols[2]||'', nowa: cols[3]||'', kabupaten: cols[4]||'', kecamatan: cols[5]||'', desa: cols[6]||'', alamat: cols[7]||'' }); }
+            if(dataToUpload.length === 0) return notify('Tidak ada baris data yang valid ditemukan.', 'error');
+            toggleLoading(true, `Mengimpor ${dataToUpload.length} Data Alumni...`);
+            try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'bulkalumni', rows: JSON.stringify(dataToUpload), mode: 'append' }) }).then(r => r.json()); if(res.ok) { notify(`Berhasil mengimpor ${res.count} data!`); loadData(); } else notify(res.error, 'error'); } 
+            catch(err) { notify('Koneksi terputus saat import.', 'error'); } finally { toggleLoading(false); event.target.value = ''; }
+        };
+        reader.readAsText(file);
+    }
+
+    async function handleForgotPin(e) {
+        e.preventDefault(); const email = document.getElementById('forgot-email').value; toggleLoading(true, 'Memproses...');
+        try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'forgotpin', email }) }).then(r => r.json()); if(res.ok) { closeModal('modal-forgot-pin'); notify('PIN baru dikirim ke email Anda!', 'success'); document.getElementById('forgot-email').value = ''; } else notify(res.error, 'error'); } 
+        catch (err) { notify('Gagal server.', 'error'); } finally { toggleLoading(false); }
+    }
+    
+    async function handleRegisterAccount(e) {
+        e.preventDefault(); const email = document.getElementById('reg-email').value; const pin = document.getElementById('reg-pin').value; toggleLoading(true, 'Mendaftarkan...');
+        try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'register', email, pin }) }).then(r => r.json()); if(res.ok) { closeModal('modal-register-account'); notify('Akun berhasil dibuat! Silakan masuk.', 'success'); document.getElementById('login-email').value = email; document.getElementById('login-pin').value = ''; } else notify(res.error, 'error'); } 
+        catch (err) { notify('Error server.', 'error'); } finally { toggleLoading(false); }
+    }
+    
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value; const pin = document.getElementById('login-pin').value;
+      if(!email || !pin) return notify('Lengkapi data', 'error'); toggleLoading(true, 'Otentikasi...');
+      try { 
+        const res = await fetch(API_URL, { 
+          method: 'POST', 
+          body: new URLSearchParams({ action: 'login', email: email, pin: pin }) 
+        }).then(r => r.json()); 
+        
+        if(res.ok) { 
+          STATE.token = res.token; 
+          STATE.user = res.user; 
+          localStorage.setItem('af_token', res.token); 
+          localStorage.setItem('af_user', JSON.stringify(res.user)); 
+          initDashboard(); 
+        } else {
+          notify(res.error, 'error');
+        }
+      } 
+      catch(e) { 
+        console.error("Login Error:", e);
+        notify('Error server', 'error'); 
+      } finally { 
+        toggleLoading(false); 
+      }
+    }
+
+    async function loadData() {
+        toggleLoading(true, 'Sinkronisasi Data...');
+        try {
+            const ts = new Date().getTime(); 
+            const resAlm = await fetch(`${API_URL}?action=listalumni&t=${ts}`); const alm = await resAlm.json();
+            const resFin = await fetch(`${API_URL}?action=listfinance&t=${ts}`); const fin = await resFin.json();
+            const resReq = await fetch(`${API_URL}?action=listrequests&t=${ts}`); const req = await resReq.json();
+            const resPan = await fetch(`${API_URL}?action=listpanitia&t=${ts}`); const pan = await resPan.json();
+            const resEvt = await fetch(`${API_URL}?action=geteventinfo&t=${ts}`); const evt = await resEvt.json();
+
+            // Set Tanggal & Info Event
+            STATE.eventDate = evt.date || "2026-12-31T08:00:00";
+            STATE.eventTime = evt.time || "";
+            STATE.eventGuest = evt.guest || "";
+
+            const allFinance = fin.rows || [];
+            
+            STATE.panitia = pan.rows || [];
+            STATE.rab = allFinance.filter(f => String(f.kategori).toUpperCase() === 'RAB');
+            STATE.finance = allFinance.filter(f => f.status === 'pemasukan' || f.status === 'pengeluaran');
+            STATE.alumni = alm.rows || []; 
+            STATE.requests = req.rows || [];
+            
+            STATE.alumni = STATE.alumni.map(a => {
+                const totalD = STATE.finance.filter(f => f.ref_alumni_id === a.id && f.status === 'pemasukan').reduce((s,c) => s + (Number(c.nominal) || 0), 0);
+                return {...a, totalDonasi: totalD};
+            });
+
+            updateFilterOptions(); populateAlumniSelect();
+            filteredAlumniData = [...STATE.alumni]; currentAlumniPage = 1;
+            
+            sortAlumni(sortConfig.alumni.key, true); 
+            applyFinanceFilter(); 
+
+            renderAll();
+        } catch(e) { console.error("Gagal sinkronisasi:", e); notify('Gagal memuat: ' + e.message, 'error'); } 
+        finally { toggleLoading(false); }
+    }
+
+    function populateAlumniSelect() { const sel = document.getElementById('fin-ref-id'); sel.innerHTML = '<option value="">Pilih Alumni (Opsional)</option>' + STATE.alumni.map(a => `<option value="${a.id}" data-name="${a.nama}">${a.nama} (${a.angkatan})</option>`).join(''); }
+    function syncFinanceName(el) { const name = el.options[el.selectedIndex].getAttribute('data-name'); if(name) document.getElementById('fin-nama').value = name; }
+
+    function openModalFinance(alumniData = null) {
+        const form = document.getElementById('form-finance'); form.reset(); document.getElementById('fin-id').value = ""; document.getElementById('modal-finance-title').innerText = "Input Transaksi Baru"; document.getElementById('fin-file-help').classList.add('hidden');
+        const statusCont = document.getElementById('fin-status-container'), nomCont = document.getElementById('fin-nominal-container');
+        if(alumniData) { document.getElementById('fin-ref-id').value = alumniData.id; document.getElementById('fin-nama').value = alumniData.nama; document.getElementById('fin-status').value = 'pemasukan'; document.getElementById('fin-kategori').value = 'Donasi'; statusCont.classList.add('hidden'); nomCont.classList.replace('col-span-1', 'col-span-2'); } 
+        else { document.getElementById('fin-status').value = 'pemasukan'; statusCont.classList.remove('hidden'); nomCont.classList.replace('col-span-2', 'col-span-1'); }
+        openModal('modal-finance');
+    }
+
+    function openModalFinanceEdit(financeDataStr) {
+        const fData = JSON.parse(decodeURIComponent(financeDataStr)); const form = document.getElementById('form-finance'); form.reset();
+        const statusCont = document.getElementById('fin-status-container'), nomCont = document.getElementById('fin-nominal-container'); statusCont.classList.remove('hidden'); nomCont.classList.replace('col-span-2', 'col-span-1');
+        document.getElementById('modal-finance-title').innerText = "Edit Transaksi"; document.getElementById('fin-id').value = fData.id; document.getElementById('fin-ref-id').value = fData.ref_alumni_id || ''; document.getElementById('fin-nama').value = fData.nama_pembayar || ''; document.getElementById('fin-nominal').value = fData.nominal || ''; document.getElementById('fin-status').value = fData.status || 'pemasukan'; document.getElementById('fin-kategori').value = fData.kategori || 'Donasi'; document.getElementById('fin-file-help').classList.remove('hidden');
+        openModal('modal-finance');
+    }
+    
+    function openModalRAB(dataStr = null) {
+        const form = document.getElementById('form-rab'); form.reset();
+        if(dataStr) {
+            const data = JSON.parse(decodeURIComponent(dataStr));
+            document.getElementById('rab-id').value = data.id;
+            document.getElementById('rab-nama').value = data.nama_pembayar;
+            document.getElementById('rab-nominal').value = data.nominal;
+            document.getElementById('rab-status').value = data.status || 'rab_belum'; 
+            document.getElementById('modal-rab-title').innerText = "Edit Item RAB";
+        } else {
+            document.getElementById('rab-id').value = "";
+            document.getElementById('rab-status').value = "rab_belum";
+            document.getElementById('modal-rab-title').innerText = "Tambah Item RAB";
+        }
+        openModal('modal-rab');
+    }
+    
+    async function toggleRABStatus(id, isPaidCurrently) {
+        const newStatus = isPaidCurrently ? 'rab_belum' : 'pengeluaran';
+        toggleLoading(true, isPaidCurrently ? 'Membatalkan pembayaran...' : 'Mencatat sebagai Pengeluaran riil...');
+        try {
+            const data = { id: id, status: newStatus };
+            if (newStatus === 'pengeluaran') { data.tanggal = new Date().toLocaleString('id-ID'); }
+            const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'updatefinance', data: JSON.stringify(data) }) }).then(r => r.json());
+            if(res.ok) { loadData(); notify(isPaidCurrently ? 'Pembayaran RAB dibatalkan.' : 'Item RAB berhasil dibayar!', 'success'); } 
+            else notify(res.error, 'error');
+        } catch(e) { notify('Gagal terhubung ke server', 'error'); } finally { toggleLoading(false); }
+    }
+
+    function openModalHistory(alumniId, alumniName) {
+        document.getElementById('history-modal-title').innerText = `Riwayat: ${alumniName}`;
+        const historyData = STATE.finance.filter(f => f.ref_alumni_id === alumniId && f.status === 'pemasukan');
+        const tbody = document.getElementById('history-list'); const role = STATE.user ? STATE.user.role : 'user'; const canManageFinance = role === 'admin_utama' || role === 'bendahara';
+        if(historyData.length === 0) tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center italic text-slate-500">Belum ada riwayat.</td></tr>`;
+        else tbody.innerHTML = [...historyData].reverse().map(h => `<tr class="hover:bg-black/5 transition-colors"><td class="p-4">${String(h.tanggal||'-').split(',')[0]}</td><td class="p-4 font-bold text-indigo-500">${h.kategori}</td><td class="p-4 text-right font-black text-emerald-500">${formatRupiah(h.nominal)}</td>${canManageFinance ? `<td class="p-4 text-center"><button onclick="printReceipt('${encodeURIComponent(JSON.stringify(h))}')" class="w-7 h-7 bg-indigo-500/10 text-indigo-500 rounded-lg hover:bg-indigo-500 hover:text-white transition-all mr-1" title="Cetak Kwitansi"><i class="fas fa-receipt text-[10px]"></i></button><button onclick="openModalFinanceEdit('${encodeURIComponent(JSON.stringify(h))}')" class="w-7 h-7 bg-amber-500/10 text-amber-500 rounded-lg hover:bg-amber-500 hover:text-white transition-all" title="Edit"><i class="fas fa-edit text-[10px]"></i></button></td>` : `<td class="p-4 text-center text-slate-500">-</td>`}</tr>`).join('');
+        openModal('modal-history');
+    }
+
+    function updateFilterOptions() {
+        const populate = (id, list, p) => { const el = document.getElementById(id); if(el) el.innerHTML = `<option value="">${p}</option>` + list.map(v => `<option value="${v}">${v}</option>`).join(''); };
+        populate('filter-kab', [...new Set(STATE.alumni.map(a => String(a.kabupaten || '')))].filter(Boolean).sort(), 'Semua Kabupaten'); 
+        populate('filter-kec', [...new Set(STATE.alumni.map(a => String(a.kecamatan || '')))].filter(Boolean).sort(), 'Semua Kecamatan'); 
+        populate('filter-desa', [...new Set(STATE.alumni.map(a => String(a.desa || '')))].filter(Boolean).sort(), 'Semua Desa');
+    }
+
+    function applyWilayahFilter() {
+        const kab = document.getElementById('filter-kab').value.toLowerCase(); const kec = document.getElementById('filter-kec').value.toLowerCase(); const desa = document.getElementById('filter-desa').value.toLowerCase();
+        const filteredRekap = STATE.alumni.filter(a => (!kab || String(a.kabupaten||'').toLowerCase() === kab) && (!kec || String(a.kecamatan||'').toLowerCase() === kec) && (!desa || String(a.desa||'').toLowerCase() === desa));
+        renderRekapTable(filteredRekap);
+    }
+
+    function renderRekapTable(data = STATE.alumni) {
+        const list = document.getElementById('rekap-list'); const role = STATE.user ? STATE.user.role : 'user'; const canManageFinance = role === 'admin_utama' || role === 'bendahara';
+        list.innerHTML = data.map(a => `<tr class="hover:bg-black/5"><td class="p-5 font-bold">${a.nama}</td><td class="p-4 text-center font-black text-indigo-500">${a.angkatan}</td><td class="p-5 text-[11px] text-slate-500 leading-relaxed">${a.alamat || '-'}</td><td class="p-5 text-center"><div class="flex justify-center gap-2">${canManageFinance ? `<button onclick='openModalFinance(${JSON.stringify(a)})' class="w-8 h-8 text-emerald-500 bg-emerald-500/10 rounded-lg hover:bg-emerald-500 hover:text-white transition-all" title="Catat Donasi"><i class="fas fa-coins text-[10px]"></i></button>` : '<span class="text-slate-500">-</span>'}</div></td></tr>`).join('');
+    }
+
+    function updateSortIcons(prefix, activeKey) {
+        const configKey = prefix === 'alm' ? 'alumni' : 'finance';
+        document.querySelectorAll(`[id^="sort-${prefix}-"]`).forEach(i => { i.className = 'fas fa-sort sort-icon ml-1'; });
+        const icon = document.getElementById(`sort-${prefix}-${activeKey}`);
+        if(icon && sortConfig && sortConfig[configKey]) {
+            const dir = sortConfig[configKey].dir; icon.className = `fas fa-sort-${dir==='asc'?'up':'down'} sort-icon active ml-1`;
+        }
+    }
+
+    function sortAlumni(key, maintainDir = false) {
+        if(!maintainDir) {
+            if(sortConfig.alumni.key === key) sortConfig.alumni.dir = sortConfig.alumni.dir === 'asc' ? 'desc' : 'asc';
+            else { sortConfig.alumni.key = key; sortConfig.alumni.dir = 'asc'; }
+        }
+        filteredAlumniData.sort((a, b) => {
+            let valA = a[key]; let valB = b[key];
+            if(key === 'angkatan' || key === 'totalDonasi') { valA = Number(valA)||0; valB = Number(valB)||0; }
+            else { valA = String(valA||'').toLowerCase(); valB = String(valB||'').toLowerCase(); }
+            if(valA < valB) return sortConfig.alumni.dir === 'asc' ? -1 : 1;
+            if(valA > valB) return sortConfig.alumni.dir === 'asc' ? 1 : -1;
+            return 0;
+        });
+        updateSortIcons('alm', sortConfig.alumni.key); renderAlumniTable();
+    }
+
+    function changePage(delta) {
+        const totalPages = Math.ceil(filteredAlumniData.length / ALUMNI_PER_PAGE); currentAlumniPage += delta;
+        if(currentAlumniPage < 1) currentAlumniPage = 1; if(currentAlumniPage > totalPages) currentAlumniPage = totalPages; renderAlumniTable();
+    }
+
+    function renderAlumniTable() {
+        const role = STATE.user ? STATE.user.role : 'user'; 
+        const canManageAlumni = role === 'admin_utama' || role === 'sekretaris'; 
+        const canManageFinance = role === 'admin_utama' || role === 'bendahara';
+        const totalPages = Math.ceil(filteredAlumniData.length / ALUMNI_PER_PAGE) || 1; document.getElementById('page-info').innerText = `Halaman ${currentAlumniPage} dari ${totalPages}`;
+        const pageData = filteredAlumniData.slice((currentAlumniPage - 1) * ALUMNI_PER_PAGE, currentAlumniPage * ALUMNI_PER_PAGE);
+        document.getElementById('alumni-list').innerHTML = pageData.map(a => {
+            const history = STATE.finance.filter(f => f.ref_alumni_id === a.id && f.status === 'pemasukan');
+            const safeStr = encodeURIComponent(JSON.stringify(a));
+            // Hapus tombol cetak ID Card dari peserta sesuai permintaan
+            return `<tr><td class="p-5 font-bold">${a.nama}<div class="text-[10px] mt-1">${getWALink(a.nowa, a.nama)}</div></td><td class="p-5 text-center font-black text-indigo-500">${a.angkatan}</td><td class="p-5 text-[10px] text-slate-500 uppercase">${a.desa || '-'}, ${a.kabupaten || '-'}</td><td class="p-5 text-center"><div class="font-black text-emerald-500">${formatRupiah(a.totalDonasi)}</div><div class="text-[9px] font-bold text-slate-400 mt-1">${history.length}x Partisipasi</div></td><td class="p-5 text-center"><div class="flex justify-center gap-1 md:gap-2"><button onclick='generateAIMessage("${a.nama}", "${a.nowa}")' class="w-7 h-7 text-white bg-indigo-600 hover:bg-indigo-500 transition-colors rounded-lg shadow-lg" title="AI Smart Message ✨"><i class="fas fa-magic text-[10px]"></i></button><button onclick='openModalHistory("${a.id}", "${a.nama}")' class="w-7 h-7 text-amber-500 bg-amber-500/10 hover:bg-amber-500 hover:text-white transition-colors rounded-lg" title="Riwayat"><i class="fas fa-history text-[10px]"></i></button>${canManageFinance ? `<button onclick='openModalFinance(${JSON.stringify(a)})' class="w-7 h-7 text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white transition-colors rounded-lg" title="Donasi"><i class="fas fa-coins text-[10px]"></i></button>` : ''}${canManageAlumni ? `<button onclick='openModalAlumni(${JSON.stringify(a)})' class="w-7 h-7 text-slate-500 bg-slate-500/10 hover:bg-slate-500 hover:text-white transition-colors rounded-lg" title="Edit"><i class="fas fa-pen text-[10px]"></i></button>` : ''}</div></td></tr>`
+        }).join('');
+    }
+
+    function renderPanitiaTable() {
+        const tbody = document.getElementById('panitia-list');
+        const role = STATE.user ? STATE.user.role : 'user';
+        const canManage = role === 'admin_utama' || role === 'sekretaris';
+        if(!tbody) return;
+        
+        tbody.innerHTML = STATE.panitia.map(p => {
+            const safeStr = encodeURIComponent(JSON.stringify(p));
+            let actions = `<button onclick="printIDCard('${safeStr}')" class="w-7 h-7 bg-indigo-500/10 text-indigo-500 rounded hover:bg-indigo-500 hover:text-white transition-all" title="Cetak ID Card"><i class="fas fa-id-badge text-[10px]"></i></button>`;
+            if(canManage) {
+                actions += `<button onclick="handleDelete('deletepanitia', '${p.id}')" class="w-7 h-7 ml-1 bg-red-500/10 text-red-500 rounded hover:bg-red-500 hover:text-white transition-all" title="Hapus"><i class="fas fa-trash-alt text-[10px]"></i></button>`;
+            }
+            return `<tr class="hover:bg-black/5 transition-colors"><td class="p-4 font-bold ${isLightMode ? 'text-slate-800' : 'text-white'}">${p.nama}</td><td class="p-4 font-black text-amber-500 uppercase text-[10px]">${p.jabatan}</td><td class="p-4 text-center">${actions}</td></tr>`;
+        }).join('');
+        
+        if(STATE.panitia.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-500 text-xs italic">Belum ada data panitia. Silakan klik "Tambah Panitia".</td></tr>`;
+        }
+    }
+
+    function renderLeaderboard() {
+        const angkatanMap = {};
+        STATE.finance.forEach(f => {
+            if(f.status === 'pemasukan' && f.ref_alumni_id) {
+                const alumni = STATE.alumni.find(a => a.id === f.ref_alumni_id);
+                if(alumni && alumni.angkatan) { const angk = alumni.angkatan; angkatanMap[angk] = (angkatanMap[angk] || 0) + (Number(f.nominal) || 0); }
+            }
+        });
+        const sorted = Object.keys(angkatanMap).map(k => ({ angkatan: k, total: angkatanMap[k] })).sort((a,b) => b.total - a.total).slice(0, 3);
+        const container = document.getElementById('leaderboard-list'); if(!container) return;
+        if(sorted.length === 0) { container.innerHTML = `<div class="col-span-full text-center text-slate-500 text-xs italic py-4">Belum ada data donasi per angkatan.</div>`; return; }
+        const medals = ['text-yellow-400', 'text-slate-300', 'text-amber-600']; const borderColors = ['border-yellow-400/30', 'border-slate-300/30', 'border-amber-600/30'];
+        container.innerHTML = sorted.map((s, i) => `<div class="flex items-center justify-between p-4 bg-black/20 rounded-[1.5rem] border ${borderColors[i]} shadow-lg"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-black ${medals[i]} bg-white/5"><i class="fas fa-medal"></i></div><div><div class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Angkatan</div><div class="text-lg font-black ${isLightMode ? 'text-slate-800' : 'text-white'}">${s.angkatan}</div></div></div><div class="text-sm font-black text-emerald-500">${formatRupiah(s.total)}</div></div>`).join('');
+    }
+
+    function renderRABTable() {
+        const tbody = document.getElementById('rab-list'); const totalDisplay = document.getElementById('rab-total-display'); const role = STATE.user ? STATE.user.role : 'user'; const canManageFinance = role === 'admin_utama' || role === 'bendahara';
+        if(!tbody) return;
+        let total = 0;
+        tbody.innerHTML = STATE.rab.map(r => {
+            total += Number(r.nominal) || 0;
+            const isPaid = r.status === 'pengeluaran'; 
+            let actions = canManageFinance ? `<div class="flex justify-center items-center gap-2">${isPaid ? `<button onclick="toggleRABStatus('${r.id}', true)" class="px-2 py-1 bg-red-500/10 text-red-500 rounded text-[9px] font-bold hover:bg-red-500 hover:text-white transition-all whitespace-nowrap"><i class="fas fa-times mr-1"></i> Batal</button>` : `<button onclick="toggleRABStatus('${r.id}', false)" class="px-2 py-1 bg-emerald-500/10 text-emerald-500 rounded text-[9px] font-bold hover:bg-emerald-500 hover:text-white transition-all whitespace-nowrap"><i class="fas fa-check mr-1"></i> Bayar</button>`}<button onclick="openModalRAB('${encodeURIComponent(JSON.stringify(r))}')" class="w-6 h-6 bg-indigo-500/10 text-indigo-500 rounded hover:bg-indigo-500 hover:text-white transition-all"><i class="fas fa-edit text-[10px]"></i></button><button onclick="handleDelete('deletefinance', '${r.id}')" class="w-6 h-6 bg-red-500/10 text-red-500 rounded hover:bg-red-500 hover:text-white transition-all"><i class="fas fa-trash-alt text-[10px]"></i></button></div>` : '-';
+            const statusBadge = isPaid ? `<span class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-500 text-[8px] font-black uppercase shadow-sm"><i class="fas fa-check-circle mr-1"></i> Sudah Dibayar</span>` : `<span class="px-2 py-1 rounded bg-amber-500/20 text-amber-500 text-[8px] font-black uppercase"><i class="fas fa-clock mr-1"></i> Belum Dibayar</span>`;
+            return `<tr class="hover:bg-black/5 transition-colors"><td class="p-4 font-bold ${isLightMode ? 'text-slate-800' : 'text-white'}">${r.nama_pembayar}</td><td class="p-4 font-black text-indigo-400">${formatRupiah(r.nominal)}</td><td class="p-4 text-center">${statusBadge}</td><td class="p-4 text-center">${actions}</td></tr>`
+        }).join('');
+        if(STATE.rab.length === 0) tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500 text-xs italic">Belum ada rincian RAB.</td></tr>`;
+        totalDisplay.innerText = formatRupiah(total);
+    }
+
+    function sortFinance(key, maintainDir = false) {
+        if(!maintainDir) { if(sortConfig.finance.key === key) sortConfig.finance.dir = sortConfig.finance.dir === 'asc' ? 'desc' : 'asc'; else { sortConfig.finance.key = key; sortConfig.finance.dir = 'asc'; } }
+        currentFinanceData.sort((a, b) => {
+            let valA = a[key], valB = b[key];
+            if(key === 'nominal') { valA = Number(valA)||0; valB = Number(valB)||0; } else if (key === 'tanggal') { valA = a.created_at || valA; valB = b.created_at || valB; } else { valA = String(valA||'').toLowerCase(); valB = String(valB||'').toLowerCase(); }
+            if(valA < valB) return sortConfig.finance.dir === 'asc' ? -1 : 1; if(valA > valB) return sortConfig.finance.dir === 'asc' ? 1 : -1; return 0;
+        });
+        updateSortIcons('fin', sortConfig.finance.key); renderFinanceTable();
+    }
+
+    function applyFinanceFilter() {
+        const typeFilter = document.getElementById('fin-type-filter').value;
+        const startDateStr = document.getElementById('fin-start-date').value; 
+        const endDateStr = document.getElementById('fin-end-date').value;     
+        currentFinanceData = STATE.finance;
+        if(typeFilter !== 'all') currentFinanceData = currentFinanceData.filter(f => f.status === typeFilter);
+        if(startDateStr || endDateStr) {
+            const startObj = startDateStr ? new Date(startDateStr) : new Date('1970-01-01'); startObj.setHours(0,0,0,0);
+            const endObj = endDateStr ? new Date(endDateStr) : new Date('2099-12-31'); endObj.setHours(23,59,59,999);
+            currentFinanceData = currentFinanceData.filter(f => { if(!f.tanggal) return false; const tParts = String(f.tanggal).split(',')[0].split('/'); if(tParts.length < 3) return false; const dateObj = new Date(tParts[2], parseInt(tParts[1])-1, tParts[0]); return dateObj >= startObj && dateObj <= endObj; });
+        }
+        sortFinance(sortConfig.finance.key, true);
+    }
+
+    function renderFinanceTable() {
+        const role = STATE.user ? STATE.user.role : 'user'; const canManageFinance = role === 'admin_utama' || role === 'bendahara';
+        document.getElementById('finance-list').innerHTML = currentFinanceData.map(f => {
+            const safeStr = encodeURIComponent(JSON.stringify(f));
+            return `<tr class="text-[11px] hover:bg-black/5"><td class="p-5 font-bold text-slate-500">${String(f.tanggal||'').split(',')[0]}</td><td class="p-5"><div class="font-bold">${f.nama_pembayar}</div><div class="text-[8px] text-indigo-500 font-bold uppercase tracking-wider">${f.kategori}</div></td><td class="p-5 font-black ${f.status==='pengeluaran'?'text-red-500':'text-emerald-500'}">${formatRupiah(f.nominal)}</td><td class="p-5 text-center"><div class="flex justify-center gap-2">${f.status==='pemasukan' ? `<button onclick="printReceipt('${safeStr}')" class="w-7 h-7 flex items-center justify-center bg-indigo-500/10 hover:bg-indigo-500 hover:text-white transition-colors text-indigo-500 rounded-lg" title="Cetak Kwitansi"><i class="fas fa-receipt text-[10px]"></i></button>`:''}${f.bukti_url ? `<a href="${f.bukti_url}" target="_blank" class="w-7 h-7 flex items-center justify-center bg-slate-500/10 hover:bg-slate-500 hover:text-white transition-colors text-slate-500 rounded-lg" title="Lihat Bukti"><i class="fas fa-image text-[10px]"></i></a>` : ''}${canManageFinance && f.kategori !== 'RAB' ? `<button onclick="openModalFinanceEdit('${safeStr}')" class="w-7 h-7 flex items-center justify-center bg-amber-500/10 hover:bg-amber-500 hover:text-white transition-colors text-amber-500 rounded-lg"><i class="fas fa-edit text-[10px]"></i></button><button onclick="handleDelete('deletefinance', '${f.id}')" class="w-7 h-7 flex items-center justify-center bg-red-500/10 hover:bg-red-500 hover:text-white transition-colors text-red-500 rounded-lg"><i class="fas fa-trash-alt text-[10px]"></i></button>` : ''}</div></td></tr>`
+        }).join('');
+    }
+
+    function renderAll() {
+        let pin=0, pout=0;
+        STATE.finance.forEach(f => { let v=Number(f.nominal)||0; if(f.status==='pengeluaran') pout+=v; else pin+=v; });
+        document.getElementById('stat-in').innerText = formatRupiah(pin); document.getElementById('stat-out').innerText = formatRupiah(pout);
+        document.getElementById('stat-balance').innerText = formatRupiah(pin-pout); document.getElementById('stat-alumni').innerText = STATE.alumni.length;
+        let totalRAB = STATE.rab.reduce((s, c) => s + (Number(c.nominal) || 0), 0); TARGET_DANA = totalRAB > 0 ? totalRAB : 1;
+        const pct = Math.min((pin / TARGET_DANA) * 100, 100).toFixed(1);
+        const targetProgress = document.getElementById('target-progress');
+        if(targetProgress) { targetProgress.style.width = pct + '%'; document.getElementById('target-percentage').innerText = pct + '%'; document.getElementById('target-current').innerText = formatRupiah(pin); document.getElementById('target-max').innerText = totalRAB > 0 ? `Target RAB: ${formatRupiah(totalRAB)}` : 'RAB Belum Diatur'; }
+        
+        renderRABTable(); renderPanitiaTable(); sortAlumni(sortConfig.alumni.key, true); renderLeaderboard();
+        
+        const role = STATE.user ? STATE.user.role : 'user'; const canManageAlumni = role === 'admin_utama' || role === 'sekretaris';
+        const pending = STATE.requests.filter(r => String(r.status || '').trim().toLowerCase() === 'pending');
+        document.getElementById('badge-requests').innerText = pending.length; document.getElementById('badge-requests').classList.toggle('hidden', pending.length === 0);
+        document.getElementById('request-list').innerHTML = STATE.requests.map(r => {
+            const isPending = String(r.status || '').trim().toLowerCase() === 'pending';
+            let actionsHTML = isPending ? (canManageAlumni ? `<button onclick="handleRequest('${r.id}', 'approverequest')" class="text-emerald-500 mx-1" title="Setujui"><i class="fas fa-check-circle"></i></button><button onclick="handleRequest('${r.id}', 'rejectrequest')" class="text-red-500 mx-1" title="Tolak"><i class="fas fa-times-circle"></i></button>` : `<span class="text-amber-500" title="Butuh tindakan Sekretaris/Admin"><i class="fas fa-lock"></i></span>`) : '-';
+            return `<tr><td class="p-5 font-bold">${r.nama}</td><td class="p-5 font-black text-indigo-500">${r.angkatan}</td><td class="p-5 uppercase text-[9px] font-black ${isPending?'text-amber-500':'text-emerald-500'}">${r.status}</td><td class="p-5 text-center">${actionsHTML}</td></tr>`;
+        }).join('');
+        applyFinanceFilter(); renderRekapTable(); renderFinanceChart();
+    }
+
+    function renderFinanceChart() {
+        const ctx = document.getElementById('financeChart'), ctxPie = document.getElementById('pieChart'); if(!ctx || !ctxPie) return;
+        const monthlyDataMap = new Map(), monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"], categoryMap = {};
+        STATE.finance.forEach(f => {
+            const nominal = Number(f.nominal) || 0;
+            if(f.tanggal) { const parts = String(f.tanggal).split(',')[0].split('/'); if(parts.length >= 3) { const mIndex = parseInt(parts[1]) - 1; const year = parts[2].trim(); const monthYear = (mIndex >= 0 && mIndex < 12) ? `${monthNames[mIndex]} ${year}` : String(f.tanggal).split(',')[0]; if(!monthlyDataMap.has(monthYear)) monthlyDataMap.set(monthYear, { in: 0, out: 0 }); if(f.status === 'pengeluaran') monthlyDataMap.get(monthYear).out += nominal; else monthlyDataMap.get(monthYear).in += nominal; } }
+            if(f.status === 'pemasukan') { const cat = f.kategori || 'Lainnya'; categoryMap[cat] = (categoryMap[cat] || 0) + nominal; }
+        });
+        const labels = Array.from(monthlyDataMap.keys()).slice(-6), dataIn = labels.map(l => monthlyDataMap.get(l).in), dataOut = labels.map(l => monthlyDataMap.get(l).out);
+        if(financeChart) financeChart.destroy(); Chart.defaults.color = isLightMode ? '#64748b' : '#cbd5e1'; Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        financeChart = new Chart(ctx, { type: 'bar', data: { labels: labels.length > 0 ? labels : ['Belum ada'], datasets: [{ label: 'Pemasukan', data: dataIn.length > 0 ? dataIn : [0], backgroundColor: '#10b981', borderRadius: 4 }, { label: 'Pengeluaran', data: dataOut.length > 0 ? dataOut : [0], backgroundColor: '#ef4444', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: isLightMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } } } });
+        const pieLabels = Object.keys(categoryMap), pieData = Object.values(categoryMap);
+        if(pieChart) pieChart.destroy(); pieChart = new Chart(ctxPie, { type: 'doughnut', data: { labels: pieLabels.length ? pieLabels : ['Kosong'], datasets: [{ data: pieData.length ? pieData : [1], backgroundColor: pieData.length ? ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'] : ['#334155'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: {size: 9} } }, tooltip: { callbacks: { label: function(c) { return pieData.length ? ` ${c.label}: ${formatRupiah(c.raw)}` : ' Belum ada data'; } } } } } });
+    }
+
+    // FORM HANDLERS 
+    function handlePanitiaSubmit(e) {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true;
+        const nama = document.getElementById('panitia-nama').value;
+        let jabatan = document.getElementById('panitia-jabatan').value;
+        if(jabatan === 'custom') jabatan = document.getElementById('panitia-jabatan-custom').value;
+        
+        toggleLoading(true, 'Menyimpan Panitia...');
+        const data = { nama: nama, jabatan: jabatan };
+        
+        fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'addpanitia', data: JSON.stringify(data) }) })
+        .then(r => r.json()).then(res => {
+            if(res.ok) { closeModal('modal-panitia'); notify('Panitia berhasil ditambahkan!', 'success'); loadData(); e.target.reset(); } 
+            else notify(res.error, 'error');
+        }).catch(err => notify('Gagal terhubung server.', 'error')).finally(() => { toggleLoading(false); btn.disabled = false; });
+    }
+
+    document.getElementById('form-rab').onsubmit = async (e) => {
+        e.preventDefault(); const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true;
+        try { const fd = new FormData(e.target); const data = Object.fromEntries(fd.entries()); const isEdit = data.id !== ""; const action = isEdit ? 'updatefinance' : 'addfinance'; toggleLoading(true, isEdit ? 'Menyimpan...' : 'Menyimpan Anggaran RAB...'); data.updated_by = STATE.user.email; if(!isEdit) data.tanggal = new Date().toLocaleString('id-ID'); else delete data.tanggal; const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: action, data: JSON.stringify(data) }) }).then(r => r.json()); if(res.ok) { closeModal('modal-rab'); notify('Item RAB Tersimpan!', 'success'); loadData(); e.target.reset(); } else notify(res.error, 'error'); } catch (err) { notify('Gagal simpan', 'error'); } finally { toggleLoading(false); btn.disabled = false; }
+    };
+    document.getElementById('form-finance').onsubmit = async (e) => {
+        e.preventDefault(); const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true;
+        try { const fd = new FormData(e.target); const data = Object.fromEntries(fd.entries()); const isEdit = data.id !== ""; const action = isEdit ? 'updatefinance' : 'addfinance'; toggleLoading(true, isEdit ? 'Menyimpan...' : 'Menyimpan Transaksi...'); const fileInput = document.getElementById('fin-file'); if (fileInput.files.length > 0) { const file = fileInput.files[0]; const reader = new FileReader(); const dataUrl = await new Promise(r => { reader.onload = () => r(reader.result); reader.readAsDataURL(file); }); toggleLoading(true, 'Mengunggah Bukti ke Drive...'); const uploadRes = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'uploadbukti', filename: file.name, mime: file.type, dataUrl: dataUrl }) }).then(r => r.json()); if (uploadRes.ok && uploadRes.file) { data.bukti_url = uploadRes.file.webViewLink; data.bukti_file_id = uploadRes.file.fileId; data.bukti_mime = uploadRes.file.mime; } else throw new Error(uploadRes.error || 'Gagal unggah'); } data.updated_by = STATE.user.email; if(!isEdit) data.tanggal = new Date().toLocaleString('id-ID'); else delete data.tanggal; const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: action, data: JSON.stringify(data) }) }).then(r => r.json()); if(res.ok) { closeModal('modal-finance'); if(!document.getElementById('modal-history').classList.contains('hidden')) closeModal('modal-history'); notify(isEdit ? 'Diperbarui!' : 'Berhasil!'); loadData(); e.target.reset(); } else notify(res.error, 'error'); } catch (err) { notify('Gagal simpan', 'error'); } finally { toggleLoading(false); btn.disabled = false; }
+    };
+    document.getElementById('form-alumni').onsubmit = async (e) => { e.preventDefault(); toggleLoading(true, 'Menyimpan...'); const data = Object.fromEntries(new FormData(e.target).entries()); const action = data.id ? 'updatealumni' : 'addalumni'; data.updated_by = STATE.user.email; try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action, data: JSON.stringify(data) }) }).then(r => r.json()); if(res.ok) { closeModal('modal-alumni'); loadData(); } } finally { toggleLoading(false); } };
+    document.getElementById('form-public-register').onsubmit = async (e) => { e.preventDefault(); const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true; toggleLoading(true, 'Mengirim Pengajuan...'); try { const data = Object.fromEntries(new FormData(e.target).entries()); const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'submitalumni', data: JSON.stringify(data) }) }).then(r => r.json()); if(res.ok) { closeModal('modal-public-register'); notify('Pengajuan Berhasil!', 'success'); e.target.reset(); } else notify(res.error, 'error'); } catch (err) { notify('Gagal terhubung.', 'error'); } finally { toggleLoading(false); btn.disabled = false; } };
+    async function handleRequest(id, action) { toggleLoading(true, 'Memproses verifikasi...'); try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action, id, approved_by: STATE.user.email }) }).then(r => r.json()); if(res.ok) { notify('Berhasil disetujui/ditolak!', 'success'); await loadData(); } else notify(res.error || 'Gagal memproses.', 'error'); } catch(e) { notify('Gagal terhubung ke server', 'error'); } finally { toggleLoading(false); } }
+    function handleDelete(action, id) { openModal('modal-delete'); const confirmBtn = document.getElementById('confirm-delete-btn'); const newBtn = confirmBtn.cloneNode(true); confirmBtn.parentNode.replaceChild(newBtn, confirmBtn); newBtn.onclick = async () => { closeModal('modal-delete'); toggleLoading(true, 'Menghapus...'); try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action, id }) }).then(r => r.json()); if(res.ok) loadData(); else notify(res.error, 'error'); } catch(e) { notify('Gagal', 'error'); } finally { toggleLoading(false); } }; }
+    function logout(auto = false) { if(auto) { document.getElementById('logout-title').innerText = "Sesi Berakhir"; document.getElementById('logout-desc').innerText = "Anda dikeluarkan karena tidak ada aktivitas selama 15 menit."; document.getElementById('btn-cancel-logout').classList.add('hidden'); } else { document.getElementById('logout-title').innerText = "Keluar Sistem?"; document.getElementById('logout-desc').innerText = "Sesi Anda akan diakhiri."; document.getElementById('btn-cancel-logout').classList.remove('hidden'); } openModal('modal-logout'); }
+    function confirmLogout() { localStorage.clear(); location.reload(); }
+    function openModalAlumni(data = null) { const f = document.getElementById('form-alumni'); f.reset(); document.getElementById('alm-id').value = data ? data.id : ''; document.getElementById('modal-alumni-title').innerText = data ? "Edit Profil Alumni" : "Tambah Alumni Baru"; if(data) ['nama','angkatan','nowa','kabupaten','kecamatan','desa','alamat'].forEach(k => { const el = document.getElementById('alm-'+k); if(el) el.value = data[k] || ''; }); openModal('modal-alumni'); }
+    function searchAlumni(v) { filteredAlumniData = STATE.alumni.filter(a => String(a.nama || '').toLowerCase().includes(v.toLowerCase()) || String(a.angkatan || '').includes(v)); currentAlumniPage = 1; sortAlumni(sortConfig.alumni.key, true); }
+    function showTab(id) { document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden')); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('tab-'+id).classList.remove('hidden'); document.getElementById('btn-'+id).classList.add('active'); document.getElementById('page-title').innerText = id.toUpperCase(); }
+    
+    function initDashboard() { 
+        document.getElementById('auth-screen').classList.add('hidden'); 
+        document.getElementById('dashboard-screen').classList.remove('hidden'); 
+        
+        const role = STATE.user ? STATE.user.role : 'user'; 
+        const isSuperAdmin = role === 'admin_utama'; 
+        const canManageAlumni = isSuperAdmin || role === 'sekretaris'; 
+        const canManageFinance = isSuperAdmin || role === 'bendahara'; 
+        
+        let roleName = 'Viewer'; 
+        if(isSuperAdmin) roleName = 'Admin'; else if(role === 'bendahara') roleName = 'Bendahara'; else if(role === 'sekretaris') roleName = 'Sekretaris'; 
+        document.getElementById('greeting').innerText = `Petugas: ${STATE.user.nama || 'Anonim'} | ${roleName}`; 
+        
+        if (!canManageAlumni) { 
+            document.getElementById('btn-requests').classList.add('hidden'); 
+            document.getElementById('btn-add-alumni').classList.add('hidden'); 
+            document.getElementById('btn-import-alumni').classList.add('hidden'); 
+            document.getElementById('btn-panitia').classList.add('hidden'); // Hide panitia tab if not admin/sekretaris
+        } else { 
+            document.getElementById('btn-requests').classList.remove('hidden'); 
+            document.getElementById('btn-add-alumni').classList.remove('hidden'); 
+            document.getElementById('btn-import-alumni').classList.remove('hidden'); 
+            document.getElementById('btn-panitia').classList.remove('hidden');
+        } 
+        
+        if (!canManageFinance) { document.getElementById('btn-add-finance').classList.add('hidden'); document.getElementById('btn-add-rab').classList.add('hidden'); } else { document.getElementById('btn-add-finance').classList.remove('hidden'); document.getElementById('btn-add-rab').classList.remove('hidden'); } 
+        
+        if (!isSuperAdmin) { 
+            document.getElementById('btn-manage-users').classList.add('hidden'); 
+            document.getElementById('btn-manage-users-mobile').classList.add('hidden'); 
+            document.getElementById('btn-event-settings').classList.add('hidden');
+        } else { 
+            document.getElementById('btn-manage-users').classList.remove('hidden'); 
+            document.getElementById('btn-manage-users-mobile').classList.remove('hidden'); 
+            document.getElementById('btn-event-settings').classList.remove('hidden');
+        } 
+        
+        showTab('home'); loadData(); 
+    }
+    
+    function openModalAddPanitia() {
+        document.getElementById('panitia-nama').value = '';
+        document.getElementById('panitia-jabatan').value = 'Ketua Panitia';
+        document.getElementById('panitia-jabatan-custom').classList.add('hidden');
+        document.getElementById('panitia-jabatan-custom').value = '';
+        openModal('modal-panitia');
+    }
+
+    function checkCustomJabatan(el) {
+        if(el.value === 'custom') {
+            document.getElementById('panitia-jabatan-custom').classList.remove('hidden');
+            document.getElementById('panitia-jabatan-custom').required = true;
+        } else {
+            document.getElementById('panitia-jabatan-custom').classList.add('hidden');
+            document.getElementById('panitia-jabatan-custom').required = false;
+        }
+    }
+
+    // EXPORTS & PRINTS
+    function printIDCard(dataStr) { 
+        const p = JSON.parse(decodeURIComponent(dataStr)); 
+        const { jsPDF } = window.jspdf; 
+        const doc = new jsPDF('p', 'mm', [54, 86]); 
+        
+        // Background Base
+        doc.setFillColor(248, 250, 252); doc.rect(0, 0, 54, 86, 'F');
+        
+        // Header Shape (Curved/Polygon)
+        doc.setFillColor(79, 70, 229); doc.rect(0, 0, 54, 30, 'F');
+        
+        // Header Text
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text("PANITIA REUNI AKBAR", 27, 10, {align: "center"});
+        doc.setFontSize(13);
+        doc.text("AL-FATAH", 27, 16, {align: "center"});
+        
+        // Photo Placeholder (Circle Outline)
+        doc.setFillColor(255, 255, 255);
+        doc.circle(27, 30, 12, 'F');
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.5);
+        doc.circle(27, 30, 12, 'S');
+        
+        // Simple avatar icon
+        doc.setFillColor(203, 213, 225); 
+        doc.circle(27, 27, 4, 'F'); 
+        doc.setLineWidth(3);
+        doc.setDrawColor(203, 213, 225);
+        doc.line(22, 36, 32, 36); 
+
+        // Name
+        doc.setTextColor(30, 41, 59);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        let displayName = String(p.nama || '').substring(0, 20);
+        doc.text(displayName, 27, 50, {align: "center"});
+        
+        // Divider
+        doc.setDrawColor(99, 102, 241);
+        doc.setLineWidth(0.5);
+        doc.line(15, 55, 39, 55);
+
+        // Jabatan (Bold and Amber Color)
+        doc.setTextColor(245, 158, 11); 
+        doc.setFontSize(10);
+        doc.text(String(p.jabatan || 'Panitia').toUpperCase(), 27, 62, {align: "center"});
+        
+        // Footer Shape
+        doc.setFillColor(30, 41, 59);
+        doc.rect(0, 76, 54, 10, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(6);
+        doc.setFont("helvetica", "normal");
+        doc.text("ID CARD PANITIA RESMI", 27, 82, {align: "center"});
+
+        doc.save(`IDCard_Panitia_${p.nama}.pdf`); 
+        notify("ID Card Panitia berhasil dicetak!", "success"); 
+    }
+
+    function printReceipt(dataStr) { const data = JSON.parse(decodeURIComponent(dataStr)); const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', [105, 148]); doc.setDrawColor(99, 102, 241); doc.setLineWidth(1); doc.roundedRect(5, 5, 95, 138, 3, 3); doc.setFillColor(99, 102, 241); doc.roundedRect(5, 5, 95, 25, 3, 3, 'F'); doc.rect(5, 15, 95, 15, 'F'); doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.text("PANITIA REUNI AKBAR", 52.5, 13, { align: "center" }); doc.setFontSize(13); doc.text("PONDOK PESANTREN AL-FATAH", 52.5, 20, { align: "center" }); doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.text("Bukti Penerimaan Dana Sah", 52.5, 26, { align: "center" }); doc.setTextColor(30, 41, 59); doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.text("BUKTI TRANSAKSI (KWITANSI)", 52.5, 38, { align: "center" }); doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.text(`No. Ref  : TRX-${String(data.id || '').substring(0, 8).toUpperCase()}`, 10, 46); doc.text(`Tanggal  : ${String(data.tanggal||'-').split(',')[0]}`, 10, 50); doc.setDrawColor(203, 213, 225); doc.setLineWidth(0.5); doc.line(10, 53, 95, 53); doc.text("Telah diterima dari:", 10, 60); doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.text(`${data.nama_pembayar || 'Hamba Allah'}`, 10, 65); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.text("Untuk Keperluan:", 10, 73); doc.setFont("helvetica", "bold"); doc.text(`${data.kategori || '-'}`, 10, 78); doc.setFillColor(241, 245, 249); doc.roundedRect(10, 85, 85, 15, 2, 2, 'F'); doc.setTextColor(16, 185, 129); doc.setFontSize(16); doc.setFont("helvetica", "bold"); doc.text(`${formatRupiah(data.nominal)}`, 52.5, 95, { align: "center" }); doc.setTextColor(30, 41, 59); doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.text("Disahkan oleh,", 75, 110, { align: "center" }); doc.setFont("helvetica", "bold"); doc.text("Bendahara Panitia", 75, 125, { align: "center" }); doc.setFont("helvetica", "normal"); doc.setFontSize(6); doc.setTextColor(100, 116, 139); doc.text(`Kwitansi ini dibuat otomatis oleh sistem. Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 52.5, 138, { align: "center" }); doc.save(`Kwitansi_Reuni_${data.nama_pembayar}_${String(data.id).substring(0,6)}.pdf`); notify("Kwitansi PDF berhasil dicetak!", "success"); }
+    function exportToPDF(paperSize) { const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', paperSize === 'f4' ? [215, 330] : 'a4'); doc.setFont("helvetica", "bold"); doc.text("LAPORAN DATA ALUMNI - REUNI AKBAR PP. AL-FATAH", 105, 15, { align: "center" }); doc.setFontSize(8); doc.text(`Dicetak: ${new Date().toLocaleString()}`, 105, 20, { align: "center" }); doc.autoTable({ startY: 25, head: [['No', 'Nama', 'Angk.', 'Kabupaten', 'Kecamatan', 'Desa', 'Alamat']], body: STATE.alumni.map((a, i) => [i+1, a.nama, a.angkatan, a.kabupaten, a.kecamatan, a.desa, a.alamat]), styles: { fontSize: 7 }, headStyles: { fillColor: [99, 102, 241] } }); doc.save(`Alumni_${paperSize.toUpperCase()}.pdf`); closeModal('modal-export'); }
+    function exportDaftarHadirPDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("DAFTAR HADIR PESERTA REUNI AKBAR", 105, 15, { align: "center" }); doc.setFontSize(12); doc.text("PONDOK PESANTREN AL-FATAH", 105, 21, { align: "center" }); const rows = []; for (let i = 0; i < 50; i++) rows.push([ i + 1, "", "", "", i % 2 === 0 ? `${i + 1}. .......................` : `          ${i + 1}. .......................` ]); doc.autoTable({ startY: 30, head: [['No', 'Nama Lengkap', 'Angkatan', 'No. HP / Domisili', 'Tanda Tangan']], body: rows, styles: { fontSize: 10, cellPadding: 2, valign: 'middle', minCellHeight: 11 }, headStyles: { fillColor: [99, 102, 241], textColor: 255, halign: 'center' }, columnStyles: { 0: { halign: 'center', cellWidth: 10 }, 1: { cellWidth: 'auto' }, 2: { halign: 'center', cellWidth: 20 }, 3: { cellWidth: 40 }, 4: { cellWidth: 45 } }, didDrawPage: function (data) { doc.setFontSize(7); doc.setFont("helvetica", "italic"); doc.setTextColor(150); doc.text(`Dicetak oleh Panitia Reuni Akbar Al-Fatah | ${new Date().toLocaleString('id-ID')}`, 14, doc.internal.pageSize.height - 10); } }); doc.save(`Daftar_Hadir_Manual_Reuni.pdf`); closeModal('modal-export'); notify('Format Daftar Hadir Manual PDF berhasil dicetak!', 'success'); }
+    function exportFinanceToPDF() { const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text("LAPORAN KEUANGAN REUNI AKBAR AL-FATAH", 105, 15, { align: "center" }); doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`, 105, 20, { align: "center" }); let inC=0, outC=0; STATE.finance.forEach(f => { let v = Number(f.nominal)||0; if(f.status === 'pengeluaran') outC+=v; else inC+=v; }); doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.text(`Pemasukan: ${formatRupiah(inC)}\nPengeluaran: ${formatRupiah(outC)}\nSaldo Akhir: ${formatRupiah(inC-outC)}`, 14, 30); doc.autoTable({ startY: 45, head: [['No', 'Tanggal', 'Keterangan', 'Kategori', 'Tipe', 'Nominal']], body: STATE.finance.map((f, i) => [ i+1, String(f.tanggal||'-').split(',')[0], f.nama_pembayar||'-', f.kategori||'-', f.status==='pengeluaran'?'Keluar':'Masuk', formatRupiah(f.nominal) ]), styles: { fontSize: 8 }, headStyles: { fillColor: [16, 185, 129] }, didParseCell: function(d) { if (d.section==='body' && (d.column.index===4 || d.column.index===5)) { d.cell.styles.textColor = d.row.raw[4]==='Keluar' ? [220,38,38] : [5,150,105]; d.cell.styles.fontStyle='bold'; } } }); doc.save(`Keuangan_${new Date().getTime()}.pdf`); notify("Laporan diunduh!", "success"); }
+    
+    function exportRABToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text("RENCANA ANGGARAN BIAYA (RAB) REUNI AKBAR", 105, 15, { align: "center" });
+        doc.setFontSize(12);
+        doc.text("PONDOK PESANTREN AL-FATAH", 105, 21, { align: "center" });
+        
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100);
+        doc.text(`Dicetak pada: ${new Date().toLocaleString('id-ID')}`, 105, 27, { align: "center" });
+        
+        let totalRAB = 0;
+        const rows = STATE.rab.map((r, i) => {
+            const nominal = Number(r.nominal) || 0;
+            totalRAB += nominal;
+            return [
+                i + 1,
+                r.nama_pembayar || '-',
+                formatRupiah(nominal),
+                r.status === 'pengeluaran' ? 'Sudah Dibayar' : 'Belum Dibayar'
+            ];
+        });
+        
+        // Baris Total diletakkan di akhir dengan gaya khusus
+        rows.push([
+            { content: 'TOTAL ANGGARAN', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold', fillColor: [241, 245, 249], textColor: [0, 0, 0] } },
+            { content: formatRupiah(totalRAB), styles: { fontStyle: 'bold', textColor: [16, 185, 129], fillColor: [241, 245, 249] } },
+            { content: '', styles: { fillColor: [241, 245, 249] } }
+        ]);
+        
+        doc.autoTable({
+            startY: 35,
+            theme: 'grid', // Membuat tabel bergaris pembatas (border) rapi
+            head: [['No', 'Nama Item / Keperluan', 'Anggaran', 'Status']],
+            body: rows,
+            styles: { fontSize: 10, cellPadding: 2, valign: 'middle' },
+            headStyles: { fillColor: [99, 102, 241], textColor: 255, halign: 'center' },
+            columnStyles: {
+                0: { cellWidth: 10, halign: 'center' },
+                1: { cellWidth: 'auto' }, // Mengatur kolom nama item agar menyesuaikan sisa lebar kertas secara otomatis
+                2: { cellWidth: 40, halign: 'right' },
+                3: { cellWidth: 35, halign: 'center' }
+            },
+            didParseCell: function(data) {
+                // Memberikan warna teks otomatis pada kolom status
+                if (data.section === 'body' && data.column.index === 3) {
+                    const statusText = data.cell.raw;
+                    if (statusText === 'Sudah Dibayar') {
+                        data.cell.styles.textColor = [16, 185, 129]; // Warna Emerald
+                        data.cell.styles.fontStyle = 'bold';
+                    } else if (statusText === 'Belum Dibayar') {
+                        data.cell.styles.textColor = [245, 158, 11]; // Warna Amber/Orange
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+            }
+        });
+        
+        doc.save(`RAB_Reuni_${new Date().getTime()}.pdf`);
+        notify("Laporan RAB PDF berhasil dicetak dengan rapi!", "success");
+    }
+
+    function downloadCSV(csv, filename) { let dl = document.createElement("a"); dl.download = filename; dl.href = window.URL.createObjectURL(new Blob([csv], {type: "text/csv;charset=utf-8;"})); dl.style.display="none"; document.body.appendChild(dl); dl.click(); document.body.removeChild(dl); }
+    function exportAlumniCSV() { let csv = "ID,Nama Lengkap,Angkatan,No WA,Kabupaten,Kecamatan,Desa,Alamat\n"; STATE.alumni.forEach(r => csv += [r.id, r.nama, r.angkatan, r.nowa, r.kabupaten, r.kecamatan, r.desa, r.alamat].map(v => `"${String(v||'').replace(/"/g, '""')}"`).join(",") + "\n"); downloadCSV(csv, `Alumni.csv`); closeModal('modal-export'); }
+    function exportFinanceToCSV() { let csv = "Tanggal,Kategori,Nama,Status,Nominal\n"; STATE.finance.forEach(r => csv += [String(r.tanggal||'-').split(',')[0], r.kategori, r.nama_pembayar, r.status, r.nominal].map(v => `"${String(v||'').replace(/"/g, '""')}"`).join(",") + "\n"); downloadCSV(csv, `Keuangan.csv`); }
+
+    function resetIdleTimer() { idleTime = 0; }
+    window.addEventListener('load', () => {
+        applyTheme();
+        const manifestBlob = new Blob([JSON.stringify({ "name": "Portal Panitia Reuni", "short_name": "Reuni Al-Fatah", "start_url": ".", "display": "standalone", "background_color": "#060813", "theme_color": "#6366f1", "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/1903/1903162.png", "sizes": "512x512", "type": "image/png"}] })], {type: 'application/json'});
+        document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
+        let dp; window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); dp = e; setTimeout(() => { document.getElementById('pwa-banner').style.bottom = '20px'; }, 3000); });
+        document.getElementById('btn-install-pwa').addEventListener('click', async () => { if (dp) { document.getElementById('pwa-banner').style.bottom = '-150px'; dp.prompt(); await dp.userChoice; dp = null; } });
+        if(STATE.token) initDashboard(); 
+        document.body.addEventListener('mousemove', resetIdleTimer); document.body.addEventListener('keypress', resetIdleTimer); document.body.addEventListener('touchstart', resetIdleTimer); document.body.addEventListener('click', resetIdleTimer);
+        setInterval(() => { if(STATE.token && !document.getElementById('dashboard-screen').classList.contains('hidden')) { idleTime++; if (idleTime >= IDLE_LIMIT) logout(true); } }, 60000);
+    });
+  </script>
+</body>
+</html>
