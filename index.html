@@ -387,28 +387,6 @@
     </div>
   </div>
 
-  <!-- AUTH & REGISTER MODALS -->
-  <div id="modal-public-register" class="hidden fixed inset-0 z-[600] flex items-center justify-center p-4">
-    <div onclick="closeModal('modal-public-register')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
-    <div class="glass relative w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar border border-indigo-500/20">
-      <h2 class="text-xl font-black uppercase mb-2 text-indigo-400">Registrasi Alumni</h2>
-      <p class="text-xs text-slate-400 mb-6">Silakan isi data diri Anda. Data akan diverifikasi sebelum masuk ke database utama Panitia.</p>
-      <form id="form-public-register" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="md:col-span-2"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nama Lengkap</label><input type="text" name="nama" class="input-field" required /></div>
-        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Angkatan</label><input type="number" name="angkatan" class="input-field" required /></div>
-        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp</label><input type="text" name="nowa" class="input-field" required /></div>
-        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kabupaten</label><input type="text" name="kabupaten" class="input-field" required /></div>
-        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kecamatan</label><input type="text" name="kecamatan" class="input-field" required /></div>
-        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Desa</label><input type="text" name="desa" class="input-field" required /></div>
-        <div class="md:col-span-2"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Alamat Lengkap</label><input type="text" name="alamat" class="input-field" required /></div>
-        <div class="md:col-span-2 mt-4 flex gap-3">
-          <button type="button" onclick="closeModal('modal-public-register')" class="flex-1 py-4 rounded-2xl font-bold bg-white/5 hover:bg-white/10 transition-all uppercase text-xs text-white">Batal</button>
-          <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold transition-all uppercase text-xs text-white">Kirim Pengajuan</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <div id="modal-register-account" class="hidden fixed inset-0 z-[600] flex items-center justify-center p-4">
     <div onclick="closeModal('modal-register-account')" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
     <div class="glass relative w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl text-center border border-indigo-500/20">
@@ -435,10 +413,34 @@
 
   <!-- AUTH SCREEN -->
   <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 relative">
-    <button onclick="toggleTheme()" class="absolute top-6 right-6 w-12 h-12 glass rounded-full flex items-center justify-center text-slate-400 hover:text-indigo-400 transition-colors z-50">
-        <i id="theme-icon-auth" class="fas fa-moon"></i>
-    </button>
-    <div class="glass p-10 rounded-[3rem] w-full max-w-md shadow-2xl text-center">
+    
+    <!-- MENU NAVIGASI PUBLIK (Muncul di layar login) -->
+    <nav class="absolute top-0 left-0 w-full p-4 z-50 flex justify-between items-center">
+        <a href="countdown.html" class="flex items-center gap-3 group">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+                <i class="fas fa-mosque text-sm sm:text-base"></i>
+            </div>
+            <div class="hidden sm:block">
+                <h1 class="font-black text-xs sm:text-sm text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">Reuni Akbar</h1>
+            </div>
+        </a>
+        <div class="flex items-center gap-1 sm:gap-2">
+            <a href="countdown.html" class="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2 flex items-center justify-center hover:bg-white/5 rounded-full text-xs font-bold text-slate-300 hover:text-white transition-all uppercase tracking-wider" title="Beranda">
+                <i class="fas fa-home sm:mr-2"></i> <span class="hidden sm:inline">Beranda</span>
+            </a>
+            <a href="Rundown.html" class="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2 flex items-center justify-center hover:bg-white/5 rounded-full text-xs font-bold text-slate-300 hover:text-white transition-all uppercase tracking-wider" title="Rundown">
+                <i class="fas fa-list-ol sm:mr-2"></i> <span class="hidden sm:inline">Rundown</span>
+            </a>
+            <a href="pendaftaran.html" class="px-3 py-2 sm:px-4 sm:py-2 glass bg-indigo-600/20 hover:bg-indigo-600 rounded-full text-[10px] sm:text-xs font-bold text-white transition-all uppercase tracking-wider border border-indigo-500/30">
+                <i class="fas fa-ticket-alt mr-1"></i> <span class="hidden sm:inline">Daftar</span>
+            </a>
+            <button onclick="toggleTheme()" class="w-8 h-8 sm:w-10 sm:h-10 glass rounded-full flex items-center justify-center text-slate-400 hover:text-indigo-400 transition-colors" title="Ubah Tema">
+                <i id="theme-icon-auth" class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+    
+    <div class="glass p-10 rounded-[3rem] w-full max-w-md shadow-2xl text-center mt-12">
       <div class="w-16 h-16 bg-indigo-600 rounded-2xl mx-auto mb-6 flex items-center justify-center"><i class="fas fa-lock text-xl text-white"></i></div>
       <h1 class="text-xl font-black mb-2 uppercase tracking-widest text-white">Admin Portal</h1>
       <p class="text-xs text-slate-400 mb-8 font-bold">PANITIA REUNI AKBAR AL-FATAH</p>
@@ -452,7 +454,7 @@
       </div>
       <div class="mt-8 border-t border-white/10 pt-6">
         <p class="text-[10px] text-slate-400 font-bold uppercase mb-3 tracking-widest">Alumni Baru?</p>
-        <button onclick="openModal('modal-public-register')" class="w-full bg-white/5 hover:bg-white/10 py-3 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all text-indigo-400 border border-indigo-500/20">Registrasi Data Diri</button>
+        <a href="pendaftaran.html" class="block w-full bg-white/5 hover:bg-white/10 py-3 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all text-indigo-400 border border-indigo-500/20 text-center">Registrasi Data Diri</a>
       </div>
     </div>
   </div>
@@ -1384,7 +1386,7 @@
         try { const fd = new FormData(e.target); const data = Object.fromEntries(fd.entries()); const isEdit = data.id !== ""; const action = isEdit ? 'updatefinance' : 'addfinance'; toggleLoading(true, isEdit ? 'Menyimpan...' : 'Menyimpan Transaksi...'); const fileInput = document.getElementById('fin-file'); if (fileInput.files.length > 0) { const file = fileInput.files[0]; const reader = new FileReader(); const dataUrl = await new Promise(r => { reader.onload = () => r(reader.result); reader.readAsDataURL(file); }); toggleLoading(true, 'Mengunggah Bukti ke Drive...'); const uploadRes = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'uploadbukti', filename: file.name, mime: file.type, dataUrl: dataUrl }) }).then(r => r.json()); if (uploadRes.ok && uploadRes.file) { data.bukti_url = uploadRes.file.webViewLink; data.bukti_file_id = uploadRes.file.fileId; data.bukti_mime = uploadRes.file.mime; } else throw new Error(uploadRes.error || 'Gagal unggah'); } data.updated_by = STATE.user.email; if(!isEdit) data.tanggal = new Date().toLocaleString('id-ID'); else delete data.tanggal; const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: action, data: JSON.stringify(data) }) }).then(r => r.json()); if(res.ok) { closeModal('modal-finance'); if(!document.getElementById('modal-history').classList.contains('hidden')) closeModal('modal-history'); notify(isEdit ? 'Diperbarui!' : 'Berhasil!'); loadData(); e.target.reset(); } else notify(res.error, 'error'); } catch (err) { notify('Gagal simpan', 'error'); } finally { toggleLoading(false); btn.disabled = false; }
     };
     document.getElementById('form-alumni').onsubmit = async (e) => { e.preventDefault(); toggleLoading(true, 'Menyimpan...'); const data = Object.fromEntries(new FormData(e.target).entries()); const action = data.id ? 'updatealumni' : 'addalumni'; data.updated_by = STATE.user.email; try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action, data: JSON.stringify(data) }) }).then(r => r.json()); if(res.ok) { closeModal('modal-alumni'); loadData(); } } finally { toggleLoading(false); } };
-    document.getElementById('form-public-register').onsubmit = async (e) => { e.preventDefault(); const btn = e.target.querySelector('button[type="submit"]'); btn.disabled = true; toggleLoading(true, 'Mengirim Pengajuan...'); try { const data = Object.fromEntries(new FormData(e.target).entries()); const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'submitalumni', data: JSON.stringify(data) }) }).then(r => r.json()); if(res.ok) { closeModal('modal-public-register'); notify('Pengajuan Berhasil!', 'success'); e.target.reset(); } else notify(res.error, 'error'); } catch (err) { notify('Gagal terhubung.', 'error'); } finally { toggleLoading(false); btn.disabled = false; } };
+    
     async function handleRequest(id, action) { toggleLoading(true, 'Memproses verifikasi...'); try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action, id, approved_by: STATE.user.email }) }).then(r => r.json()); if(res.ok) { notify('Berhasil disetujui/ditolak!', 'success'); await loadData(); } else notify(res.error || 'Gagal memproses.', 'error'); } catch(e) { notify('Gagal terhubung ke server', 'error'); } finally { toggleLoading(false); } }
     function handleDelete(action, id) { openModal('modal-delete'); const confirmBtn = document.getElementById('confirm-delete-btn'); const newBtn = confirmBtn.cloneNode(true); confirmBtn.parentNode.replaceChild(newBtn, confirmBtn); newBtn.onclick = async () => { closeModal('modal-delete'); toggleLoading(true, 'Menghapus...'); try { const res = await fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action, id }) }).then(r => r.json()); if(res.ok) loadData(); else notify(res.error, 'error'); } catch(e) { notify('Gagal', 'error'); } finally { toggleLoading(false); } }; }
     function logout(auto = false) { if(auto) { document.getElementById('logout-title').innerText = "Sesi Berakhir"; document.getElementById('logout-desc').innerText = "Anda dikeluarkan karena tidak ada aktivitas selama 15 menit."; document.getElementById('btn-cancel-logout').classList.add('hidden'); } else { document.getElementById('logout-title').innerText = "Keluar Sistem?"; document.getElementById('logout-desc').innerText = "Sesi Anda akan diakhiri."; document.getElementById('btn-cancel-logout').classList.remove('hidden'); } openModal('modal-logout'); }
