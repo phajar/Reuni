@@ -30,7 +30,34 @@
   <div class="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/30 blur-[120px] rounded-full pointer-events-none"></div>
   <div class="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/20 blur-[120px] rounded-full pointer-events-none"></div>
 
-  <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10 w-full max-w-4xl mx-auto my-8">
+  <!-- MENU NAVIGASI PUBLIK -->
+  <nav class="w-full p-4 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
+      <a href="countdown.html" class="flex items-center gap-3 group">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+              <i class="fas fa-mosque text-sm sm:text-base"></i>
+          </div>
+          <div>
+              <h1 class="font-black text-xs sm:text-sm text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">Reuni Akbar</h1>
+              <p class="text-[8px] sm:text-[10px] text-indigo-400 font-bold">AL-FATAH</p>
+          </div>
+      </a>
+      <div class="flex items-center gap-1 sm:gap-2">
+          <a href="countdown.html" class="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2 flex items-center justify-center hover:bg-white/5 rounded-full text-xs font-bold text-indigo-400 sm:text-white transition-all uppercase tracking-wider" title="Beranda">
+              <i class="fas fa-home sm:mr-2"></i> <span class="hidden sm:inline">Beranda</span>
+          </a>
+          <a href="Rundown.html" class="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2 flex items-center justify-center hover:bg-white/5 rounded-full text-xs font-bold text-slate-300 hover:text-white transition-all uppercase tracking-wider" title="Rundown">
+              <i class="fas fa-list-ol sm:mr-2"></i> <span class="hidden sm:inline">Rundown</span>
+          </a>
+          <a href="pendaftaran.html" class="px-3 py-2 sm:px-4 sm:py-2 glass bg-indigo-600/20 hover:bg-indigo-600 rounded-full text-[10px] sm:text-xs font-bold text-white transition-all uppercase tracking-wider border border-indigo-500/30">
+              <i class="fas fa-ticket-alt mr-1"></i> Daftar
+          </a>
+          <a href="dashboard.html" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center glass hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-all border border-white/10" title="Login Panitia">
+              <i class="fas fa-user-shield text-xs"></i>
+          </a>
+      </div>
+  </nav>
+
+  <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10 w-full max-w-4xl mx-auto my-4 sm:my-8">
       
       <!-- HERO SECTION -->
       <div class="text-center mb-10 md:mb-16 w-full mt-4 md:mt-10">
@@ -87,10 +114,6 @@
   </footer>
 
   <script>
-    // ==========================================
-    // KONFIGURASI API
-    // ==========================================
-    
     // GANTI STRING DI BAWAH INI DENGAN URL GOOGLE APPS SCRIPT (API_URL) ANDA!
     const API_URL = "https://script.google.com/macros/s/AKfycbxo19MF5hSTFQgU3SDAxJfWPg3stsC-VIpRcFq659J3BtIEwSJhndR1BPgRM1XNShlr/exec"; 
     
@@ -98,10 +121,8 @@
 
     async function initCountdown() {
         try {
-            // Tampilkan status loading pada judul hitung mundur
             document.getElementById("countdown-title").innerHTML = "<i class='fas fa-spinner fa-spin mr-2'></i> Mengambil Data Acara...";
             
-            // Cek jika ada URL Parameter (opsional override, misal: ?date=2026-11-20T08:00)
             const urlParams = new URLSearchParams(window.location.search);
             const dateParam = urlParams.get('date');
             
@@ -110,43 +131,34 @@
             if (dateParam && !isNaN(new Date(dateParam).getTime())) {
                 eventDateString = dateParam;
             } else {
-                // Tarik data tanggal acara langsung dari Google Apps Script
                 const res = await fetch(API_URL + "?action=geteventinfo").then(r => r.json());
                 if (res.ok && res.date) {
                     eventDateString = res.date;
-                    
-                    // Gunakan fallback "Menunggu Info Panitia" jika jam tidak diatur
                     document.getElementById("event-time-display").innerText = res.time || "Menunggu Info Panitia";
                     document.getElementById("event-guest-display").innerText = res.guest || "Menunggu Info Panitia";
                 } else {
-                    eventDateString = "TBD"; // Fallback default jika gagal
+                    eventDateString = "TBD"; 
                 }
             }
 
-            // Jika status tanggal belum ditentukan (TBD)
             if (eventDateString === "TBD" || !eventDateString) {
                 document.getElementById("countdown-title").innerHTML = "<i class='fas fa-clock mr-2'></i> Waktu Acara";
                 document.getElementById("event-date-display").innerText = "Menunggu Info Panitia";
-                
-                // Ubah angka hitung mundur menjadi strip (-)
                 document.getElementById("cd-days").innerText = "-";
                 document.getElementById("cd-hours").innerText = "-";
                 document.getElementById("cd-minutes").innerText = "-";
                 if(document.getElementById("cd-seconds")) document.getElementById("cd-seconds").innerText = "-";
-                
-                return; // Hentikan fungsi di sini, jangan jalankan hitung mundur
+                return; 
             }
 
             const EVENT_DATE = new Date(eventDateString).getTime();
             document.getElementById("countdown-title").innerHTML = "<i class='fas fa-hourglass-half mr-2'></i> Menuju Hari-H Acara";
 
-            // Format dan tampilkan tanggal acara dalam Bahasa Indonesia HANYA HARI DAN TANGGAL (Tanpa Jam)
             const eventDateObj = new Date(eventDateString);
             const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
             const formattedDate = eventDateObj.toLocaleDateString('id-ID', options);
             document.getElementById("event-date-display").innerText = formattedDate;
 
-            // Logika Hitung Mundur (Countdown)
             timer = setInterval(function() {
                 const now = new Date().getTime();
                 const distance = EVENT_DATE - now;
@@ -158,11 +170,9 @@
                     document.getElementById("cd-minutes").innerText = "00";
                     if(document.getElementById("cd-seconds")) document.getElementById("cd-seconds").innerText = "00";
                     
-                    // Ubah judul jika acara sudah dimulai
                     const titleEl = document.getElementById("countdown-title");
                     if (titleEl) titleEl.innerHTML = "<i class='fas fa-glass-cheers mr-2'></i> Acara Sedang Berlangsung!";
                     document.getElementById("event-date-display").innerText = "Selamat Datang di Reuni Akbar!";
-                    
                     return;
                 }
 
@@ -183,7 +193,6 @@
         }
     }
 
-    // Jalankan hitung mundur
     initCountdown();
   </script>
 </body>
