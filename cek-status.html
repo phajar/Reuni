@@ -261,7 +261,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, query, where, getDocs, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs, getDoc, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
@@ -274,6 +274,14 @@
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
+    // Ambil nomor WhatsApp Humas/Bantuan secara dinamis dari database settings
+    let panitiaWa = "6282130445019"; // Nomor default sebagai cadangan (fallback)
+    getDoc(doc(db, "settings", "event_info")).then(docSnap => {
+      if (docSnap.exists() && docSnap.data().wa_humas) {
+        panitiaWa = docSnap.data().wa_humas;
+        console.log("[Firebase Event Info] Dynamic WA Humas loaded:", panitiaWa);
+      }
+    }).catch(err => console.warn("[Firebase Event Info] Failed to load dynamic WA Humas settings:", err));
 
     // ── Auto-fill dari URL param ?wa=... ─────────────────────────────────
     const urlParams = new URLSearchParams(window.location.search);
@@ -614,10 +622,23 @@
         </div>
       ` : '';
 
-      // Section untuk pending: info menunggu
+      // Section untuk pending: info menunggu + Tombol WhatsApp Humas Dinamis
       const pendingInfo = alumni.status === 'pending' ? `
-        <div class="mt-4 pt-4 border-t border-white/10">
-          <p class="text-xs text-amber-400/80 text-center font-bold"><i class="fas fa-info-circle mr-1"></i>Proses verifikasi biasanya memakan waktu 1-2 hari kerja.</p>
+        <div class="mt-4 pt-4 border-t border-white/10 space-y-3">
+          <p class="text-xs text-amber-400/80 text-center font-bold mb-2"><i class="fas fa-info-circle mr-1"></i>Proses verifikasi biasanya memakan waktu 1-2 hari kerja.</p>
+          <a href="https://wa.me/${panitiaWa}?text=${encodeURIComponent('Halo Panitia Reuni Akbar Al-Fatah, saya *' + (alumni.nama || '') + '* (Lulusan ' + (alumni.angkatan || '') + '). Saya ingin menanyakan perihal pendaftaran saya yang saat ini masih pending. Terima kasih.')}" target="_blank" class="w-full py-2.5 bg-amber-500/10 hover:bg-amber-500 hover:text-black border border-amber-500/20 hover:border-transparent text-amber-400 rounded-xl text-center text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-lg">
+            <i class="fab fa-whatsapp"></i> Hubungi Humas Panitia
+          </a>
+        </div>
+      ` : '';
+
+      // Section untuk rejected: tombol WhatsApp Humas Dinamis
+      const rejectedInfo = alumni.status === 'rejected' ? `
+        <div class="mt-4 pt-4 border-t border-white/10 space-y-3">
+          <p class="text-xs text-red-400/80 text-center font-bold mb-2"><i class="fas fa-exclamation-circle mr-1"></i>Pendaftaran Anda belum dapat disetujui panitia.</p>
+          <a href="https://wa.me/${panitiaWa}?text=${encodeURIComponent('Halo Panitia Reuni Akbar Al-Fatah, saya *' + (alumni.nama || '') + '* (Lulusan ' + (alumni.angkatan || '') + '). Saya ingin bertanya perihal status pendaftaran saya yang belum disetujui panitia. Terima kasih.')}" target="_blank" class="w-full py-2.5 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/20 hover:border-transparent text-red-400 rounded-xl text-center text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-lg">
+            <i class="fab fa-whatsapp"></i> Hubungi Humas Panitia
+          </a>
         </div>
       ` : '';
 
@@ -683,6 +704,7 @@
           </div>
           ${approvedActions}
           ${pendingInfo}
+          ${rejectedInfo}
         </div>`;
     }
 

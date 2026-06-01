@@ -265,6 +265,7 @@ window.switchSettingsSubTab = (subTabName) => {
       const setEventTbdEl = document.getElementById("set-event-tbd");
       const setEventTimeEl = document.getElementById("set-event-time");
       const setEventGuestEl = document.getElementById("set-event-guest");
+      const setEventWaHumasEl = document.getElementById("set-event-wa-humas");
       const apiBendaharaEl = document.getElementById("api-access-bendahara");
       const apiSekretarisEl = document.getElementById("api-access-sekretaris");
       
@@ -276,6 +277,7 @@ window.switchSettingsSubTab = (subTabName) => {
           if (setEventTbdEl) setEventTbdEl.checked = window.STATE.eventDate === "TBD";
           if (setEventTimeEl) setEventTimeEl.value = window.STATE.eventTime || "";
           if (setEventGuestEl) setEventGuestEl.value = window.STATE.eventGuest || "";
+          if (setEventWaHumasEl) setEventWaHumasEl.value = window.STATE.eventWaHumas || "";
           
           const apiAccess = window.STATE.eventInfo && window.STATE.eventInfo.api_access_roles
               ? window.STATE.eventInfo.api_access_roles
@@ -1006,6 +1008,8 @@ window.loadDataRealtime = () => {
         window.STATE.eventDate = data.event_date || "TBD";
         window.STATE.eventTime = data.event_time || "";
         window.STATE.eventGuest = data.event_guest || "";
+        window.STATE.eventWaHumas = data.wa_humas || "";
+        window.STATE.eventInfo = data;
         if (typeof window.renderAllTabs === "function") window.renderAllTabs();
       }
     });
@@ -4152,6 +4156,9 @@ window.handleUpdateEventInfo = async (e) => {
     apiAccess.push("bendahara");
   if (document.getElementById("api-access-sekretaris").checked)
     apiAccess.push("sekretaris");
+  
+  const waHumasVal = document.getElementById("set-event-wa-humas").value.trim().replace(/\D/g, "");
+  
   try {
     await db
       .collection("settings")
@@ -4161,6 +4168,7 @@ window.handleUpdateEventInfo = async (e) => {
           event_date: dFmt,
           event_time: document.getElementById("set-event-time").value,
           event_guest: document.getElementById("set-event-guest").value,
+          wa_humas: waHumasVal,
           api_access_roles: apiAccess,
         },
         { merge: true },
