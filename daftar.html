@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#060813" />
+  <meta name="description" content="Daftar Akun Panitia — Portal Reuni Akbar AL-FATAH. Buat akun baru untuk mengakses portal pengelolaan data alumni dan acara reuni." />
+  <title>Daftar Akun — Portal AL-FATAH</title>
+
+  <script src="js/lib/tailwindcss.js"></script>
+  <link rel="stylesheet" href="css/all.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+    :root { --bg: #060813; }
+    body { background-color: var(--bg); color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+
+    .glass { background: rgba(14,18,37,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+
+    .input-field { width:100%; padding:14px 16px; border-radius:14px; background:#1e2548; border:1px solid #2d3663; color:white; outline:none; transition:all 0.3s; font-size:14px; }
+    .input-field:focus { border-color:#6366f1; box-shadow:0 0 0 4px rgba(99,102,241,0.1); }
+    .input-field::placeholder { color: #64748b; }
+
+    .input-field.error { border-color: #ef4444; box-shadow:0 0 0 4px rgba(239,68,68,0.1); }
+    .input-field.valid { border-color: #10b981; box-shadow:0 0 0 4px rgba(16,185,129,0.07); }
+
+    .strength-bar { height: 4px; border-radius: 4px; transition: all 0.4s; }
+
+    body.light-theme { --bg: #f8fafc; color: #1e293b; }
+    body.light-theme .glass { background: rgba(255,255,255,0.95); border:1px solid rgba(0,0,0,0.1); box-shadow:0 10px 25px rgba(0,0,0,0.05); }
+    body.light-theme .text-white { color: #0f172a; }
+    body.light-theme .text-slate-400 { color: #64748b; }
+    body.light-theme .input-field { background-color:#ffffff; border-color:#cbd5e1; color:#0f172a; }
+    body.light-theme .input-field::placeholder { color:#94a3b8; }
+
+    .modal-enter { animation: modalFadeIn 0.4s cubic-bezier(.4,0,.2,1) forwards; }
+    @keyframes modalFadeIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+    #reg-canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+    .orb { position:fixed; border-radius:50%; pointer-events:none; z-index:0; filter:blur(80px); animation: orbFloat 12s ease-in-out infinite; }
+    @keyframes orbFloat { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-20px) scale(1.05)} 66%{transform:translate(-20px,15px) scale(0.95)} }
+
+    .step-indicator { display:flex; align-items:center; gap:0; }
+    .step-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; transition:all 0.3s; flex-shrink:0; }
+    .step-dot.active { background:#6366f1; color:white; box-shadow:0 0 0 4px rgba(99,102,241,0.2); }
+    .step-dot.done { background:#10b981; color:white; }
+    .step-dot.pending { background:rgba(255,255,255,0.05); color:#64748b; border:1px solid rgba(255,255,255,0.1); }
+    .step-line { flex:1; height:2px; background:rgba(255,255,255,0.08); transition:all 0.3s; }
+    .step-line.done { background:#10b981; }
+
+    .toggle-password { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#64748b; cursor:pointer; transition:color 0.2s; background:none; border:none; padding:4px; }
+    .toggle-password:hover { color:#6366f1; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative">
+
+  <canvas id="reg-canvas"></canvas>
+
+  <!-- Floating Orbs -->
+  <div class="orb w-[400px] h-[400px] bg-indigo-600/20 top-[-10%] right-[-15%]" style="animation-delay:0s"></div>
+  <div class="orb w-[300px] h-[300px] bg-emerald-600/15 bottom-[-10%] left-[-10%]" style="animation-delay:-5s"></div>
+  <div class="orb w-[200px] h-[200px] bg-purple-600/10 top-[50%] left-[5%]" style="animation-delay:-9s"></div>
+
+  <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
+
+  <div id="loading-overlay" class="hidden fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center">
+    <div class="p-8 glass rounded-[2.5rem] flex flex-col items-center border border-indigo-500/20 modal-enter">
+      <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      <p id="loading-text" class="mt-4 text-[10px] font-black uppercase tracking-widest text-indigo-400">Memproses...</p>
+    </div>
+  </div>
+
+  <!-- Theme Toggle -->
+  <button onclick="toggleTheme()" class="fixed top-6 right-6 w-12 h-12 glass rounded-full flex items-center justify-center text-slate-400 hover:text-indigo-400 transition-colors z-50 hover:scale-105">
+    <i id="theme-icon" class="fas fa-moon"></i>
+  </button>
+
+  <!-- Registration Card -->
+  <div class="glass p-8 md:p-10 rounded-[3rem] w-full max-w-md modal-enter relative z-10 my-6">
+
+    <!-- Glow -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-indigo-500/10 blur-[60px] rounded-full pointer-events-none"></div>
+
+    <!-- Logo & Title -->
+    <div class="text-center mb-7 relative z-10">
+      <div class="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-full mx-auto mb-4 flex items-center justify-center shadow-2xl border border-white/20 relative overflow-hidden hover:scale-105 transition-transform duration-300">
+        <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-transparent"></div>
+        <img src="img/logo.png" alt="Logo Al-Fatah" class="w-full h-full object-cover drop-shadow-lg rounded-full relative z-10" onerror="this.parentElement.innerHTML='<div class=\'text-3xl\'>🕌</div>'" />
+      </div>
+      <h1 class="text-lg font-black uppercase tracking-widest text-white">Buat Akun Panitia</h1>
+      <p class="text-[10px] text-slate-400 font-bold mt-1">PORTAL REUNI AKBAR AL-FATAH</p>
+    </div>
+
+    <!-- Step Indicator -->
+    <div class="step-indicator mb-7 px-2 relative z-10" id="step-indicator">
+      <div class="step-dot active" id="sdot-1">1</div>
+      <div class="step-line" id="sline-1"></div>
+      <div class="step-dot pending" id="sdot-2">2</div>
+      <div class="step-line" id="sline-2"></div>
+      <div class="step-dot pending" id="sdot-3"><i class="fas fa-check text-[9px]"></i></div>
+    </div>
+
+    <!-- Step 1: Identitas -->
+    <div id="step-1" class="space-y-4 relative z-10">
+      <p class="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-4">Langkah 1 — Identitas Diri</p>
+
+      <div class="relative">
+        <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+        <input type="text" id="reg-nama" class="input-field pl-11" placeholder="Nama Lengkap" autocomplete="name" />
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+        <input type="email" id="reg-email" class="input-field pl-11" placeholder="Alamat Email Aktif" autocomplete="email" />
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+        <input type="tel" id="reg-nowa" class="input-field pl-11" placeholder="No. WhatsApp (Contoh: 08123456789)" autocomplete="tel" />
+      </div>
+
+      <button onclick="goToStep2()" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all shadow-lg shadow-indigo-500/20 text-white hover:scale-[1.02] active:scale-[0.98] mt-2">
+        Lanjut <i class="fas fa-arrow-right ml-2"></i>
+      </button>
+    </div>
+
+    <!-- Step 2: Kata Sandi -->
+    <div id="step-2" class="space-y-4 relative z-10 hidden">
+      <p class="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-4">Langkah 2 — Kata Sandi</p>
+
+      <div class="relative">
+        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+        <input type="password" id="reg-password" class="input-field pl-11 pr-12" placeholder="Buat Kata Sandi (Min. 8 Karakter)" autocomplete="new-password" oninput="checkPasswordStrength(this.value)" />
+        <button type="button" class="toggle-password" onclick="toggleVis('reg-password', this)"><i class="fas fa-eye-slash text-sm"></i></button>
+      </div>
+
+      <!-- Strength meter -->
+      <div class="space-y-1.5 px-1">
+        <div class="flex gap-1.5">
+          <div class="strength-bar flex-1 bg-white/5" id="sb-1"></div>
+          <div class="strength-bar flex-1 bg-white/5" id="sb-2"></div>
+          <div class="strength-bar flex-1 bg-white/5" id="sb-3"></div>
+          <div class="strength-bar flex-1 bg-white/5" id="sb-4"></div>
+        </div>
+        <p id="strength-label" class="text-[9px] text-slate-500 font-bold uppercase tracking-widest"></p>
+      </div>
+
+      <div class="relative">
+        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+        <input type="password" id="reg-password-confirm" class="input-field pl-11 pr-12" placeholder="Ulangi Kata Sandi" autocomplete="new-password" />
+        <button type="button" class="toggle-password" onclick="toggleVis('reg-password-confirm', this)"><i class="fas fa-eye-slash text-sm"></i></button>
+      </div>
+
+      <!-- Info -->
+      <div class="bg-indigo-500/5 border border-indigo-500/15 rounded-xl p-3 text-[10px] text-slate-400 leading-relaxed">
+        <i class="fas fa-info-circle text-indigo-400 mr-1.5"></i>
+        Akun Anda akan berstatus <b class="text-amber-400">menunggu persetujuan</b> dan baru dapat digunakan setelah diaktifkan oleh Admin Utama atau Ketua Panitia.
+      </div>
+
+      <div class="flex gap-2 mt-2">
+        <button onclick="goToStep(1)" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 py-4 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all text-slate-300">
+          <i class="fas fa-arrow-left mr-2"></i> Kembali
+        </button>
+        <button onclick="submitRegister()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all shadow-lg shadow-emerald-500/20 text-white hover:scale-[1.02] active:scale-[0.98]">
+          <i class="fas fa-user-plus mr-2"></i> Daftar
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 3: Sukses -->
+    <div id="step-3" class="relative z-10 hidden text-center">
+      <div class="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full mx-auto mb-5 flex items-center justify-center">
+        <i class="fas fa-check-circle text-emerald-400 text-4xl"></i>
+      </div>
+      <h2 class="text-lg font-black text-white mb-2">Pendaftaran Terkirim!</h2>
+      <p class="text-xs text-slate-400 leading-relaxed mb-6">
+        Akun Anda telah berhasil dibuat dan sedang menunggu persetujuan dari Admin atau Ketua Panitia. Anda akan mendapat konfirmasi melalui WhatsApp setelah akun diaktifkan.
+      </p>
+      <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 mb-6 text-[10px] text-amber-300 font-bold text-left">
+        <i class="fas fa-clock mr-1.5"></i> Status: Menunggu Persetujuan Admin
+      </div>
+      <a href="login.html" class="block w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all shadow-lg shadow-indigo-500/20 text-white hover:scale-[1.02] text-center">
+        <i class="fas fa-sign-in-alt mr-2"></i> Kembali ke Halaman Login
+      </a>
+    </div>
+
+    <!-- Divider + Google -->
+    <div id="divider-google" class="relative z-10 mt-6">
+      <div class="flex items-center gap-4 mb-4">
+        <span class="border-b border-white/10 flex-1"></span>
+        <span class="text-[10px] text-slate-500 uppercase font-bold whitespace-nowrap">Atau daftar dengan</span>
+        <span class="border-b border-white/10 flex-1"></span>
+      </div>
+      <button onclick="handleGoogleRegister()" class="w-full bg-white hover:bg-slate-100 text-slate-800 py-4 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all shadow-lg flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98]">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5">
+        Daftar dengan Google
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-6 text-center relative z-10">
+      <p class="text-[10px] text-slate-500">Sudah punya akun?
+        <a href="login.html" class="text-indigo-400 hover:text-indigo-300 font-bold transition-colors ml-1">Masuk di sini</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Particle Script -->
+  <script>
+  (function(){
+    const c = document.getElementById('reg-canvas');
+    const ctx = c.getContext('2d');
+    let pts = [];
+    function resize(){ c.width=window.innerWidth; c.height=window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+    function rnd(a,b){ return Math.random()*(b-a)+a; }
+    for(let i=0;i<40;i++) pts.push({x:rnd(0,c.width),y:rnd(0,c.height),r:rnd(0.5,1.5),dx:rnd(-0.15,0.15),dy:rnd(-0.3,-0.05),a:rnd(0.1,0.4),col:Math.random()>0.5?'99,102,241':'16,185,129'});
+    (function loop(){
+      ctx.clearRect(0,0,c.width,c.height);
+      pts.forEach((p,i)=>{
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${p.col},${p.a})`; ctx.fill();
+        p.x+=p.dx; p.y+=p.dy; p.a-=0.0008;
+        if(p.y<-5||p.a<=0) pts[i]={x:rnd(0,c.width),y:c.height+5,r:rnd(0.5,1.5),dx:rnd(-0.15,0.15),dy:rnd(-0.3,-0.05),a:rnd(0.1,0.4),col:Math.random()>0.5?'99,102,241':'16,185,129'};
+      });
+      requestAnimationFrame(loop);
+    })();
+  })();
+  </script>
+
+  <script src="js/capacitor-plugins.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
+      authDomain: "reuniakbar.firebaseapp.com",
+      projectId: "reuniakbar",
+      storageBucket: "reuniakbar.firebasestorage.app",
+      messagingSenderId: "542951643652",
+      appId: "1:542951643652:web:1b4b7dac6c676a5d6c3351"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+    try { db.settings({ experimentalForceLongPolling: true }); } catch(e) {}
+
+    // ── Theme ──────────────────────────────────────────────────────────────────
+    window.isLightMode = localStorage.getItem('af_theme') === 'light';
+    window.toggleTheme = () => {
+      window.isLightMode = !window.isLightMode;
+      localStorage.setItem('af_theme', window.isLightMode ? 'light' : 'dark');
+      applyTheme();
+    };
+    function applyTheme() {
+      if (window.isLightMode) { document.body.classList.add('light-theme'); document.getElementById('theme-icon').className = 'fas fa-sun'; }
+      else { document.body.classList.remove('light-theme'); document.getElementById('theme-icon').className = 'fas fa-moon'; }
+    }
+    applyTheme();
+
+    // ── Utilities ──────────────────────────────────────────────────────────────
+    window.toggleLoading = (show, text='Memuat...') => {
+      const ov = document.getElementById('loading-overlay');
+      if (show) { document.getElementById('loading-text').innerText = text; ov.classList.remove('hidden'); }
+      else { ov.classList.add('hidden'); }
+    };
+
+    window.notify = (message, type='success') => {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `p-4 mb-2 rounded-xl backdrop-blur border-l-4 ${type==='error'?'border-red-500 bg-red-900/30':'border-emerald-500 bg-emerald-900/30'} font-bold text-[10px] uppercase shadow-2xl text-white transform transition-all duration-300 translate-x-full opacity-0 max-w-sm`;
+      toast.innerHTML = `<div class="flex items-center"><i class="fas ${type==='error'?'fa-exclamation-circle text-red-400':'fa-check-circle text-emerald-400'} mr-2"></i>${message}</div>`;
+      container.appendChild(toast);
+      setTimeout(()=>toast.classList.remove('translate-x-full','opacity-0'),10);
+      setTimeout(()=>{toast.classList.add('translate-x-full','opacity-0');setTimeout(()=>toast.remove(),300)},3500);
+    };
+
+    // ── Visibility Toggle ──────────────────────────────────────────────────────
+    window.toggleVis = (id, btn) => {
+      const el = document.getElementById(id);
+      if (el.type === 'password') {
+        el.type = 'text';
+        btn.innerHTML = '<i class="fas fa-eye text-sm"></i>';
+      } else {
+        el.type = 'password';
+        btn.innerHTML = '<i class="fas fa-eye-slash text-sm"></i>';
+      }
+    };
+
+    // ── Password Strength ──────────────────────────────────────────────────────
+    window.checkPasswordStrength = (val) => {
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const bars  = ['sb-1','sb-2','sb-3','sb-4'];
+      const colors = ['bg-red-500','bg-orange-400','bg-yellow-400','bg-emerald-500'];
+      const labels = ['','Lemah','Sedang','Kuat','Sangat Kuat'];
+      const lColors = ['','text-red-400','text-orange-400','text-yellow-400','text-emerald-400'];
+
+      bars.forEach((id, i) => {
+        const el = document.getElementById(id);
+        el.className = `strength-bar flex-1 ${i < score ? colors[score - 1] : 'bg-white/5'}`;
+      });
+
+      const label = document.getElementById('strength-label');
+      label.textContent = val.length ? labels[score] : '';
+      label.className = `text-[9px] font-bold uppercase tracking-widest ${lColors[score] || 'text-slate-500'}`;
+    };
+
+    // ── Step Navigation ────────────────────────────────────────────────────────
+    window.goToStep = (n) => {
+      [1,2,3].forEach(i => {
+        document.getElementById(`step-${i}`).classList.add('hidden');
+      });
+      document.getElementById(`step-${n}`).classList.remove('hidden');
+      updateStepUI(n);
+
+      // Sembunyikan Google register saat step 3
+      const dividerGoogle = document.getElementById('divider-google');
+      if (dividerGoogle) dividerGoogle.classList.toggle('hidden', n === 3);
+    };
+
+    function updateStepUI(n) {
+      [1,2,3].forEach(i => {
+        const dot = document.getElementById(`sdot-${i}`);
+        if (i < n) {
+          dot.className = 'step-dot done';
+          dot.innerHTML = '<i class="fas fa-check text-[9px]"></i>';
+        } else if (i === n) {
+          dot.className = 'step-dot active';
+          dot.innerHTML = i < 3 ? String(i) : '<i class="fas fa-check text-[9px]"></i>';
+        } else {
+          dot.className = 'step-dot pending';
+          dot.innerHTML = i < 3 ? String(i) : '<i class="fas fa-check text-[9px]"></i>';
+        }
+      });
+      if (n >= 2 && document.getElementById('sline-1')) {
+        document.getElementById('sline-1').className = 'step-line done';
+      } else if (document.getElementById('sline-1')) {
+        document.getElementById('sline-1').className = 'step-line';
+      }
+      if (n >= 3 && document.getElementById('sline-2')) {
+        document.getElementById('sline-2').className = 'step-line done';
+      } else if (document.getElementById('sline-2')) {
+        document.getElementById('sline-2').className = 'step-line';
+      }
+    }
+
+    window.goToStep2 = () => {
+      const nama  = document.getElementById('reg-nama').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const nowa  = document.getElementById('reg-nowa').value.trim();
+
+      if (!nama) { window.notify('Nama lengkap wajib diisi!', 'error'); document.getElementById('reg-nama').focus(); return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { window.notify('Format email tidak valid!', 'error'); document.getElementById('reg-email').focus(); return; }
+      if (!nowa || nowa.length < 9) { window.notify('Nomor WhatsApp tidak valid!', 'error'); document.getElementById('reg-nowa').focus(); return; }
+
+      goToStep(2);
+    };
+
+    // ── Submit Registration ────────────────────────────────────────────────────
+    window.submitRegister = async () => {
+      const nama     = document.getElementById('reg-nama').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const nowa     = document.getElementById('reg-nowa').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirm  = document.getElementById('reg-password-confirm').value;
+
+      if (password.length < 8) { window.notify('Kata sandi minimal 8 karakter!', 'error'); return; }
+      if (password !== confirm) { window.notify('Konfirmasi kata sandi tidak cocok!', 'error'); document.getElementById('reg-password-confirm').classList.add('error'); return; }
+
+      window.toggleLoading(true, 'Mendaftarkan Akun...');
+      try {
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        const uid  = cred.user.uid;
+
+        // Simpan profil tambahan ke Firestore
+        await db.collection('users').doc(uid).set({
+          email:      email,
+          nama:       nama,
+          nowa:       nowa,
+          role:       'pending',
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Update display name di Firebase Auth
+        await cred.user.updateProfile({ displayName: nama });
+        await auth.signOut();
+
+        window.toggleLoading(false);
+        goToStep(3);
+      } catch(e) {
+        const errMap = {
+          'auth/email-already-in-use': 'Email sudah terdaftar. Silakan login.',
+          'auth/weak-password': 'Kata sandi terlalu lemah.',
+          'auth/invalid-email': 'Format email tidak valid.',
+          'auth/network-request-failed': 'Koneksi internet bermasalah.',
+        };
+        window.notify(errMap[e.code] || ('Gagal daftar: ' + (e.message || '')), 'error');
+        window.toggleLoading(false);
+      }
+    };
+
+    // ── Google Register ────────────────────────────────────────────────────────
+    window.handleGoogleRegister = async () => {
+      window.toggleLoading(true, 'Otentikasi Google...');
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        let result;
+        try {
+          result = await auth.signInWithPopup(provider);
+        } catch(popupErr) {
+          if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/cancelled-popup-request') {
+            window.notify('Popup diblokir. Mengalihkan halaman...', 'success');
+            await auth.signInWithRedirect(provider);
+            return;
+          }
+          throw popupErr;
+        }
+
+        const user = result.user;
+        const userRef = db.collection('users').doc(user.uid);
+        const snap = await userRef.get();
+
+        if (!snap.exists) {
+          await userRef.set({
+            email:      user.email || '',
+            nama:       user.displayName || user.email?.split('@')[0] || 'User',
+            nowa:       '',
+            role:       'pending',
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        await auth.signOut();
+        window.toggleLoading(false);
+        goToStep(3);
+      } catch(e) {
+        window.notify('Gagal daftar dengan Google: ' + (e.message || ''), 'error');
+        window.toggleLoading(false);
+      }
+    };
+  </script>
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[PWA] Registered:', reg.scope))
+          .catch((err) => console.error('[PWA] Failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

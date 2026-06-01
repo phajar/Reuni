@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#060813" />
+  <meta name="description" content="AI Pembuat Surat Undangan Kumpulan Alumni — Portal Reuni Akbar AL-FATAH. Buat surat undangan resmi dan profesional secara otomatis dengan kecerdasan buatan." />
+  <title>AI Surat Undangan — AL-FATAH</title>
+
+  <script src="js/lib/tailwindcss.js"></script>
+  <link rel="stylesheet" href="css/all.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Outfit:wght@300;400;600;800&family=Amiri:wght@400;700&display=swap');
+
+    :root {
+      --bg: #030712;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+      --emerald-gradient: linear-gradient(135deg, #10b981, #06b6d4);
+      --amber-gradient: linear-gradient(135deg, #f59e0b, #f97316);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg);
+      color: #e2e8f0;
+      font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Glass */
+    .glass {
+      background: rgba(13,17,39,0.65);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(99,102,241,0.08);
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Input Fields */
+    .input-field {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(8,10,24,0.5);
+      border: 1px solid rgba(99,102,241,0.15);
+      color: white;
+      outline: none;
+      transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+      font-size: 14px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .input-field:focus {
+      border-color: #818cf8;
+      background: rgba(8,10,24,0.7);
+      box-shadow: 0 0 15px rgba(99,102,241,0.25);
+    }
+    .input-field::placeholder { color: #4b5563; }
+
+    textarea.input-field { resize: vertical; min-height: 80px; }
+
+    /* Btn primary */
+    .btn-primary {
+      background: var(--primary-gradient);
+      color: white;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.4); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: #a5b4fc;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(99,102,241,0.2);
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-secondary:hover { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.4); transform: translateY(-1px); }
+
+    /* Orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(80px);
+      animation: orbFloat 12s ease-in-out infinite;
+    }
+    @keyframes orbFloat {
+      0%,100%{ transform: translate(0,0) scale(1); }
+      33%{ transform: translate(30px,-20px) scale(1.05); }
+      66%{ transform: translate(-20px,15px) scale(0.95); }
+    }
+
+    /* Label */
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #818cf8;
+      margin-bottom: 6px;
+    }
+
+    /* Section card */
+    .section-card {
+      background: rgba(13,17,39,0.5);
+      border: 1px solid rgba(99,102,241,0.1);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    /* AI thinking dots */
+    .thinking-dot { display: inline-block; width: 6px; height: 6px; background: #818cf8; border-radius: 50%; animation: blink 1.4s infinite; }
+    .thinking-dot:nth-child(2){ animation-delay: 0.2s; }
+    .thinking-dot:nth-child(3){ animation-delay: 0.4s; }
+    @keyframes blink { 0%,80%,100%{ transform: scale(0.6); opacity: 0.4; } 40%{ transform: scale(1); opacity: 1; } }
+
+    /* Surat preview */
+    #surat-preview {
+      font-family: 'Times New Roman', Times, serif;
+      color: #1e293b;
+      background: white;
+      padding: 40px 48px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.8;
+      white-space: normal;
+      min-height: 300px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      border: 1px solid rgba(99,102,241,0.3);
+      transition: all 0.3s ease;
+    }
+
+    #kop-area {
+      white-space: normal !important;
+      color: black;
+      width: 100%;
+    }
+
+    #surat-pembuka, #surat-penutup {
+      white-space: pre-line;
+    }
+
+    @media (max-width: 640px) {
+      #surat-preview {
+        padding: 24px 16px !important;
+        font-size: 13px !important;
+        line-height: 1.6 !important;
+        border-radius: 12px !important;
+      }
+      #kop-area {
+        margin-bottom: 16px !important;
+      }
+      #kop-area h3 {
+        font-size: 11px !important;
+      }
+      #kop-area h4 {
+        font-size: 12px !important;
+      }
+      #kop-area p {
+        font-size: 8px !important;
+      }
+      #kop-area img {
+        width: 48px !important;
+        height: 48px !important;
+      }
+      #surat-meta-section {
+        flex-direction: column !important;
+        gap: 8px;
+      }
+      #lbl-tgl-surat {
+        text-align: left !important;
+      }
+      #surat-signatures-section {
+        margin-top: 24px !important;
+      }
+      #surat-signatures-section .w-\[45\%\] {
+        width: 48% !important;
+      }
+      #surat-signatures-section .h-16 {
+        height: 48px !important;
+      }
+    }
+
+    /* Step indicators */
+    .step-indicator {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+      transition: all 0.3s;
+    }
+    .step-active { background: var(--primary-gradient); color: white; box-shadow: 0 4px 15px rgba(99,102,241,0.5); }
+    .step-done { background: linear-gradient(135deg,#10b981,#06b6d4); color: white; }
+    .step-idle { background: rgba(99,102,241,0.1); color: #4b5563; border: 1px solid rgba(99,102,241,0.2); }
+
+    /* Template chips */
+    .template-chip {
+      padding: 8px 16px;
+      border-radius: 50px;
+      background: rgba(99,102,241,0.08);
+      border: 1px solid rgba(99,102,241,0.2);
+      color: #a5b4fc;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .template-chip:hover, .template-chip.active {
+      background: rgba(99,102,241,0.25);
+      border-color: #818cf8;
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    /* Print styles */
+    @media print {
+      body { background: white !important; }
+      #no-print { display: none !important; }
+      #surat-preview {
+        box-shadow: none;
+        border: none;
+        padding: 20px;
+        font-size: 12pt;
+        color: black;
+        background: white;
+      }
+      #print-area { padding: 0; }
+    }
+
+    /* Typewriter cursor */
+    .typewriter::after {
+      content: '|';
+      animation: cursor-blink 0.8s infinite;
+      color: #6366f1;
+    }
+    @keyframes cursor-blink { 0%,100%{ opacity: 1; } 50%{ opacity: 0; } }
+
+    /* Modal animation */
+    .modal-enter { animation: modalFadeIn 0.4s cubic-bezier(.4,0,.2,1) forwards; }
+    @keyframes modalFadeIn {
+      from{ opacity:0; transform:scale(0.95) translateY(10px); }
+      to{ opacity:1; transform:scale(1) translateY(0); }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+
+<body class="relative">
+  <!-- Orbs -->
+  <div class="orb w-[500px] h-[500px] bg-indigo-600/15 top-[-20%] left-[-20%]" style="animation-delay:0s"></div>
+  <div class="orb w-[400px] h-[400px] bg-purple-600/10 bottom-[-15%] right-[-10%]" style="animation-delay:-5s"></div>
+  <div class="orb w-[300px] h-[300px] bg-emerald-600/10 top-[40%] left-[60%]" style="animation-delay:-9s"></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="hidden fixed inset-0 z-[500] bg-black/70 backdrop-blur-sm flex items-center justify-center">
+    <div class="p-8 glass rounded-[2.5rem] flex flex-col items-center border border-indigo-500/20 modal-enter text-center">
+      <div class="relative w-16 h-16 mb-4">
+        <div class="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+        <div class="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <div class="absolute inset-2 border-2 border-purple-400 border-b-transparent rounded-full animate-spin" style="animation-direction:reverse;animation-duration:0.7s"></div>
+      </div>
+      <div class="flex gap-2 mb-2">
+        <span class="thinking-dot"></span>
+        <span class="thinking-dot"></span>
+        <span class="thinking-dot"></span>
+      </div>
+      <p id="loading-text" class="text-[10px] font-black uppercase tracking-widest text-indigo-400 mt-1">AI Sedang Menyusun Surat...</p>
+      <p class="text-[9px] text-slate-500 mt-1">Mohon tunggu sebentar</p>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav id="no-print" class="sticky top-0 z-50 glass border-b border-indigo-500/10 px-4 py-3 flex items-center gap-3">
+    <a href="index.html" class="w-9 h-9 glass rounded-xl flex items-center justify-center text-slate-400 hover:text-indigo-400 transition-colors flex-shrink-0 hover:scale-105">
+      <i class="fas fa-arrow-left text-sm"></i>
+    </a>
+    <div class="w-8 h-8 rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
+      <img src="img/logo.png" alt="Logo" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'text-lg flex items-center justify-center h-full\'>🕌</div>'" />
+    </div>
+    <div class="flex-1 min-w-0">
+      <h1 class="text-sm font-black uppercase tracking-wider text-white truncate">AI Pembuat Surat Undangan</h1>
+      <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Reuni Akbar AL-FATAH</p>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="resetForm()" class="btn-secondary py-2 px-3 text-[10px]">
+        <i class="fas fa-redo-alt"></i>
+        <span class="hidden sm:inline">Reset</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="relative z-10 max-w-4xl mx-auto px-4 pb-12 pt-6">
+
+    <!-- Hero Banner -->
+    <div class="glass rounded-3xl p-6 mb-6 relative overflow-hidden border border-indigo-500/15">
+      <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-purple-600/5 to-transparent"></div>
+      <div class="relative z-10 flex items-center gap-4">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/30">
+          <i class="fas fa-robot text-2xl text-white"></i>
+        </div>
+        <div>
+          <h2 class="text-lg font-black text-white mb-1">Buat Surat Undangan Otomatis</h2>
+          <p class="text-sm text-slate-400 leading-relaxed">Isi formulir di bawah, AI akan menyusun surat undangan resmi dan profesional untuk acara kumpulan alumni Anda secara instan.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two Column Layout on Desktop -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- LEFT: Form -->
+      <div id="no-print">
+        <!-- Template Cepat -->
+        <div class="section-card">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center">
+              <i class="fas fa-magic text-amber-400 text-xs"></i>
+            </div>
+            <span class="text-xs font-black uppercase tracking-widest text-amber-400">Template Cepat</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button class="template-chip active" id="chip-reuni" onclick="applyTemplate('reuni')">🎓 Reuni Akbar</button>
+            <button class="template-chip" id="chip-rapat" onclick="applyTemplate('rapat')">📋 Rapat Koordinasi</button>
+            <button class="template-chip" id="chip-syukuran" onclick="applyTemplate('syukuran')">🎉 Syukuran</button>
+            <button class="template-chip" id="chip-halal" onclick="applyTemplate('halal')">🌙 Halal Bihalal</button>
+            <button class="template-chip" id="chip-custom" onclick="applyTemplate('custom')">✏️ Kustom</button>
+          </div>
+        </div>
+
+        <!-- Form Pengirim -->
+        <div class="section-card">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="step-indicator step-active" id="step1">1</div>
+            <span class="text-sm font-black uppercase tracking-wider text-white">Informasi Pengirim</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="form-label">Nama Organisasi / Panitia</label>
+              <input type="text" id="org-name" class="input-field" placeholder="cth: Panitia Reuni Akbar" />
+            </div>
+            <div>
+              <label class="form-label">Nomor Surat</label>
+              <input type="text" id="nomor-surat" class="input-field" placeholder="cth: 01/PA-AF/V/2025" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="form-label">Alamat Pengirim</label>
+              <input type="text" id="alamat-pengirim" class="input-field" placeholder="cth: Pondok Pesantren AL-FATAH, Lampung" />
+            </div>
+            <div class="sm:col-span-2 flex items-center justify-between mt-1 bg-indigo-950/30 p-3 rounded-xl border border-indigo-500/10">
+              <div>
+                <label class="text-[10px] font-black uppercase tracking-wider text-indigo-400 block">Kop Surat Resmi AL-FATAH</label>
+                <span class="text-[9px] text-slate-400">Tampilkan kop surat formal dengan logo resmi di pratinjau</span>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="use-kop" class="sr-only peer" checked>
+                <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Acara -->
+        <div class="section-card">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="step-indicator step-active" id="step2">2</div>
+            <span class="text-sm font-black uppercase tracking-wider text-white">Detail Acara</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="sm:col-span-2">
+              <label class="form-label">Nama / Judul Acara</label>
+              <input type="text" id="nama-acara" class="input-field" placeholder="cth: Reuni Akbar Alumni Angkatan 2005" />
+            </div>
+            <div>
+              <label class="form-label">Hari, Tanggal</label>
+              <input type="date" id="tanggal-acara" class="input-field" />
+            </div>
+            <div>
+              <label class="form-label">Waktu (Pukul)</label>
+              <input type="time" id="waktu-acara" class="input-field" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="form-label">Tempat / Lokasi</label>
+              <input type="text" id="tempat-acara" class="input-field" placeholder="cth: Aula Pondok Pesantren AL-FATAH" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="form-label">Agenda / Tujuan Acara <span class="text-slate-500 font-normal normal-case">(opsional)</span></label>
+              <textarea id="agenda-acara" class="input-field" placeholder="cth: Silaturahmi alumni, laporan kegiatan, rencana reuni besar..." style="min-height:70px"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Penerima & Gaya -->
+        <div class="section-card">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="step-indicator step-active" id="step3">3</div>
+            <span class="text-sm font-black uppercase tracking-wider text-white">Penerima & Gaya Surat</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="sm:col-span-2">
+              <label class="form-label">Kepada (Penerima Undangan)</label>
+              <input type="text" id="penerima" class="input-field" placeholder="cth: Seluruh Alumni Angkatan 2000–2010" />
+            </div>
+            <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="form-label">Penanda Tangan 1 (Kiri - Sekretaris)</label>
+                <select id="select-panitia-ttd1" class="input-field text-indigo-300 font-bold mb-2" onchange="updateSignaturesFromSelection()">
+                  <option value="">-- Pilih Sekretaris --</option>
+                </select>
+                <input type="text" id="ttd-nama" class="input-field bg-slate-900/50 text-slate-400 font-semibold text-xs" readonly placeholder="Nama Sekretaris" />
+                <input type="hidden" id="ttd-jabatan" />
+              </div>
+              <div>
+                <label class="form-label">Penanda Tangan 2 (Kanan - Ketua)</label>
+                <select id="select-panitia-ttd2" class="input-field text-indigo-300 font-bold mb-2" onchange="updateSignaturesFromSelection()">
+                  <option value="">-- Pilih Ketua Panitia --</option>
+                </select>
+                <input type="text" id="ttd-nama2" class="input-field bg-slate-900/50 text-slate-400 font-semibold text-xs" readonly placeholder="Nama Ketua Panitia" />
+              </div>
+              <div>
+                <label class="form-label">Penanda Tangan 3 (Tengah Bawah - Pimpinan)</label>
+                <select id="select-panitia-ttd3" class="input-field text-indigo-300 font-bold mb-2" onchange="updateSignaturesFromSelection()">
+                  <option value="">-- Pilih Pimpinan (Opsional) --</option>
+                </select>
+                <input type="text" id="ttd-nama3" class="input-field bg-slate-900/50 text-slate-400 font-semibold text-xs" readonly placeholder="Nama Pimpinan" />
+                <input type="hidden" id="ttd-jabatan3" />
+              </div>
+            </div>
+            <div>
+              <label class="form-label">Gaya Bahasa</label>
+              <select id="gaya-bahasa" class="input-field">
+                <option value="resmi">📜 Formal / Resmi</option>
+                <option value="semi">📝 Semi-Formal</option>
+                <option value="islami">🕌 Islami / Pesantren</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Tambahan Penutup</label>
+              <input type="text" id="tambahan" class="input-field" placeholder="cth: Harap hadir tepat waktu" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="flex gap-3">
+          <button id="btn-generate" onclick="generateSurat()" class="btn-primary flex-1 justify-center py-4 text-sm">
+            <i class="fas fa-robot"></i>
+            Buat Surat Sekarang
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Preview -->
+      <div>
+        <div class="glass rounded-2xl p-4 sticky top-20">
+          <!-- Preview header -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <i class="fas fa-file-alt text-emerald-400 text-xs"></i>
+              </div>
+              <span class="text-xs font-black uppercase tracking-widest text-emerald-400">Pratinjau Surat</span>
+            </div>
+            <div id="action-buttons" class="flex gap-2" style="display:none!important">
+              <button onclick="copySurat()" class="btn-secondary py-2 px-3 text-[10px]">
+                <i class="fas fa-copy"></i>
+                Salin
+              </button>
+              <button onclick="printSurat()" class="btn-secondary py-2 px-3 text-[10px]">
+                <i class="fas fa-print"></i>
+                Cetak
+              </button>
+            </div>
+          </div>
+
+          <div id="print-area">
+            <div id="surat-preview" class="relative">
+              <!-- Empty State -->
+              <div id="preview-empty" class="flex flex-col items-center justify-center h-64 text-center">
+                <div class="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4 border border-indigo-500/20">
+                  <i class="fas fa-scroll text-3xl text-indigo-500/50"></i>
+                </div>
+                <p class="text-slate-500 font-bold text-sm mb-1">Surat Belum Dibuat</p>
+                <p class="text-slate-600 text-xs">Isi formulir di sebelah kiri lalu klik<br><strong class="text-indigo-400">"Buat Surat Sekarang"</strong></p>
+              </div>
+              
+              <!-- Kop Surat -->
+              <div id="kop-area" style="display:none;"></div>
+              
+              <!-- Letter Body (HTML Structured) -->
+              <div id="surat-html-body" style="display:none; color:#1e293b; font-family: inherit;">
+                <!-- Header Meta (Nomor, Perihal, Date) -->
+                <div id="surat-meta-section" class="flex justify-between items-start mb-6 text-sm" style="font-family: inherit;">
+                  <div class="space-y-1">
+                    <div><span class="inline-block w-20">Nomor</span>: <span id="lbl-nomor">-</span></div>
+                    <div><span class="inline-block w-20">Lampiran</span>: -</div>
+                    <div><span class="inline-block w-20">Perihal</span>: <strong id="lbl-perihal">-</strong></div>
+                  </div>
+                  <div id="lbl-tgl-surat" class="text-right">Purwakarta, -- -- ----</div>
+                </div>
+
+                <!-- Recipient Section -->
+                <div class="mb-6 text-sm" style="font-family: inherit;">
+                  <div>Kepada Yth.</div>
+                  <div class="font-bold" id="lbl-penerima">-</div>
+                  <div>di Tempat</div>
+                </div>
+
+                <!-- Basmallah & Salam -->
+                <div id="surat-basmallah" class="text-center font-serif text-lg mb-4 hidden" style="font-family: 'Amiri', serif;">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>
+                <div id="surat-salam" class="mb-4 text-sm" style="font-family: inherit;"></div>
+
+                <!-- Paragraph 1 (Pembuka) -->
+                <div id="surat-pembuka" class="mb-4 text-sm text-justify leading-relaxed" style="font-family: inherit;"></div>
+
+                <!-- Event Details (Aligned Table) -->
+                <table id="surat-details-table" class="w-full my-4 text-sm" style="font-family: inherit; border-collapse: collapse;">
+                  <tr class="align-top">
+                    <td class="w-28 py-1 font-bold">Acara</td>
+                    <td class="w-4 py-1">:</td>
+                    <td class="py-1" id="lbl-detail-acara">-</td>
+                  </tr>
+                  <tr class="align-top">
+                    <td class="py-1 font-bold">Hari, Tanggal</td>
+                    <td class="py-1">:</td>
+                    <td class="py-1" id="lbl-detail-tgl">-</td>
+                  </tr>
+                  <tr class="align-top">
+                    <td class="py-1 font-bold">Waktu</td>
+                    <td class="py-1">:</td>
+                    <td class="py-1" id="lbl-detail-waktu">-</td>
+                  </tr>
+                  <tr class="align-top">
+                    <td class="py-1 font-bold">Tempat</td>
+                    <td class="py-1">:</td>
+                    <td class="py-1" id="lbl-detail-tempat">-</td>
+                  </tr>
+                  <tr class="align-top" id="row-detail-agenda">
+                    <td class="py-1 font-bold">Agenda</td>
+                    <td class="py-1">:</td>
+                    <td class="py-1" id="lbl-detail-agenda">-</td>
+                  </tr>
+                  <tr class="align-top" id="row-detail-catatan">
+                    <td class="py-1 font-bold text-red-600">Catatan</td>
+                    <td class="py-1">:</td>
+                    <td class="py-1 text-red-600 italic font-semibold" id="lbl-detail-catatan">-</td>
+                  </tr>
+                </table>
+
+                <!-- Paragraph 2 (Penutup) -->
+                <div id="surat-penutup" class="mb-8 text-sm text-justify leading-relaxed" style="font-family: inherit;"></div>
+
+                <!-- Signatures -->
+                <div id="surat-signatures-section" class="flex justify-center gap-4 items-start text-sm mt-8" style="font-family: inherit;">
+                  <!-- Signatory 1 (Left: Sekretaris) -->
+                  <div id="sig1-container" class="text-center w-[45%]">
+                    <div id="lbl-sig1-role" class="font-bold text-[11px] text-slate-800 uppercase">Sekretaris</div>
+                    <div class="h-16 flex items-center justify-center my-1" id="lbl-sig1-img-container">
+                      <img id="lbl-sig1-img" src="" class="hidden max-h-16 object-contain" alt="Ttd 1" />
+                    </div>
+                    <div class="font-bold underline text-xs" id="lbl-sig1-name">-</div>
+                  </div>
+                  <!-- Signatory 3 (Center: Pimpinan) -->
+                  <div id="sig3-container" class="text-center w-[45%] hidden">
+                    <div id="lbl-sig3-role" class="font-bold text-[11px] text-slate-800 uppercase">Pimpinan</div>
+                    <div class="h-16 flex items-center justify-center my-1" id="lbl-sig3-img-container">
+                      <img id="lbl-sig3-img" src="" class="hidden max-h-16 object-contain" alt="Ttd 3" />
+                    </div>
+                    <div class="font-bold underline text-xs" id="lbl-sig3-name">-</div>
+                  </div>
+                  <!-- Signatory 2 (Right: Ketua Panitia) -->
+                  <div id="sig2-container" class="text-center w-[45%]">
+                    <div id="lbl-sig2-role" class="font-bold text-[11px] text-slate-800 uppercase">Ketua Panitia</div>
+                    <div class="h-16 flex items-center justify-center my-1" id="lbl-sig2-img-container">
+                      <img id="lbl-sig2-img" src="" class="hidden max-h-16 object-contain" alt="Ttd 2" />
+                    </div>
+                    <div class="font-bold underline text-xs" id="lbl-sig2-name">-</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Legacy content area for copy action text fallback, hidden visually -->
+              <div id="surat-content" style="display:none;color:#1e293b"></div>
+            </div>
+          </div>
+
+          <!-- Action buttons below preview -->
+          <div id="action-buttons-bottom" class="flex gap-2 mt-4 flex-wrap" style="display:none">
+            <button onclick="copySurat()" class="btn-secondary flex-1 justify-center py-3 min-w-[100px]">
+              <i class="fas fa-copy"></i>
+              Salin Teks
+            </button>
+            <button onclick="exportOfficialPDF()" class="btn-primary flex-1 justify-center py-3 min-w-[125px] !bg-gradient-to-r !from-indigo-600 !to-purple-600">
+              <i class="fas fa-file-pdf"></i>
+              PDF Resmi (F4)
+            </button>
+            <button onclick="printSurat()" class="btn-secondary flex-1 justify-center py-3 min-w-[100px]">
+              <i class="fas fa-print"></i>
+              Cetak
+            </button>
+            <button onclick="downloadSurat()" class="btn-secondary flex-1 justify-center py-3 min-w-[100px]">
+              <i class="fas fa-download"></i>
+              Unduh Teks
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+  <script>
+  // ────────────────────────────────────────────────────────────────
+  // UTILITIES
+  // ────────────────────────────────────────────────────────────────
+  function notify(msg, type='success') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `p-4 mb-2 rounded-xl backdrop-blur border-l-4 ${type==='error'?'border-red-500 bg-red-900/30':'type'==='info'?'border-blue-500 bg-blue-900/30':'border-emerald-500 bg-emerald-900/30'} font-bold text-[10px] uppercase shadow-2xl text-white transform transition-all duration-300 translate-x-full opacity-0 max-w-xs`;
+    const icon = type==='error'?'fa-exclamation-circle text-red-400':type==='info'?'fa-info-circle text-blue-400':'fa-check-circle text-emerald-400';
+    t.innerHTML = `<div class="flex items-center gap-2"><i class="fas ${icon}"></i>${msg}</div>`;
+    c.appendChild(t);
+    setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);
+    setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300)},3500);
+  }
+
+  function setLoading(show) {
+    document.getElementById('loading-overlay').classList.toggle('hidden', !show);
+    document.getElementById('btn-generate').disabled = show;
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // TEMPLATES
+  // ────────────────────────────────────────────────────────────────
+  const templates = {
+    reuni: {
+      orgName: 'PANITIA REUNI AKBAR ALUMNI',
+      nomorSurat: '01/PAN-RA/ALFATAH/2026',
+      alamatPengirim: 'Jl. BBI Cirata Kp. Cilangkap Rt. 10 Rw.05 Cadassari Tegalwaru Purwakarta 41165',
+      namaAcara: 'Reuni Akbar Alumni Pondok Pesantren AL-FATAH',
+      tempat: 'Pondok Pesantren AL-FATAH, Purwakarta',
+      penerima: 'Seluruh Alumni Pondok Pesantren AL-FATAH',
+      agenda: 'Silaturahmi akbar, temu kangen, laporan pertanggungjawaban panitia, dan doa bersama',
+      ttdNama: 'H. Ahmad Zaini, S.Pd.',
+      ttdJabatan: 'Ketua Panitia Reuni Akbar',
+      gaya: 'islami',
+      tambahan: 'Harap hadir tepat waktu memakai pakaian putih rapi.'
+    },
+    rapat: {
+      orgName: 'PANITIA REUNI AKBAR ALUMNI',
+      nomorSurat: '02/PAN-RA/ALFATAH/2026',
+      alamatPengirim: 'Jl. BBI Cirata Kp. Cilangkap Rt. 10 Rw.05 Cadassari Tegalwaru Purwakarta 41165',
+      namaAcara: 'Rapat Koordinasi Persiapan Reuni',
+      tempat: 'Pondok Pesantren AL-FATAH, Purwakarta',
+      penerima: 'Seluruh Pengurus dan Anggota Panitia',
+      agenda: 'Pembahasan progres divisi, evaluasi anggaran RAB, dan finalisasi rundown acara',
+      ttdNama: 'H. Ahmad Zaini, S.Pd.',
+      ttdJabatan: 'Ketua Panitia',
+      gaya: 'resmi',
+      tambahan: 'Kehadiran Anda sangat menentukan kesuksesan Reuni Akbar.'
+    },
+    syukuran: {
+      orgName: 'KELUARGA BESAR ALUMNI AL-FATAH',
+      nomorSurat: '03/PAN-RA/ALFATAH/2026',
+      alamatPengirim: 'Jl. BBI Cirata Kp. Cilangkap Rt. 10 Rw.05 Cadassari Tegalwaru Purwakarta 41165',
+      namaAcara: 'Syukuran dan Doa Bersama Alumni',
+      tempat: 'Masjid Pondok Pesantren AL-FATAH, Purwakarta',
+      penerima: 'Segenap Guru, Alumni, dan Santri',
+      agenda: 'Khataman Al-Quran, doa bersama kemajuan pondok, dan makan bersama',
+      ttdNama: 'H. Ahmad Zaini, S.Pd.',
+      ttdJabatan: 'Ketua Pengurus Alumni',
+      gaya: 'islami',
+      tambahan: 'Harap membawa perlengkapan sholat masing-masing.'
+    },
+    halal: {
+      orgName: 'PANITIA HALAL BIHALAL ALUMNI',
+      nomorSurat: '04/PAN-RA/ALFATAH/2026',
+      alamatPengirim: 'Jl. BBI Cirata Kp. Cilangkap Rt. 10 Rw.05 Cadassari Tegalwaru Purwakarta 41165',
+      namaAcara: 'Halal Bihalal Idul Fitri Keluarga Besar AL-FATAH',
+      tempat: 'Aula Pondok Pesantren AL-FATAH, Purwakarta',
+      penerima: 'Seluruh Alumni Lintas Angkatan',
+      agenda: 'Mushafahah (saling bersalaman), tausiyah keagamaan, dan ramah tamah',
+      ttdNama: 'H. Ahmad Zaini, S.Pd.',
+      ttdJabatan: 'Ketua Panitia Halal Bihalal',
+      gaya: 'islami',
+      tambahan: 'Terbuka untuk keluarga alumni. Mohon konfirmasi kehadiran.'
+    },
+    custom: {
+      orgName: '',
+      nomorSurat: '',
+      alamatPengirim: '',
+      namaAcara: '',
+      tempat: '',
+      penerima: '',
+      agenda: '',
+      ttdNama: '',
+      ttdJabatan: '',
+      gaya: 'resmi',
+      tambahan: ''
+    }
+  };
+
+  function applyTemplate(key) {
+    // Update active chip
+    document.querySelectorAll('.template-chip').forEach(c => c.classList.remove('active'));
+    document.getElementById('chip-'+key).classList.add('active');
+
+    const t = templates[key];
+    document.getElementById('org-name').value      = t.orgName;
+    document.getElementById('nomor-surat').value   = t.nomorSurat;
+    document.getElementById('alamat-pengirim').value = t.alamatPengirim;
+    document.getElementById('nama-acara').value    = t.namaAcara;
+    document.getElementById('tempat-acara').value  = t.tempat;
+    document.getElementById('penerima').value      = t.penerima;
+    document.getElementById('agenda-acara').value  = t.agenda;
+    
+    // Only overwrite signatories if no dynamic committee data is loaded yet
+    if (!window.PANITIA_LIST || window.PANITIA_LIST.length === 0) {
+      document.getElementById('ttd-nama').value      = t.ttdNama;
+      document.getElementById('ttd-jabatan').value   = t.ttdJabatan;
+    }
+    
+    document.getElementById('gaya-bahasa').value   = t.gaya;
+    document.getElementById('tambahan').value      = t.tambahan;
+
+    // Set a sample date (next week)
+    if (key !== 'custom') {
+      const d = new Date(); d.setDate(d.getDate()+14);
+      document.getElementById('tanggal-acara').value = d.toISOString().split('T')[0];
+      document.getElementById('waktu-acara').value   = '09:00';
+    }
+
+    // Always update dynamic signatories from dropdown selections if dynamic data exists
+    if (window.updateSignaturesFromSelection && window.PANITIA_LIST && window.PANITIA_LIST.length > 0) {
+      window.updateSignaturesFromSelection();
+    }
+  }
+
+  // Apply default template on load
+  applyTemplate('reuni');
+
+  // ────────────────────────────────────────────────────────────────
+  // HELPERS
+  // ────────────────────────────────────────────────────────────────
+  function formatTanggal(dateStr) {
+    if (!dateStr) return '____, ___________';
+    const d = new Date(dateStr + 'T00:00:00');
+    const hari = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][d.getDay()];
+    const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][d.getMonth()];
+    return `${hari}, ${d.getDate()} ${bulan} ${d.getFullYear()}`;
+  }
+
+  function formatWaktu(timeStr) {
+    if (!timeStr) return '_____';
+    const [h, m] = timeStr.split(':');
+    return `${h}.${m} WIB`;
+  }
+
+  function getKotaTanggal() {
+    const d = new Date();
+    const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][d.getMonth()];
+    return `Lampung, ${d.getDate()} ${bulan} ${d.getFullYear()}`;
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // SURAT GENERATOR
+  // ────────────────────────────────────────────────────────────────
+  function buildSurat(data, skipHeader = false) {
+    const gaya = data.gaya;
+
+    let salam = '', pembuka = '', penutup = '', basmallah = '';
+
+    if (gaya === 'islami') {
+      basmallah = `بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ\n\n`;
+      salam = `Assalamu'alaikum Warahmatullahi Wabarakatuh\n\n`;
+      pembuka = `Segala puji bagi Allah SWT atas segala nikmat dan karunia-Nya. Shalawat serta salam senantiasa tercurahkan kepada Nabi Muhammad SAW, keluarga, dan para sahabatnya.`;
+      penutup = `Demikian undangan ini kami sampaikan. Atas kehadiran dan partisipasi Bapak/Ibu/Saudara/i, kami ucapkan terima kasih yang sebesar-besarnya. Semoga Allah SWT senantiasa meridhoi langkah kita bersama.\n\nWassalamu'alaikum Warahmatullahi Wabarakatuh`;
+    } else if (gaya === 'semi') {
+      salam = `Salam hangat,\n\n`;
+      pembuka = `Semoga Bapak/Ibu/Saudara/i dalam keadaan sehat dan bahagia. Dalam rangka mempererat tali silaturahmi, kami bermaksud mengundang kehadiran Anda dalam acara berikut.`;
+      penutup = `Demikian undangan ini kami sampaikan. Kehadiran Bapak/Ibu/Saudara/i merupakan kebanggaan dan kehormatan bagi kami.\n\nTerima kasih atas perhatiannya.`;
+    } else {
+      salam = `Dengan Hormat,\n\n`;
+      pembuka = `Bersama surat ini, kami selaku ${data.orgName || 'Panitia'} mengundang dengan hormat Bapak/Ibu/Saudara/i untuk menghadiri acara yang kami selenggarakan.`;
+      penutup = `Demikian undangan ini kami sampaikan. Besar harapan kami atas kehadiran Bapak/Ibu/Saudara/i pada acara tersebut. Atas perhatian dan kehadirannya, kami ucapkan terima kasih.`;
+    }
+
+    const agendaLine = data.agenda
+      ? `\n      Agenda     : ${data.agenda}`
+      : '';
+
+    const tambahanLine = data.tambahan
+      ? `\n\n📌 Catatan: ${data.tambahan}`
+      : '';
+
+    let header = '';
+    if (!skipHeader) {
+      header = `${data.orgName ? data.orgName.toUpperCase() : 'PANITIA ACARA'}\n` +
+               `${data.alamatPengirim || ''}\n` +
+               `${data.alamatPengirim ? '─────────────────────────────────────────\n\n' : '\n'}`;
+    }
+
+    const surat = `${skipHeader ? basmallah : header + basmallah}` +
+`Nomor   : ${data.nomorSurat || '-'}\n` +
+`Lampiran: -\n` +
+`Perihal : Undangan ${data.namaAcara || 'Acara'}\n\n` +
+`${getKotaTanggal()}\n\n` +
+`Kepada Yth.\n` +
+`${data.penerima || 'Seluruh Alumni'}\n` +
+`Di Tempat\n\n` +
+`${salam}${pembuka}\n\n` +
+`Dengan ini kami mengundang kehadiran Bapak/Ibu/Saudara/i dalam:\n\n` +
+`      Acara      : ${data.namaAcara || '—'}\n` +
+`      Hari/Tgl   : ${formatTanggal(data.tanggal)}\n` +
+`      Pukul      : ${formatWaktu(data.waktu)}\n` +
+`      Tempat     : ${data.tempat || '—'}${agendaLine}\n\n` +
+`${tambahanLine ? tambahanLine + '\n\n' : '\n'}${penutup}\n\n` +
+`Hormat Kami,\n` +
+`${data.orgName || 'Panitia'}\n\n` +
+(data.pimpNama && data.pimpNama !== "( ____________________ )" ? 
+`  ${data.ttdJabatan || 'Sekretaris'}             ${data.pimpJabatan || 'Pimpinan'}             ${data.sekreJabatan || 'Ketua Panitia'}\n\n\n` +
+`  ${data.ttdNama || '(_______________)'}             ${data.pimpNama || '(_______________)'}             ${data.sekreNama || '(_______________)'}` :
+`  ${data.ttdJabatan || 'Sekretaris'}                  ${data.sekreJabatan || 'Ketua Panitia'}\n\n\n` +
+`  ${data.ttdNama || '(_______________)'}                  ${data.sekreNama || '(_______________)'}`);
+
+    return surat;
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // TYPEWRITER EFFECT
+  // ────────────────────────────────────────────────────────────────
+  function typewriterEffect(targetEl, text, speed=8) {
+    return new Promise(resolve => {
+      targetEl.textContent = '';
+      targetEl.classList.add('typewriter');
+      let i = 0;
+      const timer = setInterval(() => {
+        if (i < text.length) {
+          targetEl.textContent += text[i];
+          i++;
+        } else {
+          clearInterval(timer);
+          targetEl.classList.remove('typewriter');
+          resolve();
+        }
+      }, speed);
+    });
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // MAIN GENERATE
+  // ────────────────────────────────────────────────────────────────
+  window.CURRENT_FULL_SURAT_TEXT = '';
+
+  async function generateSurat() {
+    const orgName    = document.getElementById('org-name').value.trim();
+    const nomorSurat = document.getElementById('nomor-surat').value.trim();
+    const alamatPengirim = document.getElementById('alamat-pengirim').value.trim();
+    const namaAcara  = document.getElementById('nama-acara').value.trim();
+    const tanggal    = document.getElementById('tanggal-acara').value;
+    const waktu      = document.getElementById('waktu-acara').value;
+    const tempat     = document.getElementById('tempat-acara').value.trim();
+    const agenda     = document.getElementById('agenda-acara').value.trim();
+    const penerima   = document.getElementById('penerima').value.trim();
+    const ttdNama    = document.getElementById('ttd-nama').value.trim();
+    const ttdJabatan = document.getElementById('ttd-jabatan').value.trim();
+    const gaya       = document.getElementById('gaya-bahasa').value;
+    const tambahan   = document.getElementById('tambahan').value.trim();
+
+    // Validation
+    if (!namaAcara) { notify('Nama acara harus diisi!', 'error'); document.getElementById('nama-acara').focus(); return; }
+    if (!tanggal)   { notify('Tanggal acara harus diisi!', 'error'); document.getElementById('tanggal-acara').focus(); return; }
+    if (!tempat)    { notify('Tempat acara harus diisi!', 'error'); document.getElementById('tempat-acara').focus(); return; }
+
+    setLoading(true);
+
+    // Simulate AI processing
+    await new Promise(r => setTimeout(r, 1800));
+
+    const useKop = document.getElementById('use-kop').checked;
+
+    let sekreName = "( ____________________ )";
+    let sekreJabatan = "Sekretaris";
+    const select2Val = document.getElementById('select-panitia-ttd2').value;
+    if (select2Val !== "") {
+      const p2 = window.PANITIA_LIST[select2Val];
+      sekreName = p2.nama;
+      sekreJabatan = p2.jabatan;
+    }
+
+    let pimpName = "( ____________________ )";
+    let pimpJabatan = "Pimpinan";
+    const select3Val = document.getElementById('select-panitia-ttd3').value;
+    if (select3Val !== "") {
+      const p3 = window.PANITIA_LIST[select3Val];
+      pimpName = p3.nama;
+      pimpJabatan = p3.jabatan;
+    }
+
+    // Cache full text (including text header) for clean copying and saving
+    window.CURRENT_FULL_SURAT_TEXT = buildSurat({ orgName, nomorSurat, alamatPengirim, namaAcara, tanggal, waktu, tempat, agenda, penerima, ttdNama, ttdJabatan, sekreNama: sekreName, sekreJabatan: sekreJabatan, pimpNama: pimpName, pimpJabatan: pimpJabatan, gaya, tambahan }, false);
+
+    const kopArea = document.getElementById('kop-area');
+    const previewEl = document.getElementById('surat-preview');
+    
+    if (useKop) {
+      kopArea.innerHTML = `
+      <div class="pb-4 mb-6 flex items-center gap-4 text-black" style="font-family: 'Times New Roman', Times, serif; border-bottom: 4px double black;">
+        <img src="img/logo.png" class="w-16 h-16 object-cover rounded-full flex-shrink-0" onerror="this.src='https://ui-avatars.com/api/?name=Al-Fatah&background=030712&color=fff'">
+        <div class="text-center flex-1">
+          <h3 class="text-sm font-black tracking-wide text-black uppercase m-0 leading-tight">ALUMNI PONDOK PESANTREN</h3>
+          <h4 class="text-base font-black tracking-wider text-black uppercase my-1 leading-tight">AL-FATAH TEGALWARU PURWAKARTA</h4>
+          <p class="text-[9px] text-gray-700 italic m-0">Jl. BBI Cirata Kp. Cilangkap Rt. 10 Rw.05 Cadassari Tegalwaru Purwakarta 41165</p>
+        </div>
+      </div>`;
+      kopArea.style.display = 'block';
+      previewEl.style.fontFamily = "'Times New Roman', Times, serif";
+    } else {
+      kopArea.style.display = 'none';
+      kopArea.innerHTML = '';
+      previewEl.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
+    }
+
+    const previewEmpty   = document.getElementById('preview-empty');
+    const suratHtmlBody  = document.getElementById('surat-html-body');
+    const suratContent   = document.getElementById('surat-content');
+    const actionButtons  = document.getElementById('action-buttons-bottom');
+
+    // Populate structured HTML elements
+    document.getElementById('lbl-nomor').textContent = nomorSurat || '-';
+    document.getElementById('lbl-perihal').textContent = `Undangan ${namaAcara}`;
+    
+    const d = new Date();
+    const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][d.getMonth()];
+    document.getElementById('lbl-tgl-surat').textContent = `Purwakarta, ${d.getDate()} ${bulan} ${d.getFullYear()}`;
+    
+    document.getElementById('lbl-penerima').textContent = penerima || 'Seluruh Alumni';
+    
+    document.getElementById('lbl-detail-acara').textContent = namaAcara;
+    document.getElementById('lbl-detail-tgl').textContent = formatTanggal(tanggal);
+    document.getElementById('lbl-detail-waktu').textContent = formatWaktu(waktu);
+    document.getElementById('lbl-detail-tempat').textContent = tempat;
+    
+    if (agenda) {
+      document.getElementById('lbl-detail-agenda').textContent = agenda;
+      document.getElementById('row-detail-agenda').style.display = 'table-row';
+    } else {
+      document.getElementById('row-detail-agenda').style.display = 'none';
+    }
+    
+    if (tambahan) {
+      document.getElementById('lbl-detail-catatan').textContent = tambahan;
+      document.getElementById('row-detail-catatan').style.display = 'table-row';
+    } else {
+      document.getElementById('row-detail-catatan').style.display = 'none';
+    }
+    
+    document.getElementById('lbl-sig1-role').textContent = ttdJabatan || 'Ketua Panitia';
+    document.getElementById('lbl-sig1-name').textContent = ttdNama || '( ____________________ )';
+    document.getElementById('lbl-sig2-role').textContent = sekreJabatan;
+    document.getElementById('lbl-sig2-name').textContent = sekreName;
+    document.getElementById('lbl-sig3-role').textContent = pimpJabatan;
+    document.getElementById('lbl-sig3-name').textContent = pimpName;
+
+    // Basmallah & Salam Setup
+    const basmallahEl = document.getElementById('surat-basmallah');
+    const salamEl = document.getElementById('surat-salam');
+    
+    if (gaya === 'islami') {
+      basmallahEl.classList.remove('hidden');
+      salamEl.textContent = "Assalamu'alaikum Warahmatullahi Wabarakatuh";
+    } else {
+      basmallahEl.classList.add('hidden');
+      salamEl.textContent = gaya === 'semi' ? 'Salam hangat,' : 'Dengan Hormat,';
+    }
+
+    // Paragraph Texts Setup
+    let pembukaText = "";
+    let penutupText = "";
+    
+    if (gaya === 'islami') {
+      pembukaText = "Segala puji bagi Allah SWT atas segala nikmat dan karunia-Nya. Shalawat serta salam senantiasa tercurahkan kepada Nabi Muhammad SAW, keluarga, dan para sahabatnya.\n\nDengan ini kami mengundang kehadiran Bapak/Ibu/Saudara/i dalam:";
+      penutupText = "Demikian undangan ini kami sampaikan. Atas kehadiran dan partisipasi Bapak/Ibu/Saudara/i, kami ucapkan terima kasih yang sebesar-besarnya. Semoga Allah SWT senantiasa meridhoi langkah kita bersama.\n\nWassalamu'alaikum Warahmatullahi Wabarakatuh";
+    } else if (gaya === 'semi') {
+      pembukaText = "Semoga Bapak/Ibu/Saudara/i dalam keadaan sehat dan bahagia. Dalam rangka mempererat tali silaturahmi, kami bermaksud mengundang kehadiran Anda dalam acara:";
+      penutupText = "Demikian undangan ini kami sampaikan. Kehadiran Bapak/Ibu/Saudara/i merupakan kebanggaan dan kehormatan bagi kami.\n\nTerima kasih atas perhatiannya.";
+    } else {
+      pembukaText = `Bersama surat ini, kami selaku ${orgName || 'Panitia'} mengundang dengan hormat Bapak/Ibu/Saudara/i untuk menghadiri acara yang kami selenggarakan:`;
+      penutupText = "Demikian undangan ini kami sampaikan. Besar harapan kami atas kehadiran Bapak/Ibu/Saudara/i pada acara tersebut. Atas perhatian dan kehadirannya, kami ucapkan terima kasih.";
+    }
+
+    // Reset Elements state for Animation
+    const pembukaEl = document.getElementById('surat-pembuka');
+    const penutupEl = document.getElementById('surat-penutup');
+    const tableEl = document.getElementById('surat-details-table');
+    const sigEl = document.getElementById('surat-signatures-section');
+    
+    pembukaEl.textContent = '';
+    penutupEl.textContent = '';
+    tableEl.style.opacity = '0';
+    tableEl.style.transition = 'opacity 0.4s ease';
+    sigEl.style.opacity = '0';
+    sigEl.style.transition = 'opacity 0.4s ease';
+
+    // Show bodies
+    previewEmpty.style.display = 'none';
+    suratHtmlBody.style.display = 'block';
+    
+    // Fallback display text in background for copy action
+    const displaySuratText = buildSurat({ orgName, nomorSurat, alamatPengirim, namaAcara, tanggal, waktu, tempat, agenda, penerima, ttdNama, ttdJabatan, sekreNama: sekreName, sekreJabatan: sekreJabatan, pimpNama: pimpName, pimpJabatan: pimpJabatan, gaya, tambahan }, useKop);
+    suratContent.textContent = displaySuratText;
+
+    setLoading(false);
+
+    // Run custom typewriter animation sequentially
+    await typewriterEffect(pembukaEl, pembukaText, 4);
+    
+    // Fade in details table
+    tableEl.style.opacity = '1';
+    await new Promise(r => setTimeout(r, 200));
+    
+    // Type out penutup
+    await typewriterEffect(penutupEl, penutupText, 4);
+    
+    // Fade in signatures section
+    sigEl.style.opacity = '1';
+
+    actionButtons.style.display = 'flex';
+
+    notify('Surat undangan berhasil dibuat! ✨', 'success');
+
+    if (window.innerWidth < 1024) {
+      document.getElementById('surat-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // COPY, PRINT, DOWNLOAD
+  // ────────────────────────────────────────────────────────────────
+  function copySurat() {
+    const text = window.CURRENT_FULL_SURAT_TEXT || document.getElementById('surat-content').textContent;
+    if (!text.trim()) { notify('Buat surat terlebih dahulu!', 'error'); return; }
+    navigator.clipboard.writeText(text).then(() => {
+      notify('Teks surat disalin ke clipboard! 📋', 'success');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta);
+      notify('Teks surat disalin!', 'success');
+    });
+  }
+
+  function printSurat() {
+    const text = document.getElementById('surat-content').textContent;
+    if (!text.trim()) { notify('Buat surat terlebih dahulu!', 'error'); return; }
+    window.print();
+  }
+
+  function downloadSurat() {
+    const text = window.CURRENT_FULL_SURAT_TEXT || document.getElementById('surat-content').textContent;
+    if (!text.trim()) { notify('Buat surat terlebih dahulu!', 'error'); return; }
+    const namaAcara = document.getElementById('nama-acara').value.trim() || 'Surat-Undangan';
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Undangan-${namaAcara.replace(/\s+/g,'-')}.txt`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    notify('Surat berhasil diunduh! 📥', 'success');
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // RESET
+  // ────────────────────────────────────────────────────────────────
+  function resetForm() {
+    ['org-name','nomor-surat','alamat-pengirim','nama-acara','tanggal-acara',
+     'waktu-acara','tempat-acara','agenda-acara','penerima','ttd-nama','ttd-jabatan','tambahan'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('gaya-bahasa').value = 'resmi';
+    document.getElementById('use-kop').checked = true;
+    document.getElementById('preview-empty').style.display = 'flex';
+    document.getElementById('surat-content').style.display = 'none';
+    document.getElementById('surat-content').textContent = '';
+    document.getElementById('kop-area').style.display = 'none';
+    document.getElementById('kop-area').innerHTML = '';
+    document.getElementById('action-buttons-bottom').style.display = 'none';
+    document.getElementById('surat-preview').style.background = 'white';
+    document.querySelectorAll('.template-chip').forEach(c => c.classList.remove('active'));
+    document.getElementById('chip-custom').classList.add('active');
+    window.CURRENT_FULL_SURAT_TEXT = '';
+    notify('Form direset!', 'success');
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // PANITIA AUTO-FILL & FIREBASE DYNAMIC SETUP
+  // ────────────────────────────────────────────────────────────────
+  window.PANITIA_LIST = [];
+
+  window.updateSignaturesFromSelection = function() {
+    const select1 = document.getElementById('select-panitia-ttd1');
+    const select2 = document.getElementById('select-panitia-ttd2');
+    const select3 = document.getElementById('select-panitia-ttd3');
+    
+    const idx1 = select1.value;
+    const idx2 = select2.value;
+    const idx3 = select3 ? select3.value : "";
+    
+    const img1 = document.getElementById('lbl-sig1-img');
+    const img2 = document.getElementById('lbl-sig2-img');
+    const img3 = document.getElementById('lbl-sig3-img');
+    
+    if (idx1 !== "") {
+      const p1 = window.PANITIA_LIST[idx1];
+      document.getElementById('ttd-nama').value = p1.nama;
+      document.getElementById('ttd-jabatan').value = p1.jabatan;
+      if (img1) {
+        if (p1.tanda_tangan) {
+          img1.src = p1.tanda_tangan;
+          img1.classList.remove('hidden');
+        } else {
+          img1.src = '';
+          img1.classList.add('hidden');
+        }
+      }
+    } else {
+      document.getElementById('ttd-nama').value = '';
+      document.getElementById('ttd-jabatan').value = '';
+      if (img1) {
+        img1.src = '';
+        img1.classList.add('hidden');
+      }
+    }
+    
+    if (idx2 !== "") {
+      const p2 = window.PANITIA_LIST[idx2];
+      document.getElementById('ttd-nama2').value = p2.nama;
+      if (img2) {
+        if (p2.tanda_tangan) {
+          img2.src = p2.tanda_tangan;
+          img2.classList.remove('hidden');
+        } else {
+          img2.src = '';
+          img2.classList.add('hidden');
+        }
+      }
+    } else {
+      document.getElementById('ttd-nama2').value = '';
+      if (img2) {
+        img2.src = '';
+        img2.classList.add('hidden');
+      }
+    }
+
+    if (idx3 !== "") {
+      const p3 = window.PANITIA_LIST[idx3];
+      document.getElementById('ttd-nama3').value = p3.nama;
+      document.getElementById('ttd-jabatan3').value = p3.jabatan;
+      if (img3) {
+        if (p3.tanda_tangan) {
+          img3.src = p3.tanda_tangan;
+          img3.classList.remove('hidden');
+        } else {
+          img3.src = '';
+          img3.classList.add('hidden');
+        }
+      }
+    } else {
+      document.getElementById('ttd-nama3').value = '';
+      document.getElementById('ttd-jabatan3').value = '';
+      if (img3) {
+        img3.src = '';
+        img3.classList.add('hidden');
+      }
+    }
+
+    // Dynamic grid widths based on whether signatory 3 is enabled
+    const sig1Container = document.getElementById('sig1-container');
+    const sig2Container = document.getElementById('sig2-container');
+    const sig3Container = document.getElementById('sig3-container');
+
+    if (sig1Container && sig2Container && sig3Container) {
+      if (idx3 !== "") {
+        sig1Container.className = "text-center w-[30%]";
+        sig2Container.className = "text-center w-[30%]";
+        sig3Container.className = "text-center w-[30%]";
+        sig3Container.classList.remove('hidden');
+      } else {
+        sig1Container.className = "text-center w-[45%]";
+        sig2Container.className = "text-center w-[45%]";
+        sig3Container.className = "text-center w-[45%]";
+        sig3Container.classList.add('hidden');
+      }
+    }
+  }
+
+  function initFirebaseConnection() {
+    // Pastikan Firebase SDK sudah dimuat
+    if (typeof firebase === 'undefined') {
+      console.warn('[SURAT] Firebase SDK belum dimuat, mencoba lagi...');
+      setTimeout(initFirebaseConnection, 300);
+      return;
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
+      authDomain: "reuniakbar.firebaseapp.com",
+      projectId: "reuniakbar",
+      storageBucket: "reuniakbar.firebasestorage.app",
+      messagingSenderId: "542951643652",
+      appId: "1:542951643652:web:1b4b7dac6c676a5d6c3351"
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    
+    // REAL-TIME: Gunakan onSnapshot agar data panitia selalu sinkron
+    // Data kepanitiaan bersifat GLOBAL — tidak tergantung event apapun
+    db.collection("panitia").onSnapshot((snap) => {
+      // Simpan seleksi penanda tangan saat ini agar tidak ter-reset
+      const select1 = document.getElementById('select-panitia-ttd1');
+      const select2 = document.getElementById('select-panitia-ttd2');
+      const select3 = document.getElementById('select-panitia-ttd3');
+      const prevVal1 = select1 ? select1.value : '';
+      const prevVal2 = select2 ? select2.value : '';
+      const prevVal3 = select3 ? select3.value : '';
+      const prevNama1 = (prevVal1 !== '' && window.PANITIA_LIST[prevVal1]) ? window.PANITIA_LIST[prevVal1].nama : null;
+      const prevNama2 = (prevVal2 !== '' && window.PANITIA_LIST[prevVal2]) ? window.PANITIA_LIST[prevVal2].nama : null;
+      const prevNama3 = (prevVal3 !== '' && window.PANITIA_LIST[prevVal3]) ? window.PANITIA_LIST[prevVal3].nama : null;
+      
+      window.PANITIA_LIST = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      if (!select1 || !select2 || !select3) return;
+      
+      select1.innerHTML = '<option value="">-- Pilih Sekretaris --</option>';
+      select2.innerHTML = '<option value="">-- Pilih Ketua Panitia --</option>';
+      select3.innerHTML = '<option value="">-- Pilih Pimpinan (Opsional) --</option>';
+      
+      let ketuaIndex = -1;
+      let sekreIndex = -1;
+      let pimpinanIndex = -1;
+      let restoreIdx1 = -1;
+      let restoreIdx2 = -1;
+      let restoreIdx3 = -1;
+      
+      window.PANITIA_LIST.forEach((p, idx) => {
+        const opt1 = document.createElement('option');
+        opt1.value = idx;
+        opt1.textContent = `${p.nama} (${p.jabatan})`;
+        select1.appendChild(opt1);
+        
+        const opt2 = document.createElement('option');
+        opt2.value = idx;
+        opt2.textContent = `${p.nama} (${p.jabatan})`;
+        select2.appendChild(opt2);
+
+        const opt3 = document.createElement('option');
+        opt3.value = idx;
+        opt3.textContent = `${p.nama} (${p.jabatan})`;
+        select3.appendChild(opt3);
+        
+        // Coba restore seleksi sebelumnya berdasarkan nama
+        if (prevNama1 && p.nama === prevNama1) restoreIdx1 = idx;
+        if (prevNama2 && p.nama === prevNama2) restoreIdx2 = idx;
+        if (prevNama3 && p.nama === prevNama3) restoreIdx3 = idx;
+        
+        // Auto-detect Ketua Panitia / Ketua
+        if (p.jabatan && p.jabatan.toLowerCase().includes('ketua') && ketuaIndex === -1) {
+          ketuaIndex = idx;
+        }
+        // Auto-detect Sekretaris
+        if (p.jabatan && p.jabatan.toLowerCase().includes('sekretaris') && sekreIndex === -1) {
+          sekreIndex = idx;
+        }
+        // Auto-detect Pimpinan / Pengasuh
+        if (p.jabatan && (p.jabatan.toLowerCase().includes('pimpinan') || p.jabatan.toLowerCase().includes('pengasuh')) && pimpinanIndex === -1) {
+          pimpinanIndex = idx;
+        }
+      });
+      
+      // Restore seleksi sebelumnya, atau auto-select berdasarkan jabatan (Standar Tata Naskah Dinas: Kiri = Sekretaris, Kanan = Ketua)
+      if (restoreIdx1 !== -1) {
+        select1.value = restoreIdx1;
+      } else if (sekreIndex !== -1) {
+        select1.value = sekreIndex;
+      } else if (window.PANITIA_LIST.length > 0) {
+        select1.value = 0;
+      }
+      
+      if (restoreIdx2 !== -1) {
+        select2.value = restoreIdx2;
+      } else if (ketuaIndex !== -1) {
+        select2.value = ketuaIndex;
+      } else if (window.PANITIA_LIST.length > 1) {
+        select2.value = 1;
+      }
+
+      if (restoreIdx3 !== -1) {
+        select3.value = restoreIdx3;
+      } else if (pimpinanIndex !== -1) {
+        select3.value = pimpinanIndex;
+      } else {
+        select3.value = '';
+      }
+      
+      window.updateSignaturesFromSelection();
+      console.log('[SURAT] Data panitia dimuat/diperbarui secara real-time:', window.PANITIA_LIST.length, 'orang');
+    }, (err) => {
+      console.error("Gagal memuat data panitia:", err);
+      notify("Gagal memuat data kepanitiaan secara otomatis.", "error");
+    });
+  }
+
+  async function exportOfficialPDF() {
+    const orgName    = document.getElementById('org-name').value.trim() || 'PANITIA REUNI AKBAR ALUMNI';
+    const nomorSurat = document.getElementById('nomor-surat').value.trim() || '-';
+    const alamatPengirim = document.getElementById('alamat-pengirim').value.trim() || 'Jl. BBI Cirata Kp. Cilangkap Rt. 10 Rw.05 Cadassari Tegalwaru Purwakarta 41165';
+    const namaAcara  = document.getElementById('nama-acara').value.trim() || 'Undangan Reuni';
+    const tanggal    = document.getElementById('tanggal-acara').value;
+    const waktu      = document.getElementById('waktu-acara').value;
+    const tempat     = document.getElementById('tempat-acara').value.trim();
+    const agenda     = document.getElementById('agenda-acara').value.trim();
+    const penerima   = document.getElementById('penerima').value.trim() || 'Seluruh Alumni';
+    const ttdNama    = document.getElementById('ttd-nama').value.trim() || '( ____________________ )';
+    const ttdJabatan = document.getElementById('ttd-jabatan').value.trim() || 'Ketua Panitia';
+    const tambahan   = document.getElementById('tambahan').value.trim();
+    const gaya       = document.getElementById('gaya-bahasa').value;
+
+    if (!namaAcara || !tanggal || !tempat) {
+      notify("Isi form dan buat draf surat terlebih dahulu!", "error");
+      return;
+    }
+
+    notify("Membuat PDF Resmi Al-Fatah...", "info");
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        // F4 size is 210 x 330 mm
+        const doc = new jsPDF("p", "mm", [210, 330]);
+        
+        // 1. KOP SURAT RESMI
+        try {
+            const logoImg = await new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(null);
+                img.src = "img/logo.png";
+            });
+            if (logoImg) {
+                doc.addImage(logoImg, "PNG", 18, 11, 16, 16);
+            }
+        } catch (logoErr) {
+            console.error("Failed to load logo in PDF:", logoErr);
+        }
+
+        doc.setFont("times", "bold");
+        doc.setFontSize(14);
+        doc.text("ALUMNI PONDOK PESANTREN", 112, 16, { align: "center" });
+        doc.text("AL-FATAH TEGALWARU PURWAKARTA", 112, 21, { align: "center" });
+        
+        doc.setFont("times", "italic");
+        doc.setFontSize(10);
+        doc.text("Jl. BBI Cirata Kp. Cilangkap Rt. 10 Rw.05 Cadassari Tegalwaru Purwakarta 41165", 112, 26, { align: "center" });
+
+        // Decorative double lines below Kop Surat
+        doc.setLineWidth(0.8);
+        doc.setDrawColor(0, 0, 0);
+        doc.line(15, 30, 195, 30);
+        doc.setLineWidth(0.2);
+        doc.line(15, 31, 195, 31);
+        
+        // 2. TANGGAL & HEADER SURAT
+        doc.setFont("times", "normal");
+        doc.setFontSize(11);
+        const dateStr = new Date().toLocaleDateString("id-ID", { year: 'numeric', month: 'long', day: 'numeric' });
+        doc.text(`Purwakarta, ${dateStr}`, 195, 45, { align: "right" });
+        
+        doc.text(`Nomor    : ${nomorSurat}`, 15, 45);
+        doc.text("Lampiran : -", 15, 50);
+        doc.text(`Perihal  : Undangan ${namaAcara}`, 15, 55);
+        
+        doc.text("Kepada Yth.", 15, 70);
+        doc.setFont("times", "bold");
+        doc.text(penerima, 15, 75);
+        doc.setFont("times", "normal");
+        doc.text("di Tempat", 15, 80);
+        
+        // 3. ISI SURAT
+        let salam = '', pembuka = '', penutup = '', basmallah = '';
+
+        if (gaya === 'islami') {
+          basmallah = `بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ\n\n`;
+          salam = `Assalamu'alaikum Warahmatullahi Wabarakatuh\n\n`;
+          pembuka = `Segala puji bagi Allah SWT atas segala nikmat dan karunia-Nya. Shalawat serta salam senantiasa tercurahkan kepada Nabi Muhammad SAW, keluarga, dan para sahabatnya.`;
+          penutup = `Demikian undangan ini kami sampaikan. Atas kehadiran dan partisipasi Bapak/Ibu/Saudara/i, kami ucapkan terima kasih yang sebesar-besarnya. Semoga Allah SWT senantiasa meridhoi langkah kita bersama.\n\nWassalamu'alaikum Warahmatullahi Wabarakatuh`;
+        } else if (gaya === 'semi') {
+          salam = `Salam hangat,\n\n`;
+          pembuka = `Semoga Bapak/Ibu/Saudara/i dalam keadaan sehat dan bahagia. Dalam rangka mempererat tali silaturahmi, kami bermaksud mengundang kehadiran Anda dalam acara berikut.`;
+          penutup = `Demikian undangan ini kami sampaikan. Kehadiran Bapak/Ibu/Saudara/i merupakan kebanggaan dan kehormatan bagi kami.\n\nTerima kasih atas perhatiannya.`;
+        } else {
+          salam = `Dengan Hormat,\n\n`;
+          pembuka = `Bersama surat ini, kami selaku ${orgName} mengundang dengan hormat Bapak/Ibu/Saudara/i untuk menghadiri acara yang kami selenggarakan.`;
+          penutup = `Demikian undangan ini kami sampaikan. Besar harapan kami atas kehadiran Bapak/Ibu/Saudara/i pada acara tersebut. Atas perhatian dan kehadirannya, kami ucapkan terima kasih.`;
+        }
+
+        let startY = 95;
+
+        doc.setFont("times", "normal");
+        doc.setFontSize(11);
+        
+        // Salam & Pembuka paragraphs
+        const fullIntro = `${basmallah}${salam}${pembuka}\n\nDengan ini kami mengundang kehadiran Bapak/Ibu/Saudara/i dalam:`;
+        const splitPembuka = doc.splitTextToSize(fullIntro, 180);
+        doc.text(splitPembuka, 15, startY);
+        
+        startY += (splitPembuka.length * 5) + 5; // Space after intro
+        
+        // Rincian items array
+        const rincianItems = [
+            { label: "Acara", value: namaAcara },
+            { label: "Hari/Tanggal", value: formatTanggal(tanggal) },
+            { label: "Waktu", value: formatWaktu(waktu) }
+        ];
+        if (tempat) rincianItems.push({ label: "Tempat", value: tempat });
+        if (agenda) rincianItems.push({ label: "Agenda", value: agenda });
+        if (tambahan) rincianItems.push({ label: "Catatan", value: tambahan });
+        
+        // Print items in bold/normal side-by-side
+        rincianItems.forEach(item => {
+            doc.setFont("times", "bold");
+            doc.text(item.label, 25, startY);
+            doc.text(":", 55, startY);
+            doc.setFont("times", "normal");
+            const splitVal = doc.splitTextToSize(item.value, 130);
+            doc.text(splitVal, 58, startY);
+            startY += (splitVal.length * 5);
+        });
+        
+        startY += 8; // Space after details
+        
+        // Print penutup
+        const splitPenutup = doc.splitTextToSize(penutup, 180);
+        doc.text(splitPenutup, 15, startY);
+        
+        // 4. SIGNATURE
+        let finalY = startY + (splitPenutup.length * 5) + 20;
+        if (finalY > 260) {
+            doc.addPage();
+            finalY = 30;
+        }
+        
+        doc.setFont("times", "normal");
+        doc.text("Hormat kami,", 105, finalY, { align: "center" });
+        doc.setFont("times", "bold");
+        doc.text(orgName.toUpperCase(), 105, finalY + 5, { align: "center" });
+        
+        finalY += 20;
+        
+        const select1Val = document.getElementById('select-panitia-ttd1').value;
+        const select2Val = document.getElementById('select-panitia-ttd2').value;
+        const select3Val = document.getElementById('select-panitia-ttd3').value;
+
+        if (select3Val !== "") {
+          // --- 3 Signatures Parallel Layout (Sekretaris, Pimpinan, Ketua) ---
+          const p1 = select1Val !== "" ? window.PANITIA_LIST[select1Val] : { nama: ttdNama, jabatan: ttdJabatan || "Sekretaris", tanda_tangan: null };
+          const p2 = select2Val !== "" ? window.PANITIA_LIST[select2Val] : { nama: "( ____________________ )", jabatan: "Ketua Panitia", tanda_tangan: null };
+          const p3 = window.PANITIA_LIST[select3Val];
+
+          // 1. Sekretaris (Left, Center x=35)
+          doc.setFont("times", "bold");
+          doc.text(p1.jabatan || ttdJabatan || "Sekretaris", 35, finalY, { align: "center" });
+          if (p1.tanda_tangan) {
+            try {
+              doc.addImage(p1.tanda_tangan, 'PNG', 15, finalY + 1, 40, 18);
+            } catch (err) { console.error(err); }
+          }
+          doc.line(15, finalY + 20, 55, finalY + 20);
+          doc.setFont("times", "normal");
+          doc.text(p1.nama || ttdNama, 35, finalY + 25, { align: "center" });
+
+          // 2. Pimpinan (Center, Center x=105)
+          doc.setFont("times", "bold");
+          doc.text(p3.jabatan || "Pimpinan", 105, finalY, { align: "center" });
+          if (p3.tanda_tangan) {
+            try {
+              doc.addImage(p3.tanda_tangan, 'PNG', 85, finalY + 1, 40, 18);
+            } catch (err) { console.error(err); }
+          }
+          doc.line(85, finalY + 20, 125, finalY + 20);
+          doc.setFont("times", "normal");
+          doc.text(p3.nama, 105, finalY + 25, { align: "center" });
+
+          // 3. Ketua Panitia (Right, Center x=170)
+          doc.setFont("times", "bold");
+          doc.text(p2.jabatan || "Ketua Panitia", 170, finalY, { align: "center" });
+          if (p2.tanda_tangan) {
+            try {
+              doc.addImage(p2.tanda_tangan, 'PNG', 150, finalY + 1, 40, 18);
+            } catch (err) { console.error(err); }
+          }
+          doc.line(150, finalY + 20, 190, finalY + 20);
+          doc.setFont("times", "normal");
+          doc.text(p2.nama || "( ____________________ )", 170, finalY + 25, { align: "center" });
+
+        } else {
+          // --- 2 Signatures Layout (Original) ---
+          // Ketua Panitia (Left, Center x=45, Line: x=25 to 65)
+          doc.setFont("times", "bold");
+          doc.text(ttdJabatan, 45, finalY, { align: "center" });
+          if (select1Val !== "") {
+            const p1 = window.PANITIA_LIST[select1Val];
+            if (p1.tanda_tangan) {
+              try {
+                doc.addImage(p1.tanda_tangan, 'PNG', 25, finalY + 1, 40, 18);
+              } catch (imgErr) {
+                console.error("Gagal menambahkan tanda tangan 1 ke PDF:", imgErr);
+              }
+            }
+          }
+          doc.line(25, finalY + 20, 65, finalY + 20);
+          doc.setFont("times", "normal");
+          doc.text(ttdNama, 45, finalY + 25, { align: "center" });
+          
+          // Sekretaris (Right, Center x=165, Line: x=145 to 185)
+          let sekreName = "( ____________________ )";
+          let sekreJabatan = "Sekretaris";
+          let sekreTTD = null;
+          
+          if (select2Val !== "") {
+            const p2 = window.PANITIA_LIST[select2Val];
+            sekreName = p2.nama;
+            sekreJabatan = p2.jabatan;
+            sekreTTD = p2.tanda_tangan;
+          }
+          
+          doc.setFont("times", "bold");
+          doc.text(sekreJabatan, 165, finalY, { align: "center" });
+          if (sekreTTD) {
+            try {
+              doc.addImage(sekreTTD, 'PNG', 145, finalY + 1, 40, 18);
+            } catch (imgErr) {
+              console.error("Gagal menambahkan tanda tangan 2 ke PDF:", imgErr);
+            }
+          }
+          doc.line(145, finalY + 20, 185, finalY + 20);
+          doc.setFont("times", "normal");
+          doc.text(sekreName, 165, finalY + 25, { align: "center" });
+        }
+        
+        await window.savePDF(doc, `Undangan-${namaAcara.replace(/\s+/g,'-')}.pdf`);
+    } catch (err) {
+        console.error(err);
+        notify("Gagal membuat PDF: " + err.message, "error");
+    }
+  }
+
+  // Jalankan inisialisasi koneksi database saat halaman dimuat
+  // Firebase SDK sudah dimuat di atas sebelum script block ini
+  window.addEventListener('DOMContentLoaded', () => {
+    initFirebaseConnection();
+  });
+  // Fallback: jika DOMContentLoaded sudah terlewat
+  if (document.readyState !== 'loading') {
+    initFirebaseConnection();
+  }
+  </script>
+
+  <script src="js/capacitor-plugins.js"></script>
+  <script src="js/lib/jspdf.umd.min.js"></script>
+  <script src="js/lib/jspdf.plugin.autotable.min.js"></script>
+  <script src="js/services/pdf-service.js"></script>
+  <script src="js/transitions.js"></script>
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[PWA] Registered:', reg.scope))
+          .catch((err) => console.error('[PWA] Failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

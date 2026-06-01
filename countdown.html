@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#060813" />
+  <meta name="description" content="Hitung mundur menuju Reuni Akbar Pondok Pesantren AL-FATAH. Lihat buku tamu digital dan papan donatur alumni." />
+  <title>Hitung Mundur – Reuni Akbar AL-FATAH</title>
+  <script src="js/lib/tailwindcss.js"></script>
+  <link rel="stylesheet" href="css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800;900&display=swap');
+
+    :root { --bg: #060813; }
+    body { background-color: var(--bg); color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+    .glass { background: rgba(14, 18, 37, 0.70); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+    .bg-gradient-animate { background: linear-gradient(-45deg,#4f46e5,#0ea5e9,#3b82f6,#6366f1); background-size:400% 400%; animation:gradientBG 15s ease infinite; }
+    @keyframes gradientBG { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+    /* â”€â”€ CANVAS PARTICLE BACKGROUND â”€â”€ */
+    #particle-canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+    /* â”€â”€ FLIP CARD COUNTDOWN â”€â”€ */
+    .flip-card { width: 5.5rem; height: 5.5rem; position: relative; perspective: 400px; }
+    @media (min-width:768px) { .flip-card { width: 7rem; height: 7rem; } }
+    .flip-card-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; }
+    .flip-face { position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:1.25rem; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:900; color:#fff; }
+    @media (min-width:768px) { .flip-face { font-size:2.75rem; border-radius:1.5rem; } }
+    .flip-face.front { background:rgba(14,18,37,0.85); border:1px solid rgba(255,255,255,0.08); box-shadow:0 4px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06); }
+    .flip-face.back  { background:rgba(99,102,241,0.25); border:1px solid rgba(99,102,241,0.3); transform:rotateX(180deg); }
+    @keyframes flipDown {
+      0%   { transform:rotateX(0deg);   }
+      50%  { transform:rotateX(-90deg); }
+      100% { transform:rotateX(-180deg);}
+    }
+    .flip-card-inner.flip { animation: flipDown 0.45s cubic-bezier(.4,0,.2,1) forwards; }
+
+    /* â”€â”€ PROGRESS BAR â”€â”€ */
+    .progress-glow { box-shadow: 0 0 12px rgba(99,102,241,0.6), 0 0 24px rgba(99,102,241,0.3); }
+
+    /* â”€â”€ SCROLLBAR â”€â”€ */
+    .custom-scrollbar::-webkit-scrollbar { width:4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:10px; }
+
+    /* â”€â”€ INPUT â”€â”€ */
+    .input-field { width:100%; padding:14px 16px; border-radius:12px; background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); color:white; outline:none; transition:all 0.3s; font-size:12px; }
+    .input-field:focus { border-color:#6366f1; box-shadow:0 0 0 4px rgba(99,102,241,0.1); }
+
+    /* â”€â”€ SCROLL REVEAL â”€â”€ */
+    .reveal { opacity:0; transform:translateY(24px); transition:opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    /* â”€â”€ TOAST â”€â”€ */
+    @keyframes slideDown { from{transform:translateY(-20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+    /* ── QUICK LINK CARD HOVER ── */
+    .quick-link-card { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .quick-link-card:hover { transform: translateY(-6px) scale(1.06); }
+
+    /* ── LIVE INDICATOR ── */
+    @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+    .live-dot { width:7px; height:7px; background:#10b981; border-radius:50%; animation:livePulse 1.5s ease infinite; display:inline-block; vertical-align:middle; margin-right:4px; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body class="min-h-screen flex flex-col relative text-slate-300">
+
+  <!-- Particle Canvas -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- Ambient Glow (di belakang canvas) -->
+  <div class="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/20 blur-[150px] rounded-full pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/15 blur-[150px] rounded-full pointer-events-none z-0"></div>
+
+  <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
+
+  <!-- NAV -->
+  <nav class="w-full p-4 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
+    <a href="countdown.html" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+        <i class="fas fa-mosque"></i>
+      </div>
+      <div>
+        <h1 class="font-black text-sm text-white tracking-widest uppercase">Reuni Akbar</h1>
+        <p class="text-sm text-indigo-400 font-bold">AL-FATAH</p>
+      </div>
+    </a>
+    <div class="flex items-center gap-2">
+      <a href="Rundown.html" class="hidden sm:flex items-center px-4 py-2 hover:bg-white/5 rounded-full text-xs font-bold text-slate-300 uppercase tracking-wider transition-all"><i class="fas fa-list-ol mr-2"></i>Rundown</a>
+      <a href="pendaftaran.html" class="px-4 py-2 glass bg-indigo-600/20 hover:bg-indigo-600 rounded-full text-xs font-bold text-white uppercase border border-indigo-500/30 transition-all"><i class="fas fa-ticket-alt mr-1"></i>Daftar</a>
+      <a href="login.html" class="w-10 h-10 flex items-center justify-center glass hover:bg-white/10 rounded-full text-slate-300 border border-white/10 transition-all"><i class="fas fa-user-shield text-xs"></i></a>
+    </div>
+  </nav>
+
+  <main class="flex-1 flex flex-col items-center p-4 md:p-8 relative z-10 w-full max-w-5xl mx-auto pb-36">
+
+    <!-- HERO TITLE -->
+    <div class="text-center mb-10 w-full mt-4 reveal">
+      <div class="inline-block p-4 rounded-3xl glass shadow-2xl border border-indigo-500/30 mb-6 bg-gradient-animate"><i class="fas fa-mosque text-4xl text-white"></i></div>
+      <h1 class="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight uppercase">Reuni Akbar <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Al-Fatah</span></h1>
+      <p class="text-sm text-slate-400 max-w-xl mx-auto leading-relaxed">Menyambung tali silaturahmi, mengenang masa indah, merajut ukhuwah islamiyah bersama keluarga besar Pondok Pesantren Al-Fatah.</p>
+    </div>
+
+    <!-- COUNTDOWN CARD -->
+    <div class="glass p-6 md:p-12 rounded-[3rem] border border-white/10 shadow-2xl mb-6 w-full max-w-3xl mx-auto relative overflow-hidden reveal">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-600/15 blur-[60px] pointer-events-none"></div>
+
+      <h2 id="countdown-title" class="text-center text-xs md:text-sm font-bold uppercase tracking-widest text-indigo-400 mb-2">
+        <i class="fas fa-hourglass-half mr-2 animate-pulse"></i> Menuju Hari-H Acara
+      </h2>
+      <p id="event-date-display" class="text-center text-sm md:text-base font-black text-amber-400 tracking-wide mb-2">Memuat Data...</p>
+
+      <div class="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 mt-2 mb-8">
+        <div class="flex items-center gap-2 bg-indigo-500/10 px-4 py-2 rounded-xl border border-indigo-500/20">
+          <i class="fas fa-clock text-indigo-400 text-xs"></i>
+          <span id="event-time-display" class="text-xs font-bold text-indigo-200">-</span>
+        </div>
+        <div class="flex items-center gap-2 bg-emerald-500/10 px-4 py-2 rounded-xl border border-emerald-500/20">
+          <i class="fas fa-star text-emerald-400 text-xs"></i>
+          <span id="event-guest-display" class="text-xs font-bold text-emerald-200">-</span>
+        </div>
+      </div>
+
+      <!-- FLIP COUNTDOWN -->
+      <div class="flex justify-center gap-3 md:gap-6 text-center mb-8">
+        <!-- HARI -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="flip-card" id="fc-days">
+            <div class="flip-card-inner">
+              <div class="flip-face front" id="cd-days-front">00</div>
+              <div class="flip-face back"  id="cd-days-back">00</div>
+            </div>
+          </div>
+          <span class="text-sm md:text-xs font-bold uppercase text-slate-500 tracking-wider">Hari</span>
+        </div>
+        <div class="text-2xl md:text-4xl font-black text-slate-700 mt-5 md:mt-7">:</div>
+        <!-- JAM -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="flip-card" id="fc-hours">
+            <div class="flip-card-inner">
+              <div class="flip-face front" id="cd-hours-front">00</div>
+              <div class="flip-face back"  id="cd-hours-back">00</div>
+            </div>
+          </div>
+          <span class="text-sm md:text-xs font-bold uppercase text-slate-500 tracking-wider">Jam</span>
+        </div>
+        <div class="text-2xl md:text-4xl font-black text-slate-700 mt-5 md:mt-7">:</div>
+        <!-- MENIT -->
+        <div class="flex flex-col items-center gap-2">
+          <div class="flip-card" id="fc-minutes">
+            <div class="flip-card-inner">
+              <div class="flip-face front" id="cd-minutes-front">00</div>
+              <div class="flip-face back"  id="cd-minutes-back">00</div>
+            </div>
+          </div>
+          <span class="text-sm md:text-xs font-bold uppercase text-slate-500 tracking-wider">Menit</span>
+        </div>
+        <div class="text-2xl md:text-4xl font-black text-slate-700 mt-5 md:mt-7 hidden md:block">:</div>
+        <!-- DETIK -->
+        <div class="flex-col items-center gap-2 hidden md:flex">
+          <div class="flip-card" id="fc-seconds">
+            <div class="flip-card-inner">
+              <div class="flip-face front" id="cd-seconds-front">00</div>
+              <div class="flip-face back"  id="cd-seconds-back">00</div>
+            </div>
+          </div>
+          <span class="text-sm md:text-xs font-bold uppercase text-slate-500 tracking-wider">Detik</span>
+        </div>
+      </div>
+
+      <!-- PROGRESS BAR menuju hari-H -->
+      <div id="progress-section" class="hidden">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-sm font-black text-slate-500 uppercase tracking-widest">Progress Waktu</span>
+          <span id="progress-pct-label" class="text-sm font-black text-indigo-400">0%</span>
+        </div>
+        <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
+          <div id="progress-bar-time" class="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full transition-all duration-1000 progress-glow" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-slate-600 mt-1.5 text-right" id="progress-sub-label">Menghitung...</p>
+      </div>
+    </div>
+
+    <!-- STATS PESERTA + SHARE -->
+    <div class="w-full max-w-3xl mx-auto mb-6 flex flex-wrap items-center justify-center gap-3 reveal">
+      <div class="flex items-center gap-2 glass px-5 py-3 rounded-2xl border border-emerald-500/20">
+        <span class="live-dot"></span>
+        <i class="fas fa-users text-emerald-400 text-sm"></i>
+        <span class="text-sm font-black text-white"><span id="alumni-count">...</span></span>
+        <span class="text-xs text-slate-400 font-bold">Alumni Telah Mendaftar &#127881;</span>
+      </div>
+      <a href="cek-status.html" class="flex items-center gap-2 glass px-5 py-3 rounded-2xl border border-amber-500/20 hover:bg-amber-500/10 transition-all group">
+        <i class="fas fa-search text-amber-400 text-sm group-hover:scale-110 transition-transform"></i>
+        <span class="text-xs font-black text-slate-300 uppercase tracking-widest">Cek Status</span>
+      </a>
+    </div>
+
+    <!-- QUICK LINKS -->
+    <div class="grid grid-cols-3 gap-3 w-full max-w-sm mx-auto mb-10 reveal">
+      <a href="pendaftaran.html" class="quick-link-card glass rounded-2xl p-4 text-center border border-indigo-500/20 hover:bg-indigo-500/10 group">
+        <i class="fas fa-user-plus text-indigo-400 text-xl mb-2 block group-hover:text-indigo-300"></i>
+        <span class="text-xs font-black text-slate-400 group-hover:text-white uppercase tracking-widest block transition-colors">Daftar</span>
+      </a>
+      <a href="pembayaran.html" class="quick-link-card glass rounded-2xl p-4 text-center border border-emerald-500/20 hover:bg-emerald-500/10 group">
+        <i class="fas fa-hand-holding-heart text-emerald-400 text-xl mb-2 block group-hover:text-emerald-300"></i>
+        <span class="text-xs font-black text-slate-400 group-hover:text-white uppercase tracking-widest block transition-colors">Donasi</span>
+      </a>
+      <a href="Rundown.html" class="quick-link-card glass rounded-2xl p-4 text-center border border-purple-500/20 hover:bg-purple-500/10 group">
+        <i class="fas fa-list-ol text-purple-400 text-xl mb-2 block group-hover:text-purple-300"></i>
+        <span class="text-xs font-black text-slate-400 group-hover:text-white uppercase tracking-widest block transition-colors">Jadwal</span>
+      </a>
+    </div>
+
+    <!-- CARI TEMAN SEANGKATAN -->
+    <div class="w-full max-w-3xl mx-auto mb-6 reveal" id="search-classmate-card">
+      <div class="glass p-6 md:p-8 rounded-[2.5rem] border border-indigo-500/20 shadow-xl relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/10 blur-[40px] pointer-events-none"></div>
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 border border-indigo-500/30">
+            <i class="fas fa-user-friends"></i>
+          </div>
+          <div>
+            <h3 class="font-black uppercase text-sm text-white tracking-wide">Cari Teman Lulusan</h3>
+            <p class="text-xs text-slate-400">Lihat siapa saja teman lulusan yang sudah mendaftar reuni.</p>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="flex-1 relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"><i class="fas fa-graduation-cap"></i></span>
+            <input type="number" id="search-classmate-year" class="input-field pl-10 pr-4 py-3.5 text-xs text-white" placeholder="Masukkan Tahun Lulus (Cth: 2018)" min="1970" max="2030" />
+          </div>
+          <button onclick="window.searchClassmates()" id="btn-search-classmate" class="px-6 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap">
+            <i class="fas fa-search"></i> Cari Teman
+          </button>
+        </div>
+        
+        <!-- Search Results Area -->
+        <div id="search-classmate-result" class="mt-5 hidden border-t border-white/5 pt-4">
+          <div class="flex justify-between items-center mb-3">
+            <span id="search-result-count" class="text-[10px] font-black uppercase text-slate-500 tracking-wider">0 alumni ditemukan</span>
+            <button onclick="window.clearClassmateSearch()" class="text-[10px] text-slate-500 hover:text-indigo-400 font-bold transition-all"><i class="fas fa-times mr-1"></i>Tutup</button>
+          </div>
+          <div id="classmate-results-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+            <!-- Results item will go here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATISTIK DONASI PUBLIK REAL-TIME -->
+    <div class="w-full max-w-3xl mx-auto mb-6 reveal" id="donation-stats-card">
+      <div class="glass p-5 md:p-6 rounded-[2rem] border border-emerald-500/20 shadow-xl relative overflow-hidden">
+        <div class="absolute -top-8 -right-8 w-32 h-32 bg-emerald-500/10 blur-[40px] pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-3 relative z-10">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+              <i class="fas fa-hand-holding-usd text-emerald-400 text-xs"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-black text-emerald-400 uppercase tracking-widest">Progress Donasi</h3>
+              <p class="text-xs text-slate-500">Dana yang terkumpul dari seluruh alumni</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <div id="donation-pct" class="text-lg font-black text-white">0%</div>
+            <div class="text-xs text-slate-500 uppercase tracking-widest">Terkumpul</div>
+          </div>
+        </div>
+        <div class="w-full h-3 bg-white/5 rounded-full overflow-hidden border border-white/5 mb-3 relative z-10">
+          <div id="donation-bar" class="h-full rounded-full transition-all duration-1000"
+               style="width:0%; background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7); box-shadow: 0 0 12px rgba(16,185,129,0.5)">
+          </div>
+        </div>
+        <div class="flex justify-between items-center relative z-10">
+          <div class="text-center">
+            <div id="donation-terkumpul" class="text-xl font-black text-emerald-400">Rp 0</div>
+            <div class="text-xs text-slate-500 uppercase tracking-widest mt-0.5">Terkumpul</div>
+          </div>
+          <div class="flex-1 mx-4 h-px bg-white/5"></div>
+          <div class="text-center">
+            <div id="donation-donatur" class="text-sm font-black text-white">0</div>
+            <div class="text-xs text-slate-500 uppercase tracking-widest mt-0.5">Donatur</div>
+          </div>
+          <div class="flex-1 mx-4 h-px bg-white/5"></div>
+          <div class="text-center">
+            <div id="donation-angkatan" class="text-sm font-black text-white">0</div>
+            <div class="text-xs text-slate-500 uppercase tracking-widest mt-0.5">Tahun Lulus</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUKU TAMU + DONATUR -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+
+      <!-- BUKU TAMU -->
+      <div class="glass p-6 md:p-8 rounded-[2.5rem] border border-indigo-500/20 shadow-xl relative overflow-hidden flex flex-col h-[600px] reveal">
+        <div class="absolute -top-10 -left-10 w-40 h-40 bg-indigo-500/10 blur-[40px] pointer-events-none"></div>
+        <div class="text-center mb-5 relative z-10">
+          <h2 class="text-xl md:text-2xl font-black uppercase text-indigo-400 mb-1"><i class="fas fa-book-open mr-2"></i>Buku Tamu</h2>
+          <p class="text-xs text-slate-400">Tinggalkan pesan, kenangan, atau doa untuk almamater.</p>
+        </div>
+        <form id="form-guestbook" class="mb-5 space-y-3 relative z-10 bg-black/20 p-4 rounded-2xl border border-white/5 shrink-0">
+          <div class="grid grid-cols-2 gap-3">
+            <input type="text" id="gb-nama" class="input-field py-2.5" placeholder="Nama Lengkap" required>
+            <input type="number" id="gb-angkatan" class="input-field py-2.5" placeholder="Tahun Lulus (cth: 2015)" required>
+          </div>
+          <textarea id="gb-pesan" class="input-field resize-none h-16 py-2.5" placeholder="Tuliskan memori atau doa Anda di sini..." required></textarea>
+          <button type="submit" id="btn-submit-gb" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all uppercase text-sm tracking-widest shadow-lg"><i class="fas fa-paper-plane mr-2"></i>Kirim Pesan</button>
+        </form>
+        <div id="guestbook-list" class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3 relative z-10">
+          <div class="text-center text-slate-500 text-xs italic py-8">Memuat pesan...</div>
+        </div>
+      </div>
+
+      <!-- PAPAN DONATUR -->
+      <div class="glass p-6 md:p-8 rounded-[2.5rem] border border-emerald-500/20 shadow-xl relative overflow-hidden flex flex-col h-[600px] reveal">
+        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-500/10 blur-[40px] pointer-events-none"></div>
+        <div class="text-center mb-5 relative z-10">
+          <h2 class="text-xl md:text-2xl font-black uppercase text-emerald-400 mb-1"><i class="fas fa-trophy mr-2 text-amber-400"></i>Papan Donatur</h2>
+          <p class="text-xs text-slate-400">Terima kasih atas kontribusi Anda menyukseskan acara ini.</p>
+        </div>
+        <div class="mb-5 relative z-10 shrink-0">
+          <h3 class="text-sm font-black text-amber-400 uppercase tracking-widest mb-3 border-b border-white/10 pb-2"><i class="fas fa-crown mr-1"></i>Top Donasi Per Tahun Lulus</h3>
+          <div id="public-top-angkatan" class="space-y-2">
+            <div class="text-center text-slate-500 text-xs italic py-4">Memuat data...</div>
+          </div>
+        </div>
+        <div class="relative z-10 flex-1 flex flex-col overflow-hidden">
+          <h3 class="text-sm font-black text-emerald-400 uppercase tracking-widest mb-3 border-b border-white/10 pb-2"><i class="fas fa-history mr-1"></i>Partisipan Terbaru</h3>
+          <div id="public-recent-donors" class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-2">
+            <div class="text-center text-slate-500 text-xs italic py-4">Memuat data...</div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-white/10 text-center shrink-0">
+            <a href="pembayaran.html" class="inline-block bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black py-3.5 px-6 rounded-xl transition-all uppercase text-sm tracking-widest shadow-[0_4px_15px_rgba(16,185,129,0.3)]">
+              <i class="fas fa-hand-holding-heart mr-2"></i>Ikut Berdonasi Sekarang
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SCRIPT: Particle Canvas -->
+  <script>
+  (function() {
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    const PARTICLE_COUNT = 60;
+
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+
+    function createParticle() {
+      return {
+        x: rand(0, canvas.width),
+        y: rand(0, canvas.height),
+        r: rand(0.5, 2),
+        dx: rand(-0.2, 0.2),
+        dy: rand(-0.4, -0.1),
+        alpha: rand(0.1, 0.5),
+        color: Math.random() > 0.5 ? '99,102,241' : '16,185,129'
+      };
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(createParticle());
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p, i) => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+        ctx.fill();
+        p.x += p.dx;
+        p.y += p.dy;
+        p.alpha -= 0.0005;
+        if (p.y < -10 || p.alpha <= 0) particles[i] = createParticle();
+      });
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+  </script>
+
+  <!-- SCRIPT: Scroll Reveal -->
+  <script>
+  (function(){
+    // 1. Setup IntersectionObserver for smooth reveal
+    if (typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); } });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    } else {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    }
+
+    // 2. Foolproof Timeout Fallback: Force visibility after 1.5 seconds
+    // to ensure the page NEVER stays blank black even if Firebase CDN fails to load!
+    setTimeout(function() {
+      document.querySelectorAll('.reveal:not(.visible)').forEach(function(el) {
+        el.classList.add('visible');
+        console.warn('[Reveal Fallback] Forced element visibility due to CDN/JS load delay.');
+      });
+    }, 1500);
+  })();
+  </script>
+
+  <!-- SCRIPT: Firebase + Countdown + Guestbook + WallOfFame -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, getDocs, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
+      authDomain: "reuniakbar.firebaseapp.com",
+      projectId: "reuniakbar",
+      storageBucket: "reuniakbar.firebasestorage.app",
+      messagingSenderId: "542951643652",
+      appId: "1:542951643652:web:1b4b7dac6c676a5d6c3351"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // â”€â”€ Utils â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    window.formatRupiah = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(Number(n)||0);
+
+    window.notify = (msg, type='success') => {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `p-4 mb-2 rounded-xl backdrop-blur border-l-4 ${type==='error'?'border-red-500 bg-red-900/30':'border-indigo-500 bg-indigo-900/30'} font-bold text-sm uppercase shadow-2xl text-white transform transition-all duration-300 translate-x-full opacity-0 max-w-sm`;
+      t.innerHTML = `<i class="fas ${type==='error'?'fa-exclamation-circle text-red-400':'fa-check-circle text-indigo-400'} mr-2"></i>${msg}`;
+      c.appendChild(t);
+      setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);
+      setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300)},4000);
+    };
+
+    // â”€â”€ FLIP COUNTDOWN ENGINE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const prevVals = { days: -1, hours: -1, minutes: -1, seconds: -1 };
+
+    function flipDigit(id, newVal) {
+      const inner = document.querySelector(`#fc-${id} .flip-card-inner`);
+      const front = document.getElementById(`cd-${id}-front`);
+      const back  = document.getElementById(`cd-${id}-back`);
+      if (!inner) return;
+      back.textContent = newVal;
+      inner.classList.remove('flip');
+      void inner.offsetWidth; // reflow
+      inner.classList.add('flip');
+      setTimeout(() => {
+        front.textContent = newVal;
+        inner.classList.remove('flip');
+        inner.style.transform = '';
+      }, 450);
+    }
+
+    function updateCountdownUI(days, hours, minutes, seconds) {
+      const dStr = String(days).padStart(2,'0');
+      const hStr = String(hours).padStart(2,'0');
+      const mStr = String(minutes).padStart(2,'0');
+      const sStr = String(seconds).padStart(2,'0');
+
+      if (dStr !== prevVals.days)    { flipDigit('days',    dStr); prevVals.days    = dStr; }
+      if (hStr !== prevVals.hours)   { flipDigit('hours',   hStr); prevVals.hours   = hStr; }
+      if (mStr !== prevVals.minutes) { flipDigit('minutes', mStr); prevVals.minutes = mStr; }
+      if (sStr !== prevVals.seconds) { flipDigit('seconds', sStr); prevVals.seconds = sStr; }
+
+      // Pulsating glow saat < 7 hari
+      if (days < 7 && days >= 0) {
+        document.querySelectorAll('.flip-face.front').forEach(el => {
+          el.style.borderColor = 'rgba(239,68,68,0.4)';
+          el.style.boxShadow = '0 0 20px rgba(239,68,68,0.25), inset 0 1px 0 rgba(255,255,255,0.06)';
+        });
+      }
+    }
+
+    // â”€â”€ INIT COUNTDOWN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    let createdAt = null;
+
+    async function initCountdown() {
+      try {
+        const docSnap = await getDoc(doc(db, 'settings', 'event_info'));
+        let eventDateStr = 'TBD';
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          eventDateStr = data.event_date || 'TBD';
+          document.getElementById('event-time-display').innerText  = data.event_time  || 'Menunggu Info';
+          document.getElementById('event-guest-display').innerText = data.event_guest || 'Menunggu Info';
+          createdAt = data.created_at ? new Date(data.created_at).getTime() : null;
+        }
+
+        if (eventDateStr === 'TBD' || !eventDateStr) {
+          document.getElementById('event-date-display').innerText = 'Tanggal Belum Ditentukan';
+          return;
+        }
+
+        const parsedDate = new Date(eventDateStr);
+        if (isNaN(parsedDate.getTime())) {
+          document.getElementById('event-date-display').innerText = 'Format Tanggal Acara Salah';
+          return;
+        }
+
+        const EVENT_DATE = parsedDate.getTime();
+        const formatted  = parsedDate.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        document.getElementById('event-date-display').innerText = formatted;
+
+        // Progress bar
+        if (createdAt) {
+          document.getElementById('progress-section').classList.remove('hidden');
+          updateProgress(createdAt, EVENT_DATE);
+        }
+
+        setInterval(() => {
+          const now = Date.now();
+          const dist = EVENT_DATE - now;
+
+          if (createdAt) updateProgress(createdAt, EVENT_DATE);
+
+          if (dist < 0) {
+            updateCountdownUI(0,0,0,0);
+            document.getElementById('countdown-title').innerHTML = "<i class='fas fa-glass-cheers mr-2 text-amber-400'></i>Acara Sedang Berlangsung!";
+            return;
+          }
+          const d = Math.floor(dist / (1000*60*60*24));
+          const h = Math.floor((dist % (1000*60*60*24)) / (1000*60*60));
+          const m = Math.floor((dist % (1000*60*60)) / (1000*60));
+          const s = Math.floor((dist % (1000*60)) / 1000);
+          updateCountdownUI(d, h, m, s);
+        }, 1000);
+
+      } catch(e) {
+        console.error("Countdown Init Error:", e);
+        document.getElementById('event-date-display').innerText = (e.message && e.message.toLowerCase().includes('permission')) ? 'Akses ditolak (Permissions)' : 'Gagal memuat data: ' + (e.message || '');
+      }
+    }
+
+    function updateProgress(start, end) {
+      const now = Date.now();
+      const total = end - start;
+      if (total <= 0) return;
+      const elapsed = now - start;
+      const pct = Math.min(100, Math.max(0, (elapsed / total) * 100));
+      document.getElementById('progress-bar-time').style.width = pct.toFixed(1) + '%';
+      document.getElementById('progress-pct-label').innerText = pct.toFixed(1) + '%';
+      const remaining = Math.max(0, end - now);
+      const d = Math.floor(remaining / (1000*60*60*24));
+      document.getElementById('progress-sub-label').innerText = `Sisa ${d} hari lagi menuju hari-H`;
+    }
+
+    initCountdown();
+
+    // ── HITUNG ALUMNI TERDAFTAR ─────────────────────────────────────────
+    (async function loadAlumniCount() {
+      try {
+        const q = query(collection(db, 'alumni'), where('status','==','approved'));
+        const snap = await getCountFromServer(q);
+        const el = document.getElementById('alumni-count');
+        if (el) el.textContent = snap.data().count;
+      } catch(e) {
+        console.error("Gagal load count alumni:", e);
+        const el = document.getElementById('alumni-count');
+        if (el) el.textContent = '?';
+      }
+    })();
+
+    // â”€â”€ SHARE / SALIN LINK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    window.copyShareLink = async function() {
+      const shareUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'pendaftaran.html';
+      const shareData = {
+        title: 'Reuni Akbar AL-FATAH',
+        text: 'ðŸ•Œ Yuk daftar Reuni Akbar Pondok Pesantren AL-FATAH! Klik link berikut untuk mendaftar:',
+        url: shareUrl
+      };
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+        } else {
+          await navigator.clipboard.writeText(shareUrl);
+          const btn = document.getElementById('btn-share');
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<i class="fas fa-check text-emerald-400 text-sm"></i><span class="text-xs font-black text-emerald-400 uppercase tracking-widest">Tersalin!</span>';
+          setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        }
+      } catch(e) {
+        // Fallback manual copy
+        const ta = document.createElement('textarea');
+        ta.value = shareUrl; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        const btn = document.getElementById('btn-share');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check text-emerald-400 text-sm"></i><span class="text-xs font-black text-emerald-400 uppercase tracking-widest">Link Tersalin!</span>';
+        setTimeout(() => { btn.innerHTML = orig; }, 2000);
+      }
+    };
+
+
+    document.getElementById('form-guestbook').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-gb');
+
+      // RATE LIMIT: Cegah spam â€” maks 1 pesan per menit
+      const lastSubmit = Number(localStorage.getItem('af_last_gb') || 0);
+      const cooldown = 60 * 1000; // 60 detik
+      if (Date.now() - lastSubmit < cooldown) {
+        const sisaDetik = Math.ceil((cooldown - (Date.now() - lastSubmit)) / 1000);
+        window.notify(`Tunggu ${sisaDetik} detik sebelum kirim pesan lagi.`, 'error');
+        return;
+      }
+
+      // VALIDASI ANGKATAN
+      const angkatanVal = parseInt(document.getElementById('gb-angkatan').value);
+      if (isNaN(angkatanVal) || angkatanVal < 1970 || angkatanVal > 2030) {
+        window.notify('Tahun lulus tidak valid (1970–2030)!', 'error');
+        document.getElementById('gb-angkatan').focus();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengirim...';
+      try {
+        await addDoc(collection(db, 'guestbook'), {
+          nama:     document.getElementById('gb-nama').value.trim(),
+          angkatan: document.getElementById('gb-angkatan').value.trim(),
+          pesan:    document.getElementById('gb-pesan').value.trim(),
+          created_at: new Date().toISOString()
+        });
+        localStorage.setItem('af_last_gb', Date.now()); // Catat waktu submit
+        e.target.reset();
+        window.notify('Terima kasih! Pesan Anda berhasil dikirim di Buku Tamu.','success');
+      } catch(err) {
+        window.notify('Gagal mengirim pesan. Periksa koneksi Anda.','error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Kirim Pesan';
+      }
+    };
+
+    onSnapshot(query(collection(db,'guestbook'), orderBy('created_at','desc')), snap => {
+      const c = document.getElementById('guestbook-list');
+      if (snap.empty) {
+        c.innerHTML = '<div class="text-center text-slate-500 text-xs italic py-8 border border-dashed border-white/10 rounded-2xl">Belum ada pesan.<br>Jadilah yang pertama!</div>';
+        return;
+      }
+      c.innerHTML = snap.docs.map(d => {
+        const x = d.data();
+        const time = new Date(x.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+        return `<div class="bg-white/5 p-4 rounded-2xl border border-white/5 relative group hover:bg-white/10 transition-colors">
+          <i class="fas fa-quote-right absolute top-4 right-4 text-white/5 text-2xl group-hover:text-indigo-500/20 transition-colors"></i>
+          <p class="text-[11px] text-slate-300 italic mb-3 relative z-10 leading-relaxed pr-6">"${x.pesan}"</p>
+          <div class="flex items-center gap-3 border-t border-white/10 pt-3">
+            <div class="w-7 h-7 rounded-full bg-indigo-500/20 flex items-center justify-center text-sm text-indigo-400 font-black border border-indigo-500/30"><i class="fas fa-user"></i></div>
+            <div>
+              <div class="text-[11px] font-bold text-white">${x.nama} <span class="text-indigo-400 ml-1 text-xs uppercase bg-indigo-500/10 px-1.5 py-0.5 rounded">Lulus ${x.angkatan}</span></div>
+              <div class="text-xs text-slate-500 mt-0.5"><i class="far fa-clock mr-1"></i>${time}</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    });
+
+    // ────────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────
+    let financeList = [];
+    let alumniData = [];
+    window.alumniCache = window.alumniCache || {};
+
+    // Load alumni list dari Cloudinary untuk pencarian dan pemetaan yang cepat & gratis
+    fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni.json?t=" + Date.now())
+        .then(res => res.json())
+        .then(data => {
+            alumniData = data;
+            data.forEach(a => {
+                window.alumniCache[a.id] = a;
+            });
+            console.log("[Cloudinary JSON] Loaded and cached", data.length, "approved alumni.");
+            if (financeList.length > 0) {
+                processWallOfFame();
+            }
+        })
+        .catch(err => {
+            console.error("Gagal memuat alumni.json dari Cloudinary:", err);
+        });
+
+    onSnapshot(collection(db,'finance'), (snap) => {
+        financeList = snap.docs.map(d=>({id:d.id,...d.data()}));
+        processWallOfFame();
+    }, e => { 
+        console.error("Finance snap error:", e); 
+    });
+
+    function processWallOfFame() {
+      if (!financeList.length) return;
+      let angkatanMap = {}, recentDonors = [], totalTerkumpul = 0, donaturSet = new Set();
+      [...financeList]
+        .filter(f => (f.status === 'pemasukan' || f.status === 'approved') && f.kategori === 'Donasi')
+        .sort((a,b) => new Date(b.tanggal||0) - new Date(a.tanggal||0))
+        .forEach(f => {
+          let nom = Number(f.nominal)||0;
+          let nama = f.nama_pembayar || 'Hamba Allah';
+          totalTerkumpul += nom;
+          donaturSet.add(f.ref_alumni_id || nama);
+
+          // Cari angkatan dari field finance doc, atau dari cache alumni jika tidak ada
+          let angkatan = f.angkatan_pembayar || f.angkatan || '?';
+          if (angkatan === '?' && f.ref_alumni_id) {
+            const al = window.alumniCache[f.ref_alumni_id];
+            if (al) angkatan = al.angkatan || '?';
+          }
+
+          if (angkatan !== '?') {
+            angkatanMap[angkatan] = (angkatanMap[angkatan]||0) + nom;
+          }
+          
+          const cleanName = nama.replace(/^Donasi:\s*/i, '');
+          if (!recentDonors.find(x => x.nama === cleanName)) {
+            recentDonors.push({nama: cleanName, angkatan, nominal:nom, waktu:String(f.tanggal||'').split(',')[0]});
+          }
+        });
+
+      // UPDATE STATISTIK DONASI PUBLIK
+      const rabDocs = financeList.filter(f => f.kategori === 'RAB');
+      const totalRAB = rabDocs.reduce((sum, f) => sum + (Number(f.nominal) || 0), 0);
+      const targetDonasi = totalRAB > 0 ? totalRAB : 20000000;
+      const pct = Math.min(100, (totalTerkumpul / targetDonasi) * 100);
+      const el_bar = document.getElementById('donation-bar');
+      const el_pct = document.getElementById('donation-pct');
+      const el_terkumpul = document.getElementById('donation-terkumpul');
+      const el_donatur   = document.getElementById('donation-donatur');
+      const el_angkatan  = document.getElementById('donation-angkatan');
+      if (el_bar)  el_bar.style.width = pct.toFixed(1) + '%';
+      if (el_pct)  el_pct.textContent = pct.toFixed(1) + '%';
+      if (el_terkumpul) el_terkumpul.textContent = window.formatRupiah(totalTerkumpul);
+      if (el_donatur)   el_donatur.textContent   = donaturSet.size;
+      if (el_angkatan)  el_angkatan.textContent  = Object.keys(angkatanMap).length;
+
+      const medals = ['text-yellow-400 border-yellow-400/30 bg-yellow-400/10','text-slate-300 border-slate-300/30 bg-slate-300/10','text-amber-600 border-amber-600/30 bg-amber-600/10'];
+      const top3 = Object.entries(angkatanMap).map(([k,v])=>({angkatan:k,total:v})).sort((a,b)=>b.total-a.total).slice(0,3);
+      const taC = document.getElementById('public-top-angkatan');
+      taC.innerHTML = top3.length ? top3.map((x,i) => `
+        <div class="flex items-center justify-between p-2.5 bg-black/40 rounded-xl border border-white/5">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center font-black border ${medals[i]||'text-indigo-400 bg-indigo-500/10 border-indigo-500/20'}"><i class="fas ${i===0?'fa-crown':'fa-medal'}"></i></div>
+            <div class="text-xs font-bold text-white">Tahun Lulus ${x.angkatan}</div>
+          </div>
+          <div class="text-sm font-black text-amber-400 bg-amber-500/10 px-2 py-1.5 rounded-lg border border-amber-500/20">${window.formatRupiah(x.total)}</div>
+        </div>`).join('') : '<div class="text-center text-slate-500 text-xs italic py-4">Belum ada donasi.</div>';
+
+      const rdC = document.getElementById('public-recent-donors');
+      rdC.innerHTML = recentDonors.length ? recentDonors.slice(0,10).map(x => `
+        <div class="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/30"><i class="fas fa-hand-holding-heart text-xs"></i></div>
+            <div>
+              <div class="text-xs font-bold text-white">${x.nama}</div>
+              <div class="text-xs text-slate-400 mt-0.5"><span class="text-emerald-400">Tahun Lulus ${x.angkatan}</span> &middot; ${x.waktu}</div>
+            </div>
+          </div>
+          <div class="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20">Berdonasi</div>
+        </div>`).join('') : '<div class="text-center text-slate-500 text-xs italic py-4">Belum ada donatur.</div>';
+    }
+
+    // ── FITUR CARI TEMAN SEANGKATAN ─────────────────────────────────────────
+    // ── FITUR CARI TEMAN SEANGKATAN (Menggunakan alumniData dari Cloudinary secara Lokal) ──
+    window.searchClassmates = function() {
+      const input = document.getElementById('search-classmate-year');
+      const year = parseInt(input?.value);
+      const btn = document.getElementById('btn-search-classmate');
+      const resultEl = document.getElementById('search-classmate-result');
+      const listEl = document.getElementById('classmate-results-list');
+      const countEl = document.getElementById('search-result-count');
+
+      if (!year || isNaN(year) || year < 1970 || year > 2030) {
+        window.notify('Masukkan tahun lulus antara 1970 - 2030.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+
+      try {
+        const records = alumniData.filter(a => Number(a.angkatan) === year);
+        listEl.innerHTML = '';
+        
+        if (records.length === 0) {
+          countEl.textContent = '0 alumni ditemukan';
+          listEl.innerHTML = `
+            <div class="col-span-full py-6 text-center text-slate-500 text-xs italic">
+              Belum ada alumni lulusan ${year} yang terdaftar (atau belum disetujui panitia).
+            </div>`;
+        } else {
+          // Urutkan alfabetis nama
+          records.sort((a, b) => a.nama.localeCompare(b.nama));
+          
+          countEl.textContent = `${records.length} alumni lulusan ${year} terdaftar`;
+          
+          listEl.innerHTML = records.map(r => {
+            const lembagaBadge = r.lembaga ? `<span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${r.lembaga === 'MA' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-pink-500/20 text-pink-400 border border-pink-500/30'}">${r.lembaga}</span>` : '';
+            const kabupatenText = r.kabupaten ? `<span class="text-slate-500 text-[10px]"><i class="fas fa-map-marker-alt text-[9px] mr-0.5 text-emerald-400"></i>${r.kabupaten.replace(/KABUPATEN\s+/i, '').replace(/KOTA\s+/i, '')}</span>` : '';
+            
+            return `
+              <div class="p-3 bg-white/5 border border-white/5 rounded-xl flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                  <div class="font-bold text-white text-xs truncate" title="${window.escapeHtml(r.nama)}">${window.escapeHtml(r.nama)}</div>
+                  <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+                    ${lembagaBadge}
+                    ${kabupatenText}
+                  </div>
+                </div>
+              </div>`;
+          }).join('');
+        }
+        resultEl.classList.remove('hidden');
+      } catch (err) {
+        console.error("Gagal mencari alumni:", err);
+        window.notify('Gagal memproses data alumni.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search"></i> Cari Teman';
+      }
+    };
+
+    window.clearClassmateSearch = function() {
+      document.getElementById('search-classmate-result').classList.add('hidden');
+      document.getElementById('search-classmate-year').value = '';
+    };
+  </script>
+
+  <!-- Shared Floating Nav -->
+  <script src="js/transitions.js"></script>
+  <script src="js/nav-component.js"></script>
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[PWA] Registered:', reg.scope))
+          .catch((err) => console.error('[PWA] Failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
+

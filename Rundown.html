@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#060813" />
+  <meta name="description" content="Rundown dan susunan acara Reuni Akbar Pondok Pesantren AL-FATAH. Lihat jadwal lengkap kegiatan." />
+  <title>Rundown Acara â€” Reuni Akbar AL-FATAH</title>
+  <script src="js/lib/tailwindcss.js"></script>
+  <link rel="stylesheet" href="css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800;900&display=swap');
+    :root { --bg: #060813; }
+    body { background-color: var(--bg); color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+    .glass { background: rgba(14,18,37,0.70); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+
+    /* â”€â”€ SCROLLBAR â”€â”€ */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #2d3663; border-radius: 10px; }
+
+    /* â”€â”€ TIMELINE ANIMATION â”€â”€ */
+    .timeline-item { opacity: 0; transform: translateX(-30px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .timeline-item.visible { opacity: 1; transform: translateX(0); }
+
+    /* â”€â”€ PULSE DOT saat sedang berlangsung â”€â”€ */
+    @keyframes pulse-ring { 0%{transform:scale(1);opacity:0.8} 70%{transform:scale(2);opacity:0} 100%{transform:scale(2);opacity:0} }
+    .dot-live::after { content:''; position:absolute; inset:-4px; border-radius:50%; background:rgba(16,185,129,0.4); animation:pulse-ring 1.5s ease infinite; }
+
+    /* â”€â”€ SCROLL REVEAL â”€â”€ */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* â”€â”€ BADGE LIVE â”€â”€ */
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .badge-live { animation: blink 1.5s ease infinite; }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body class="min-h-screen flex flex-col relative text-slate-300 custom-scrollbar">
+
+  <!-- Ambient -->
+  <div class="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/10 blur-[120px] rounded-full pointer-events-none z-0"></div>
+
+  <!-- NAV -->
+  <nav class="w-full p-4 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
+    <a href="countdown.html" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+        <i class="fas fa-mosque"></i>
+      </div>
+      <div>
+        <h1 class="font-black text-sm text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">Reuni Akbar</h1>
+        <p class="text-sm text-indigo-400 font-bold">AL-FATAH</p>
+      </div>
+    </a>
+    <div class="flex items-center gap-2">
+      <a href="countdown.html" class="hidden sm:flex items-center px-4 py-2 hover:bg-white/5 rounded-full text-xs font-bold text-slate-300 hover:text-white transition-all uppercase tracking-wider"><i class="fas fa-home mr-2"></i>Beranda</a>
+      <a href="pendaftaran.html" class="px-4 py-2 glass bg-indigo-600/20 hover:bg-indigo-600 rounded-full text-xs font-bold text-white transition-all uppercase border border-indigo-500/30"><i class="fas fa-ticket-alt mr-1"></i>Daftar</a>
+      <a href="login.html" class="w-10 h-10 flex items-center justify-center glass hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-all border border-white/10"><i class="fas fa-user-shield text-xs"></i></a>
+    </div>
+  </nav>
+
+  <main class="flex-1 flex flex-col items-center p-4 md:p-8 relative z-10 w-full max-w-3xl mx-auto pb-36">
+
+    <div class="text-center mb-12 w-full mt-4 reveal">
+      <span class="inline-block px-4 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-sm font-black uppercase tracking-widest border border-indigo-500/20 mb-4">Jadwal &amp; Susunan Acara</span>
+      <h2 class="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight uppercase">Rundown <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Acara</span></h2>
+      <p class="text-sm text-slate-400 max-w-md mx-auto">Susunan acara lengkap Reuni Akbar Pondok Pesantren AL-FATAH.</p>
+    </div>
+
+    <!-- Info Tanggal -->
+    <div id="event-info-bar" class="hidden w-full max-w-xl mx-auto mb-8 glass rounded-2xl p-4 border border-indigo-500/20 flex items-center gap-4 reveal">
+      <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 flex-shrink-0"><i class="fas fa-calendar-check"></i></div>
+      <div>
+        <p id="event-info-date" class="text-sm font-black text-white"></p>
+        <p id="event-info-time" class="text-sm text-slate-400"></p>
+      </div>
+    </div>
+
+    <div class="glass w-full p-6 md:p-10 rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden reveal">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[50px] pointer-events-none"></div>
+
+      <!-- Loading -->
+      <div id="loading-state" class="flex flex-col items-center justify-center py-16">
+        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Memuat Jadwal Acara...</p>
+      </div>
+
+      <!-- Timeline -->
+      <div id="timeline-container" class="hidden relative border-l-2 border-white/10 ml-3 md:ml-6 space-y-8 py-4"></div>
+
+      <!-- Empty -->
+      <div id="empty-state" class="hidden text-center py-16">
+        <div class="w-20 h-20 bg-slate-800/50 text-slate-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border border-white/5"><i class="fas fa-calendar-times"></i></div>
+        <h3 class="text-lg font-black text-white uppercase mb-2">Jadwal Belum Tersedia</h3>
+        <p class="text-xs text-slate-500">Panitia akan segera mengumumkan susunan acara.</p>
+      </div>
+    </div>
+
+    <!-- Tombol Admin -->
+    <div class="w-full text-center pb-8 pt-6">
+      <a href="index.html" class="text-sm font-bold uppercase tracking-widest text-slate-500 hover:text-indigo-400 transition-colors"><i class="fas fa-lock mr-1"></i>Login Panitia</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
+      authDomain: "reuniakbar.firebaseapp.com",
+      projectId: "reuniakbar",
+      storageBucket: "reuniakbar.firebasestorage.app",
+      messagingSenderId: "542951643652",
+      appId: "1:542951643652:web:1b4b7dac6c676a5d6c3351"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    let eventDateStr = null;
+
+    // Fungsi parse waktu dari string "08:00 - 09:00" atau "08:00"
+    function parseStartTime(waktuStr) {
+      if (!waktuStr) return null;
+      const match = waktuStr.match(/(\d{1,2}):(\d{2})/);
+      if (!match) return null;
+      let baseDate = new Date();
+      if (eventDateStr) {
+        const parsed = new Date(eventDateStr);
+        if (!isNaN(parsed.getTime())) baseDate = parsed;
+      }
+      return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), parseInt(match[1]), parseInt(match[2]), 0);
+    }
+
+    function parseEndTime(waktuStr) {
+      if (!waktuStr) return null;
+      const parts = waktuStr.split('-');
+      const timeStr = parts.length > 1 ? parts[1].trim() : null;
+      if (!timeStr) return null;
+      const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+      if (!match) return null;
+      let baseDate = new Date();
+      if (eventDateStr) {
+        const parsed = new Date(eventDateStr);
+        if (!isNaN(parsed.getTime())) baseDate = parsed;
+      }
+      return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), parseInt(match[1]), parseInt(match[2]), 0);
+    }
+
+    // Helper: Buat Google Calendar URL
+    function getGoogleCalendarUrl(title, description, startTime, endTime) {
+      const formatDate = (date) => {
+        return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+      };
+      const start = formatDate(startTime);
+      const end = formatDate(endTime);
+      const details = encodeURIComponent(description + "\n\nLokasi: Pondok Pesantren AL-FATAH");
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${details}&location=Pondok+Pesantren+AL-FATAH`;
+    }
+
+    // Helper: Download file ICS
+    window.downloadICS = function(title, description, startTimeISO, endTimeISO) {
+      const startTime = new Date(startTimeISO);
+      const endTime = new Date(endTimeISO);
+      
+      const formatDate = (date) => {
+        return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+      };
+
+      const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Reuni Akbar AL-FATAH//EN",
+        "BEGIN:VEVENT",
+        `UID:${Date.now()}@reuniakbar`,
+        `DTSTAMP:${formatDate(new Date())}`,
+        `DTSTART:${formatDate(startTime)}`,
+        `DTEND:${formatDate(endTime)}`,
+        `SUMMARY:${title}`,
+        `DESCRIPTION:${description}`,
+        "LOCATION:Pondok Pesantren AL-FATAH",
+        "END:VEVENT",
+        "END:VCALENDAR"
+      ].join("\r\n");
+
+      const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${title.replace(/\s+/g, "_")}.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    async function loadEventInfo() {
+      try {
+        const docSnap = await getDoc(doc(db, 'settings', 'event_info'));
+        if (docSnap.exists()) {
+          const d = docSnap.data();
+          eventDateStr = d.event_date;
+          const parsedDate = new Date(d.event_date);
+          let dateText = d.event_date;
+          if (!isNaN(parsedDate.getTime())) {
+              dateText = parsedDate.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+          }
+          const bar = document.getElementById('event-info-bar');
+          bar.classList.remove('hidden');
+          bar.classList.add('flex');
+          document.getElementById('event-info-date').innerText = dateText;
+          document.getElementById('event-info-time').innerText = (d.event_time||'') + (d.event_guest ? ' · ' + d.event_guest : '');
+        }
+      } catch(e) { /* silent */ }
+    }
+
+    async function fetchRundown() {
+      try {
+        // Tunggu loadEventInfo selesai agar tanggal valid terisi
+        await loadEventInfo();
+
+        const q = query(collection(db, 'rundown'));
+        const snap = await getDocs(q);
+        const data = snap.docs.map(d => d.data()).sort((a, b) => {
+          if (!a.waktu) return 1;
+          if (!b.waktu) return -1;
+          return a.waktu.toString().localeCompare(b.waktu.toString());
+        });
+
+        document.getElementById('loading-state').classList.add('hidden');
+
+        if (data.length > 0) {
+          renderTimeline(data);
+          document.getElementById('timeline-container').classList.remove('hidden');
+        } else {
+          document.getElementById('empty-state').classList.remove('hidden');
+        }
+      } catch(e) {
+        console.error("Rundown Error:", e);
+        document.getElementById('loading-state').classList.add('hidden');
+        document.getElementById('empty-state').classList.remove('hidden');
+        document.querySelector('#empty-state h3').innerText = 'Gagal Memuat Data: ' + (e.message || '');
+      }
+    }
+
+    function renderTimeline(data) {
+      const now = new Date();
+      const container = document.getElementById('timeline-container');
+      container.innerHTML = data.map((item, index) => {
+        const startTime = parseStartTime(item.waktu);
+        const endTime   = parseEndTime(item.waktu) || (startTime ? new Date(startTime.getTime() + 60*60*1000) : null);
+        const isLive    = startTime && endTime && now >= startTime && now <= endTime;
+        const isPast    = endTime && now > endTime;
+
+        const dotClass  = isLive ? 'bg-emerald-500 dot-live' : isPast ? 'bg-slate-600' : (index % 2 === 0 ? 'bg-indigo-500' : 'bg-purple-500');
+        const timeColor = isLive ? 'text-emerald-400' : isPast ? 'text-slate-600' : (index % 2 === 0 ? 'text-indigo-400' : 'text-purple-400');
+        const cardClass = isLive
+          ? 'border-emerald-500/30 bg-emerald-500/5'
+          : isPast
+          ? 'border-white/5 bg-white/2 opacity-60'
+          : 'border-white/5 bg-white/3';
+
+        const liveTag = isLive ? `<span class="badge-live ml-2 text-xs font-black text-white bg-emerald-500 px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg shadow-emerald-500/30"><i class="fas fa-circle text-[6px] mr-1"></i>LIVE</span>` : '';
+        const pastTag = isPast ? `<span class="text-xs font-bold text-slate-600 ml-2 uppercase"><i class="fas fa-check mr-1"></i>Selesai</span>` : '';
+
+        // Tampilkan tombol kalender jika acara valid dan belum selesai
+        let calendarButtons = '';
+        if (startTime && endTime && !isPast) {
+          const googleUrl = getGoogleCalendarUrl(item.kegiatan, item.keterangan || '', startTime, endTime);
+          calendarButtons = `
+            <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/5 justify-end">
+              <a href="${googleUrl}" target="_blank" class="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500 hover:text-white text-indigo-400 text-[10px] font-black uppercase transition-all flex items-center gap-1.5">
+                <i class="fab fa-google"></i> Google Calendar
+              </a>
+              <button onclick="window.downloadICS('${item.kegiatan.replace(/'/g, "\\'")}', '${(item.keterangan || '').replace(/'/g, "\\'")}', '${startTime.toISOString()}', '${endTime.toISOString()}')" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-400 text-[10px] font-black uppercase transition-all flex items-center gap-1.5">
+                <i class="far fa-calendar-alt"></i> Simpan iCal (.ics)
+              </button>
+            </div>`;
+        }
+
+        return `
+          <div class="relative pl-8 md:pl-10 timeline-item" style="transition-delay:${index*80}ms">
+            <div class="absolute w-4 h-4 ${dotClass} rounded-full -left-[9px] top-1.5 border-4 border-[#060813] relative"></div>
+            <div class="p-4 md:p-5 rounded-2xl border ${cardClass} transition-all hover:border-white/15 hover:shadow-lg group">
+              <div class="flex items-center flex-wrap gap-2 mb-1">
+                <span class="text-xs md:text-sm font-black ${timeColor} tracking-widest"><i class="far fa-clock mr-1"></i>${item.waktu}</span>
+                ${liveTag}${pastTag}
+              </div>
+              <h3 class="text-lg md:text-xl font-black text-white group-hover:text-indigo-200 transition-colors">${item.kegiatan}</h3>
+              ${item.keterangan ? `<p class="text-slate-400 text-xs md:text-sm mt-2 leading-relaxed">${item.keterangan}</p>` : ''}
+              ${calendarButtons}
+            </div>
+          </div>`;
+      }).join('');
+
+      // Scroll reveal timeline items
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.timeline-item').forEach(el => observer.observe(el));
+    }
+
+    loadEventInfo();
+    document.addEventListener('DOMContentLoaded', fetchRundown);
+  </script>
+
+  <!-- ── Local Scroll Reveal & Blank Page Fallback ── -->
+  <script>
+    (function() {
+      // 1. Setup IntersectionObserver for smooth reveal locally
+      if (typeof IntersectionObserver !== 'undefined') {
+        const revObs = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.classList.add('visible');
+            }
+          });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
+      } else {
+        document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+      }
+
+      // 2. Foolproof Timeout Fallback: Force visibility after 1.5 seconds
+      // to ensure the page NEVER stays blank black even if Firebase CDN fails to load!
+      setTimeout(function() {
+        document.querySelectorAll('.reveal:not(.visible)').forEach(function(el) {
+          el.classList.add('visible');
+          console.warn('[Reveal Fallback] Forced element visibility due to CDN/JS load delay.');
+        });
+      }, 1500);
+    })();
+  </script>
+
+  <!-- Shared Floating Nav -->
+  <script src="js/transitions.js"></script>
+  <script src="js/nav-component.js"></script>
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[PWA] Registered:', reg.scope))
+          .catch((err) => console.error('[PWA] Failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
+

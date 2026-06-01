@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#060813" />
+  <meta name="description" content="Login Portal Panitia Reuni Akbar Pondok Pesantren AL-FATAH. Masuk untuk mengelola data alumni, keuangan, dan acara." />
+  <title>Login Petugas — Portal AL-FATAH</title>
+
+  <script src="js/lib/tailwindcss.js"></script>
+  <link rel="stylesheet" href="css/all.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+    :root { --bg: #060813; }
+    body { background-color: var(--bg); color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+
+    /* Glass */
+    .glass { background: rgba(14,18,37,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+
+    /* Input */
+    .input-field { width:100%; padding:14px 16px; border-radius:14px; background:#1e2548; border:1px solid #2d3663; color:white; outline:none; transition:all 0.3s; font-size:14px; }
+    .input-field:focus { border-color:#6366f1; box-shadow:0 0 0 4px rgba(99,102,241,0.1); }
+
+    /* Light theme */
+    body.light-theme { --bg: #f8fafc; color: #1e293b; }
+    body.light-theme .glass { background: rgba(255,255,255,0.95); border:1px solid rgba(0,0,0,0.1); box-shadow:0 10px 25px rgba(0,0,0,0.05); }
+    body.light-theme .text-white { color: #0f172a; }
+    body.light-theme .text-slate-400 { color: #64748b; }
+    body.light-theme input { background-color:#ffffff; border-color:#cbd5e1; color:#0f172a; }
+    body.light-theme input::placeholder { color:#94a3b8; }
+
+    /* Modal animation */
+    .modal-enter { animation: modalFadeIn 0.4s cubic-bezier(.4,0,.2,1) forwards; }
+    @keyframes modalFadeIn { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+    /* Particle Canvas */
+    #login-canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+    /* Floating orbs */
+    .orb { position:fixed; border-radius:50%; pointer-events:none; z-index:0; filter:blur(80px); animation: orbFloat 12s ease-in-out infinite; }
+    @keyframes orbFloat { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-20px) scale(1.05)} 66%{transform:translate(-20px,15px) scale(0.95)} }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative">
+
+  <!-- Particle Canvas -->
+  <canvas id="login-canvas"></canvas>
+
+  <!-- Floating Orbs -->
+  <div class="orb w-[450px] h-[450px] bg-indigo-600/20 top-[-15%] left-[-15%]" style="animation-delay:0s"></div>
+  <div class="orb w-[350px] h-[350px] bg-emerald-600/15 bottom-[-15%] right-[-10%]" style="animation-delay:-4s"></div>
+  <div class="orb w-[250px] h-[250px] bg-purple-600/10 top-[40%] right-[10%]" style="animation-delay:-8s"></div>
+
+  <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
+
+  <div id="loading-overlay" class="hidden fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center transition-opacity">
+    <div class="p-8 glass rounded-[2.5rem] flex flex-col items-center border border-indigo-500/20 modal-enter">
+      <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      <p id="loading-text" class="mt-4 text-[10px] font-black uppercase tracking-widest text-indigo-400">Memproses...</p>
+    </div>
+  </div>
+
+  <!-- Theme Toggle -->
+  <button onclick="toggleTheme()" class="fixed top-6 right-6 w-12 h-12 glass rounded-full flex items-center justify-center text-slate-400 hover:text-indigo-400 transition-colors z-50 hover:scale-105">
+    <i id="theme-icon-auth" class="fas fa-moon"></i>
+  </button>
+
+  <!-- Login Card -->
+  <div class="glass p-10 rounded-[3rem] w-full max-w-md text-center modal-enter relative z-10">
+
+    <!-- Glow inner -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-indigo-500/10 blur-[60px] rounded-full pointer-events-none"></div>
+
+    <!-- Logo -->
+    <div class="w-28 h-28 bg-white/10 backdrop-blur-xl rounded-full mx-auto mb-6 p-0 flex items-center justify-center shadow-2xl border border-white/20 relative overflow-hidden hover:scale-105 transition-transform duration-300">
+      <div class="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-transparent"></div>
+      <img src="img/logo.png" alt="Logo Al-Fatah" class="w-full h-full object-cover drop-shadow-lg rounded-full relative z-10" onerror="this.parentElement.innerHTML='<div class=\'text-4xl\'>🕌</div>'" />
+    </div>
+
+    <h1 class="text-xl font-black mb-1 uppercase tracking-widest text-white relative z-10">Halaman Login</h1>
+    <p class="text-xs text-slate-400 mb-8 font-bold relative z-10">PANITIA &amp; ALUMNI REUNI AKBAR AL-FATAH</p>
+
+    <form onsubmit="event.preventDefault(); handleLogin();" class="relative z-10">
+      <div class="mb-4 relative">
+        <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+        <input type="email" id="login-email" class="input-field pl-11 text-center" placeholder="Email" required autocomplete="email" />
+      </div>
+      <div class="mb-2 relative">
+        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none"></i>
+        <input type="password" id="login-pin" class="input-field pl-11 text-center" placeholder="Password" required autocomplete="current-password" />
+      </div>
+      <div class="text-right mb-6">
+        <button type="button" onclick="handleForgotPin()" class="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-widest transition-all">Lupa Password?</button>
+      </div>
+      <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 py-4 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all shadow-lg shadow-indigo-500/20 text-white hover:scale-[1.02] active:scale-[0.98]">
+          <i class="fas fa-sign-in-alt mr-2"></i>Masuk ke Portal
+        </button>
+    </form>
+
+    <!-- Divider -->
+    <div class="mt-6 flex items-center justify-between relative z-10">
+      <span class="border-b border-white/10 flex-1"></span>
+      <span class="text-[10px] text-center text-slate-500 uppercase font-bold mx-4 whitespace-nowrap">Atau masuk dengan</span>
+      <span class="border-b border-white/10 flex-1"></span>
+    </div>
+
+    <!-- Google Login -->
+    <button onclick="handleGoogleLogin()" class="w-full mt-4 bg-white hover:bg-slate-100 text-slate-800 py-4 rounded-2xl font-bold uppercase text-xs tracking-widest transition-all shadow-lg flex items-center justify-center gap-3 relative z-10 hover:scale-[1.02] active:scale-[0.98]">
+      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5">
+      Masuk dengan Google
+    </button>
+
+    <!-- Footer links -->
+    <div class="mt-6 relative z-10 text-center space-y-2">
+      <p class="text-[10px] text-slate-500">Belum punya akun panitia?
+        <a href="daftar.html" class="text-indigo-400 hover:text-indigo-300 font-bold transition-colors ml-1">Daftar di sini</a>
+      </p>
+      <a href="countdown.html" class="text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:text-indigo-400 transition-colors block">
+        <i class="fas fa-home mr-1"></i>Kembali ke Beranda
+      </a>
+    </div>
+  </div>
+
+  <!-- Particle Script -->
+  <script>
+  (function(){
+    const c = document.getElementById('login-canvas');
+    const ctx = c.getContext('2d');
+    let pts = [];
+    function resize(){ c.width=window.innerWidth; c.height=window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+    function rnd(a,b){ return Math.random()*(b-a)+a; }
+    for(let i=0;i<40;i++) pts.push({x:rnd(0,c.width),y:rnd(0,c.height),r:rnd(0.5,1.5),dx:rnd(-0.15,0.15),dy:rnd(-0.3,-0.05),a:rnd(0.1,0.4),col:Math.random()>0.5?'99,102,241':'16,185,129'});
+    (function loop(){
+      ctx.clearRect(0,0,c.width,c.height);
+      pts.forEach((p,i)=>{
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${p.col},${p.a})`; ctx.fill();
+        p.x+=p.dx; p.y+=p.dy; p.a-=0.0008;
+        if(p.y<-5||p.a<=0) pts[i]={x:rnd(0,c.width),y:c.height+5,r:rnd(0.5,1.5),dx:rnd(-0.15,0.15),dy:rnd(-0.3,-0.05),a:rnd(0.1,0.4),col:Math.random()>0.5?'99,102,241':'16,185,129'};
+      });
+      requestAnimationFrame(loop);
+    })();
+  })();
+  </script>
+
+  <script src="js/capacitor-plugins.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
+      authDomain: "reuniakbar.firebaseapp.com",
+      projectId: "reuniakbar",
+      storageBucket: "reuniakbar.firebasestorage.app",
+      messagingSenderId: "542951643652",
+      appId: "1:542951643652:web:1b4b7dac6c676a5d6c3351"
+    };
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+    try {
+      db.settings({ experimentalForceLongPolling: true });
+    } catch (e) {
+      console.warn("Firestore settings already configured:", e);
+    }
+
+    // Handle redirect sign-in result on page load
+    auth.getRedirectResult().then((result) => {
+      if (result?.user) {
+        window.notify('Login Google Berhasil!', 'success');
+      }
+    }).catch((e) => {
+      console.error('Gagal memproses redirect login Google:', e);
+      if (e.code === 'auth/unauthorized-domain') {
+        window.showUnauthorizedDomainModal(window.location.hostname);
+      } else {
+        window.notify('Gagal masuk Google (Redirect): ' + (e.message || ''), 'error');
+      }
+    });
+
+    // ── Theme ────────────────────────────────────────────────────────────────
+    window.isLightMode = localStorage.getItem('af_theme') === 'light';
+    window.toggleTheme = () => {
+      window.isLightMode = !window.isLightMode;
+      localStorage.setItem('af_theme', window.isLightMode ? 'light' : 'dark');
+      applyTheme();
+    };
+    function applyTheme() {
+      if (window.isLightMode) { document.body.classList.add('light-theme'); document.getElementById('theme-icon-auth').className = 'fas fa-sun'; }
+      else { document.body.classList.remove('light-theme'); document.getElementById('theme-icon-auth').className = 'fas fa-moon'; }
+    }
+    applyTheme();
+
+    // ── Utilities ─────────────────────────────────────────────────────────────
+    window.toggleLoading = (show, text='Memuat...') => {
+      const overlay = document.getElementById('loading-overlay');
+      if (show) { document.getElementById('loading-text').innerText = text; overlay.classList.remove('hidden'); }
+      else { overlay.classList.add('hidden'); }
+    };
+
+    window.notify = (message, type='success') => {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `p-4 mb-2 rounded-xl backdrop-blur border-l-4 ${type==='error'?'border-red-500 bg-red-900/30':'border-emerald-500 bg-emerald-900/30'} font-bold text-[10px] uppercase shadow-2xl text-white transform transition-all duration-300 translate-x-full opacity-0 max-w-sm`;
+      toast.innerHTML = `<div class="flex items-center"><i class="fas ${type==='error'?'fa-exclamation-circle text-red-400':'fa-check-circle text-emerald-400'} mr-2"></i>${message}</div>`;
+      container.appendChild(toast);
+      setTimeout(()=>toast.classList.remove('translate-x-full','opacity-0'),10);
+      setTimeout(()=>{toast.classList.add('translate-x-full','opacity-0');setTimeout(()=>toast.remove(),300)},3000);
+    };
+
+    window.closeProtocolErrorModal = () => {
+      document.getElementById('protocol-error-modal').classList.add('hidden');
+    };
+    window.showProtocolErrorModal = () => {
+      document.getElementById('protocol-error-modal').classList.remove('hidden');
+    };
+
+    window.closeUnauthorizedDomainModal = () => {
+      document.getElementById('unauthorized-domain-modal').classList.add('hidden');
+    };
+    window.showUnauthorizedDomainModal = (hostname) => {
+      document.getElementById('err-hostname-display').innerText = hostname;
+      document.getElementById('err-hostname-copy').innerText = hostname;
+      document.getElementById('unauthorized-domain-modal').classList.remove('hidden');
+    };
+
+    // ── Auth Handlers ─────────────────────────────────────────────────────────
+    window.handleLogin = async () => {
+      const email = document.getElementById('login-email').value;
+      const pin   = document.getElementById('login-pin').value;
+      if (!email || !pin) return window.notify('Lengkapi email dan password!', 'error');
+      window.toggleLoading(true,'Otentikasi...');
+      try { await auth.signInWithEmailAndPassword(email, pin); }
+      catch(e) {
+        const errMap = {
+          'auth/invalid-credential': 'Email atau password salah.',
+          'auth/wrong-password': 'Password salah.',
+          'auth/user-not-found': 'Email tidak terdaftar.',
+          'auth/too-many-requests': 'Terlalu banyak percobaan. Coba lagi nanti.',
+          'auth/user-disabled': 'Akun ini dinonaktifkan. Hubungi admin.',
+          'auth/network-request-failed': 'Koneksi internet bermasalah.',
+        };
+        window.notify(errMap[e.code] || 'Email atau Password salah!', 'error');
+        window.toggleLoading(false);
+      }
+    };
+
+    window.handleGoogleLogin = async () => {
+      if (window.location.protocol === 'file:') {
+        window.showProtocolErrorModal();
+        return;
+      }
+      window.toggleLoading(true, 'Otentikasi Google...');
+      try {
+        const CapCore = window.CapacitorCore || window.Capacitor;
+        if (CapCore?.isNativePlatform?.()) {
+          const FirebaseAuthentication = window.FirebaseAuthentication;
+          if (!FirebaseAuthentication) {
+            window.notify('Capacitor Plugin tidak ditemukan.', 'error');
+            window.toggleLoading(false);
+            return;
+          }
+          const result = await FirebaseAuthentication.signInWithGoogle();
+          if (result?.credential?.idToken) {
+            const credential = firebase.auth.GoogleAuthProvider.credential(result.credential.idToken);
+            await auth.signInWithCredential(credential);
+          } else {
+            throw new Error('Token tidak valid');
+          }
+        } else {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          try {
+            await auth.signInWithPopup(provider);
+          } catch (popupErr) {
+            // Fallback to Redirect if popup is blocked
+            if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/cancelled-popup-request') {
+              console.warn('Popup diblokir, mencoba dengan Redirect...');
+              window.notify('Popup diblokir. Mengalihkan halaman login...', 'success');
+              await auth.signInWithRedirect(provider);
+            } else {
+              throw popupErr;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Gagal Login Google:', e);
+        if (e.code === 'auth/unauthorized-domain') {
+          window.showUnauthorizedDomainModal(window.location.hostname);
+        } else {
+          window.notify('Gagal Login Google: ' + (e.message || ''), 'error');
+        }
+        window.toggleLoading(false);
+      }
+    };
+
+
+    window.handleForgotPin = async () => {
+      const email = document.getElementById('login-email').value;
+      if (!email) return window.notify('Masukkan email Anda terlebih dahulu!', 'error');
+      try {
+        await auth.sendPasswordResetEmail(email);
+        window.notify('Link reset terkirim ke email.', 'success');
+      } catch (e) {
+        const errMap = {
+          'auth/user-not-found': 'Email tidak terdaftar dalam sistem.',
+          'auth/invalid-email': 'Format email tidak valid.',
+          'auth/network-request-failed': 'Koneksi internet bermasalah.',
+        };
+        window.notify(errMap[e.code] || 'Gagal mengirim link reset.', 'error');
+      }
+    };
+
+    let isHandlingAuth = false;
+    auth.onAuthStateChanged(async (user) => {
+      if (user && !isHandlingAuth) {
+        isHandlingAuth = true;
+        window.toggleLoading(true, 'Memverifikasi status akun...');
+        try {
+          const userRef = db.collection('users').doc(user.uid);
+          const userSnap = await Promise.race([
+            userRef.get(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 20000))
+          ]);
+
+          if (!userSnap.exists) {
+            // New user registration (Email or Google)
+            const newUser = {
+              email: user.email || "",
+              role: 'pending',
+              nama: user.displayName || user.email?.split('@')[0] || 'User',
+              created_at: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await Promise.race([
+              userRef.set(newUser),
+              new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 20000))
+            ]);
+            window.notify('Pendaftaran Anda berhasil dikirim dan sedang ditinjau oleh admin.', 'success');
+            await auth.signOut();
+          } else {
+            const userData = userSnap.data();
+            if (userData.role === 'pending') {
+              window.notify('Akun Anda sedang menunggu persetujuan Admin/Ketua.', 'error');
+              await auth.signOut();
+            } else {
+              // Approved, redirect to index.html
+              window.location.href = 'index.html';
+            }
+          }
+        } catch (e) {
+          console.error('Error during auth state verification:', e);
+          window.notify('Gagal verifikasi: ' + (e.message || e), 'error');
+          await auth.signOut();
+        } finally {
+          isHandlingAuth = false;
+          window.toggleLoading(false);
+        }
+      }
+    });
+  </script>
+
+  <!-- Modal: Peringatan Protokol File Lokal (file://) -->
+  <div id="protocol-error-modal" class="fixed inset-0 z-[600] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="glass max-w-md w-full p-8 rounded-[2.5rem] border border-red-500/20 text-center relative modal-enter">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-red-500/10 blur-[50px] rounded-full pointer-events-none"></div>
+      
+      <!-- Error Icon -->
+      <div class="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-full mx-auto mb-6 flex items-center justify-center">
+        <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+      </div>
+      
+      <h2 class="text-lg font-black text-white uppercase tracking-widest mb-2">Google Sign-In Membutuhkan Server</h2>
+      <p class="text-xs text-slate-300 mb-6 leading-relaxed">
+        Keamanan Google OAuth tidak mengizinkan login melalui protokol berkas langsung (<code class="bg-black/40 px-1.5 py-0.5 rounded text-red-300 font-mono">file://</code>). Anda perlu menjalankan aplikasi di server lokal (<code class="bg-black/40 px-1.5 py-0.5 rounded text-indigo-300 font-mono">http://localhost</code>).
+      </p>
+      
+      <!-- Step by Step -->
+      <div class="bg-black/30 rounded-2xl p-4 text-left border border-white/5 mb-6 text-xs text-slate-400 space-y-3">
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+          <p>Jalankan berkas <span class="text-white font-semibold">jalankan-aplikasi.bat</span> di folder utama aplikasi.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+          <p>Aplikasi otomatis terbuka di browser pada alamat <span class="text-indigo-400 font-semibold">http://localhost:3000</span>.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 bg-indigo-600/20 text-indigo-400 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+          <p>Klik kembali tombol <span class="text-white font-semibold">Masuk dengan Google</span>.</p>
+        </div>
+      </div>
+      
+      <p class="text-[9px] text-slate-500 mb-6 uppercase tracking-wider font-bold">Atau masuk menggunakan Email &amp; Password</p>
+      
+      <div class="flex gap-3">
+        <button onclick="window.closeProtocolErrorModal()" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all text-slate-300">
+          Tutup
+        </button>
+        <button onclick="window.closeProtocolErrorModal(); document.getElementById('login-email').focus();" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-500/20">
+          Gunakan Email
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Otorisasi Domain Firebase (auth/unauthorized-domain) -->
+  <div id="unauthorized-domain-modal" class="fixed inset-0 z-[600] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="glass max-w-md w-full p-8 rounded-[2.5rem] border border-amber-500/20 text-center relative modal-enter">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-amber-500/10 blur-[50px] rounded-full pointer-events-none"></div>
+      
+      <!-- Alert Icon -->
+      <div class="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-full mx-auto mb-6 flex items-center justify-center">
+        <i class="fas fa-shield-halved text-amber-400 text-2xl"></i>
+      </div>
+      
+      <h2 class="text-lg font-black text-white uppercase tracking-widest mb-2">Domain Belum Diotorisasi</h2>
+      <p class="text-xs text-slate-300 mb-6 leading-relaxed">
+        Domain <code id="err-hostname-display" class="bg-black/40 px-1.5 py-0.5 rounded text-amber-300 font-mono font-bold">domain.com</code> belum diotorisasi di Firebase Console untuk proyek <span class="text-indigo-400 font-semibold">reuniakbar</span>.
+      </p>
+      
+      <!-- Step by Step -->
+      <div class="bg-black/30 rounded-2xl p-4 text-left border border-white/5 mb-6 text-xs text-slate-400 space-y-3">
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 bg-amber-600/20 text-amber-400 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+          <p>Buka <a href="https://console.firebase.google.com/" target="_blank" class="text-indigo-400 hover:underline font-semibold">Firebase Console <i class="fas fa-external-link-alt text-[9px] ml-0.5"></i></a> dan pilih proyek <span class="text-white font-semibold">reuniakbar</span>.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 bg-amber-600/20 text-amber-400 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+          <p>Pilih menu <span class="text-white font-semibold">Authentication</span> di samping kiri, lalu klik tab <span class="text-white font-semibold">Settings</span>.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 bg-amber-600/20 text-amber-400 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+          <p>Scroll ke bagian <span class="text-white font-semibold">Authorized Domains</span>, lalu klik tombol <span class="text-white font-semibold">Add Domain</span>.</p>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="w-5 h-5 bg-amber-600/20 text-amber-400 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">4</span>
+          <p>Masukkan domain: <code id="err-hostname-copy" class="bg-indigo-950/60 border border-indigo-500/30 px-1.5 py-0.5 rounded text-indigo-300 font-mono select-all">domain.com</code> lalu klik <span class="text-white font-semibold">Save</span>.</p>
+        </div>
+      </div>
+      
+      <div class="flex gap-3">
+        <button onclick="window.closeUnauthorizedDomainModal()" class="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all text-slate-300">
+          Tutup
+        </button>
+        <a href="https://console.firebase.google.com/" target="_blank" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center font-bold">
+          Buka Firebase Console
+        </a>
+      </div>
+    </div>
+  </div>
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[PWA] Registered:', reg.scope))
+          .catch((err) => console.error('[PWA] Failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

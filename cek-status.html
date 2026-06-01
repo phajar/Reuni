@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#060813" />
+  <meta name="description" content="Cek status pendaftaran Reuni Akbar Pondok Pesantren AL-FATAH menggunakan nomor WhatsApp Anda." />
+  <title>Cek Status Pendaftaran — Reuni Akbar AL-FATAH</title>
+  <script src="js/lib/tailwindcss.js"></script>
+  <link rel="stylesheet" href="css/all.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800;900&display=swap');
+    :root { --bg: #060813; }
+    body { background-color: var(--bg); color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+    .glass { background: rgba(14,18,37,0.80); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.07); }
+    .input-field { width:100%; padding:14px 18px; border-radius:14px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:white; outline:none; transition:all 0.3s; font-size:14px; }
+    .input-field option { background: #0e1225; color: white; }
+    .input-field:focus { border-color:#6366f1; box-shadow:0 0 0 4px rgba(99,102,241,0.12); }
+    .reveal { opacity:0; transform:translateY(20px); transition:opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    /* Status Cards */
+    .status-pending  { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.05); }
+    .status-approved { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
+    .status-rejected { border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.05); }
+
+    /* Pulse animation */
+    @keyframes pulse-glow { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0.4)} 50%{box-shadow:0 0 0 12px rgba(245,158,11,0)} }
+    .pulse-amber { animation: pulse-glow 2s ease infinite; }
+    @keyframes pulse-green { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.4)} 50%{box-shadow:0 0 0 12px rgba(16,185,129,0)} }
+    .pulse-green { animation: pulse-green 2s ease infinite; }
+
+    /* Number input */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+    /* Upload area */
+    .upload-area { border: 2px dashed rgba(99,102,241,0.3); border-radius: 16px; transition: all 0.3s; cursor: pointer; }
+    .upload-area:hover { border-color: rgba(99,102,241,0.7); background: rgba(99,102,241,0.05); }
+    .upload-area.dragover { border-color: #6366f1; background: rgba(99,102,241,0.1); }
+
+    /* Progress bar */
+    @keyframes progress-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+    .progress-bar-animated {
+      background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%);
+      background-size: 200% 100%;
+      animation: progress-shimmer 1.5s infinite;
+    }
+
+
+    /* ── SKELETON LOADING ── */
+    @keyframes skeleton-shimmer {
+      0% { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg,
+        rgba(255,255,255,0.04) 0%,
+        rgba(255,255,255,0.10) 40%,
+        rgba(255,255,255,0.04) 80%
+      );
+      background-size: 800px 100%;
+      animation: skeleton-shimmer 1.4s ease infinite;
+      border-radius: 12px;
+    }
+    .skeleton-card {
+      background: rgba(14,18,37,0.80);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 1.5rem;
+    }
+
+    /* ── SHARE BUTTON ── */
+    .btn-share-wa {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #25d366, #128c7e);
+      color: white;
+      padding: 10px 18px;
+      border-radius: 14px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(37,211,102,0.25);
+    }
+    .btn-share-wa:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 28px rgba(37,211,102,0.4);
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body class="min-h-screen flex flex-col relative">
+
+  <!-- Ambient -->
+  <div class="fixed top-[-15%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/20 blur-[130px] rounded-full pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-15%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/15 blur-[130px] rounded-full pointer-events-none z-0"></div>
+
+  <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
+
+  <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10 w-full max-w-2xl mx-auto my-8">
+
+    <!-- HEADER -->
+    <div class="text-center mb-10 w-full reveal">
+      <a href="countdown.html" class="inline-flex items-center gap-2 mb-8 text-slate-400 hover:text-indigo-400 transition-colors text-sm font-bold">
+        <i class="fas fa-arrow-left"></i> Kembali ke Beranda
+      </a>
+      <div class="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl flex items-center justify-center mx-auto mb-5">
+        <i class="fas fa-search-location text-3xl text-indigo-400"></i>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-black text-white mb-3 uppercase tracking-tight">Cek Status <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Pendaftaran</span></h1>
+      <p class="text-slate-400 text-sm max-w-md mx-auto leading-relaxed">Masukkan nomor WhatsApp yang Anda gunakan saat mendaftar untuk melihat status pendaftaran Anda.</p>
+    </div>
+
+    <!-- FORM CARD -->
+    <div class="glass p-8 md:p-10 rounded-[2.5rem] border border-white/5 shadow-2xl w-full reveal">
+
+      <form id="form-cek" class="space-y-5">
+        <div>
+          <label class="block text-xs font-black text-indigo-400 uppercase tracking-widest mb-2">Nomor WhatsApp</label>
+          <div class="relative">
+            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm pointer-events-none">+62</span>
+            <input type="tel" id="inp-wa" inputmode="numeric" class="input-field pl-14" placeholder="81234567890" required autocomplete="tel" />
+          </div>
+          <p class="text-xs text-slate-500 mt-2 ml-1">Contoh: 81234567890 (tanpa 0 di depan)</p>
+        </div>
+        <button type="submit" id="btn-cek" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl font-black uppercase text-sm tracking-widest transition-all shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98]">
+          <span id="btn-text"><i class="fas fa-search mr-2"></i>Cek Status Saya</span>
+          <span id="btn-loading" class="hidden"><i class="fas fa-spinner fa-spin mr-2"></i>Mencari...</span>
+        </button>
+      </form>
+
+      <!-- SKELETON LOADING -->
+      <div id="skeleton-area" class="hidden mt-8 space-y-4">
+        <hr class="border-white/10" />
+        <div class="skeleton-card space-y-3">
+          <div class="flex items-start gap-4">
+            <div class="skeleton w-12 h-12 rounded-2xl flex-shrink-0"></div>
+            <div class="flex-1 space-y-2">
+              <div class="skeleton h-5 w-3/4 rounded-xl"></div>
+              <div class="skeleton h-3 w-1/2 rounded-xl"></div>
+              <div class="skeleton h-3 w-2/3 rounded-xl"></div>
+            </div>
+          </div>
+          <div class="skeleton h-4 w-full rounded-xl mt-2"></div>
+          <div class="skeleton h-4 w-4/5 rounded-xl"></div>
+        </div>
+      </div>
+
+      <!-- RESULT AREA -->
+      <div id="result-area" class="hidden mt-8 space-y-4">
+        <hr class="border-white/10" />
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <p class="text-xs font-black text-slate-500 uppercase tracking-widest" id="result-count"></p>
+          <div class="flex items-center gap-3">
+            <button id="btn-share-result" onclick="shareResult()" class="btn-share-wa hidden">
+              <i class="fab fa-whatsapp text-base"></i> Bagikan
+            </button>
+            <button id="btn-refresh" onclick="refreshStatus()" class="text-xs text-indigo-400 hover:text-indigo-300 font-bold transition-colors flex items-center gap-1">
+              <i class="fas fa-sync-alt"></i> Perbarui
+            </button>
+          </div>
+        </div>
+        <div id="result-cards" class="space-y-6"></div>
+      </div>
+
+      <!-- NOT FOUND -->
+      <div id="not-found" class="hidden mt-8 text-center py-6">
+        <hr class="border-white/10 mb-6" />
+        <div class="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/10">
+          <i class="fas fa-user-slash text-3xl text-slate-500"></i>
+        </div>
+        <h3 class="font-black text-white text-lg uppercase mb-2">Data Tidak Ditemukan</h3>
+        <p class="text-slate-400 text-sm leading-relaxed mb-6">Nomor WhatsApp ini belum terdaftar di sistem.<br>Pastikan nomor yang Anda masukkan sudah benar.</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="pendaftaran.html" class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105">
+            <i class="fas fa-user-plus"></i>Daftar Sekarang
+          </a>
+          <button onclick="document.getElementById('inp-wa').value=''; document.getElementById('inp-wa').focus(); document.getElementById('not-found').classList.add('hidden')" class="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-slate-300 px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-white/10">
+            <i class="fas fa-redo"></i>Coba Lagi
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LINK PENDAFTARAN -->
+    <div class="mt-6 w-full glass rounded-2xl p-5 border border-white/5 flex items-center justify-between gap-4 reveal">
+      <div>
+        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Belum Mendaftar?</p>
+        <p class="text-sm font-bold text-white mt-1">Daftar sekarang untuk ikut Reuni Akbar!</p>
+      </div>
+      <a href="pendaftaran.html" class="flex-shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg">
+        Daftar <i class="fas fa-arrow-right ml-1"></i>
+      </a>
+    </div>
+
+  </main>
+
+  <footer class="text-center py-6 text-xs font-bold text-slate-600 uppercase tracking-widest relative z-10">
+    &copy; Panitia Reuni Akbar Pondok Pesantren Al-Fatah
+  </footer>
+
+  <!-- ── Local Scroll Reveal & Blank Page Fallback ── -->
+  <script>
+    (function() {
+      // 1. Setup IntersectionObserver for smooth reveal locally
+      if (typeof IntersectionObserver !== 'undefined') {
+        const revObs = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              e.target.classList.add('visible');
+            }
+          });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => revObs.observe(el));
+      } else {
+        document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+      }
+
+      // 2. Foolproof Timeout Fallback: Force visibility after 1.5 seconds
+      // to ensure the page NEVER stays blank black even if Firebase CDN fails to load!
+      setTimeout(function() {
+        document.querySelectorAll('.reveal:not(.visible)').forEach(function(el) {
+          el.classList.add('visible');
+          console.warn('[Reveal Fallback] Forced element visibility due to CDN/JS load delay.');
+        });
+      }, 1500);
+
+      // 3. Robust Error Logging
+      window.onerror = function(message, source, lineno, colno, error) {
+        console.error("Global Error:", message, "at", source, ":", lineno);
+        if (typeof notify === 'function') {
+          notify("Error: " + message, "error");
+        }
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        console.error("Unhandled Rejection:", event.reason);
+        if (typeof notify === 'function') {
+          notify("Error: " + (event.reason ? event.reason.message : "Promise rejected"), "error");
+        }
+      });
+    })();
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, doc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
+      authDomain: "reuniakbar.firebaseapp.com",
+      projectId: "reuniakbar",
+      storageBucket: "reuniakbar.firebasestorage.app",
+      messagingSenderId: "542951643652",
+      appId: "1:542951643652:web:1b4b7dac6c676a5d6c3351"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+
+    // ── Auto-fill dari URL param ?wa=... ─────────────────────────────────
+    const urlParams = new URLSearchParams(window.location.search);
+    const waParam = urlParams.get('wa');
+    if (waParam) {
+      const cleaned = waParam.startsWith('62') ? waParam.slice(2) : waParam;
+      document.getElementById('inp-wa').value = cleaned;
+      setTimeout(() => document.getElementById('form-cek').requestSubmit(), 300);
+    }
+
+    // ── Normalize WA ──────────────────────────────────────────────────────
+    function normalizeWA(raw) {
+      if (!raw) return "";
+      let num = raw.replace(/\D/g, '');
+      if (num.startsWith('620')) {
+        num = '62' + num.slice(3);
+      }
+      if (num.startsWith('0')) {
+        num = '62' + num.slice(1);
+      } else if (num.startsWith('8')) {
+        num = '62' + num;
+      }
+      return num;
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────────
+    function notify(msg, type='error') {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `p-4 rounded-2xl backdrop-blur border-l-4 ${type==='error'?'border-red-500 bg-red-900/30':'border-emerald-500 bg-emerald-900/30'} font-bold text-xs uppercase shadow-2xl text-white transform transition-all duration-300 translate-x-full opacity-0 max-w-sm`;
+      t.innerHTML = `<div class="flex items-center"><i class="fas ${type==='error'?'fa-exclamation-circle text-red-400':'fa-check-circle text-emerald-400'} mr-3 text-lg"></i><span>${msg}</span></div>`;
+      c.appendChild(t);
+      setTimeout(() => t.classList.remove('translate-x-full','opacity-0'), 10);
+      setTimeout(() => { t.classList.add('translate-x-full','opacity-0'); setTimeout(()=>t.remove(),300); }, 4000);
+    }
+
+    // ── Status config ─────────────────────────────────────────────────────
+    const STATUS_CONFIG = {
+      pending: {
+        icon: 'fas fa-clock', iconColor: 'text-amber-400', iconBg: 'bg-amber-500/10',
+        cardClass: 'status-pending', badge: 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+        badgeText: '⏳ Menunggu Verifikasi',
+        desc: 'Data Anda sedang ditinjau oleh panitia. Kami akan segera menghubungi Anda via WhatsApp setelah verifikasi selesai.',
+        pulse: 'pulse-amber'
+      },
+      approved: {
+        icon: 'fas fa-check-circle', iconColor: 'text-emerald-400', iconBg: 'bg-emerald-500/10',
+        cardClass: 'status-approved', badge: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+        badgeText: '✅ Pendaftaran Disetujui',
+        desc: 'Selamat! Pendaftaran Anda telah diverifikasi dan disetujui oleh panitia. Sampai jumpa di hari Reuni Akbar!',
+        pulse: 'pulse-green'
+      },
+      rejected: {
+        icon: 'fas fa-times-circle', iconColor: 'text-red-400', iconBg: 'bg-red-500/10',
+        cardClass: 'status-rejected', badge: 'bg-red-500/20 text-red-400 border border-red-500/30',
+        badgeText: '❌ Tidak Disetujui', desc: 'Mohon maaf, pendaftaran Anda tidak dapat diproses. Silakan hubungi panitia untuk informasi lebih lanjut.',
+        pulse: ''
+      }
+    };
+
+    // ── Format Rupiah ──────────────────────────────────────────────────────
+    const fmt = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(Number(n)||0);
+
+
+    // ── Helper: Kompres Gambar ─────────────────────────────────────────────
+    function compressImage(file, maxMB = 0.5) {
+      return new Promise((resolve) => {
+        if (!file || !file.type.startsWith('image/')) return resolve(file);
+        const fileSizeMB = file.size / (1024 * 1024);
+        if (fileSizeMB <= maxMB) return resolve(file);
+
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height = Math.round((height * MAX_WIDTH) / width);
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width = Math.round((width * MAX_HEIGHT) / height);
+                height = MAX_HEIGHT;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => {
+              if (!blob) return resolve(file);
+              const compressedFile = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
+              resolve(compressedFile);
+            }, 'image/jpeg', 0.70);
+          };
+        };
+      });
+    }
+
+    // ── Helper: Upload ke Cloudinary dengan Progress ──────────────────────
+    function uploadToCloudinaryWithProgress(file, onProgress) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://api.cloudinary.com/v1_1/dowih3wr7/image/upload", true);
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            onProgress(pct);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            try {
+              const res = JSON.parse(xhr.responseText);
+              if (res.secure_url) {
+                resolve(res.secure_url);
+              } else {
+                reject(new Error("Response secure_url kosong"));
+              }
+            } catch (err) {
+              reject(err);
+            }
+          } else {
+            reject(new Error("Gagal upload: " + xhr.statusText));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Koneksi bermasalah saat upload"));
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "Reuniakbar");
+        xhr.send(formData);
+      });
+    }
+
+    // ── Upload Bukti Transfer ──────────────────────────────────────────────
+    window.uploadBuktiTransfer = async function(alumniId, nama) {
+      const fileInput = document.getElementById(`file-bukti-${alumniId}`);
+      let file = fileInput?.files[0];
+      if (!file) {
+        notify('Pilih file gambar bukti transfer terlebih dahulu.', 'error');
+        return;
+      }
+
+      const progressContainer = document.getElementById(`upload-progress-${alumniId}`);
+      const progressBar = document.getElementById(`progress-bar-${alumniId}`);
+      const progressText = document.getElementById(`progress-text-${alumniId}`);
+      const btnUpload = document.getElementById(`btn-upload-${alumniId}`);
+
+      progressContainer.classList.remove('hidden');
+      if (btnUpload) btnUpload.disabled = true;
+
+      try {
+        // Kompres file terlebih dahulu demi mempercepat upload
+        file = await compressImage(file, 0.5);
+
+        // Hitung SHA-256 binary hash dari file hasil kompresi
+        let hashHex = null;
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch(hashErr) {
+          console.error("Gagal menghitung hash berkas:", hashErr);
+        }
+
+        // Upload ke Cloudinary
+        const downloadURL = await uploadToCloudinaryWithProgress(file, (pct) => {
+          if (progressBar) progressBar.style.width = pct + '%';
+          if (progressText) progressText.textContent = pct + '%';
+        });
+
+        // Simpan URL bukti ke Firestore dengan membuat dokumen di koleksi finance
+        // Ini menyelesaikan masalah 'Missing or insufficient permissions' pada update alumni
+        await addDoc(collection(db, "finance"), {
+          ref_alumni_id: alumniId,
+          nama_pembayar: "Donasi: " + nama,
+          nominal: 0, // Nominal 0 karena hanya menyusulkan bukti transfer dari cek status
+          status: "pending_payment",
+          kategori: "Donasi",
+          bukti_url: downloadURL,
+          bukti_hash: hashHex,
+          tanggal: new Date().toLocaleString('id-ID'),
+          created_at: new Date().toISOString()
+        });
+
+        // Juga update sync_state untuk memicu invalidasi cache di dashboard panitia
+        try {
+          const syncRef = doc(db, "settings", "sync_state");
+          await updateDoc(syncRef, { finance_version: Date.now().toString() });
+        } catch(syncErr) {
+          console.warn('[SYNC] Gagal update sync_state:', syncErr);
+        }
+
+        notify(`Bukti transfer berhasil diunggah untuk ${nama}!`, 'success');
+        
+        // Update UI
+        const uploadSection = document.getElementById(`upload-section-${alumniId}`);
+        if (uploadSection) {
+          uploadSection.innerHTML = `
+            <div class="flex items-center gap-3">
+              <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
+              <div>
+                 <div class="text-xs font-black text-emerald-400 uppercase">Bukti Transfer Terkirim</div>
+                 <a href="${downloadURL}" target="_blank" class="text-[10px] text-emerald-300 hover:text-white underline">Lihat bukti yang diunggah</a>
+              </div>
+            </div>
+          `;
+        }
+      } catch(err) {
+        notify('Gagal mengunggah bukti transfer.', 'error');
+        console.error(err);
+      } finally {
+        progressContainer.classList.add('hidden');
+        if (btnUpload) btnUpload.disabled = false;
+      }
+    };
+
+    function renderCard(alumni, payments = []) {
+      const firstProof = (payments || []).find(p => p.bukti_url);
+      const proofUrl = firstProof ? firstProof.bukti_url : null;
+
+      const cfg = STATUS_CONFIG[alumni.status] || STATUS_CONFIG['pending'];
+      const tgl = alumni.created_at
+        ? new Date(alumni.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })
+        : '-';
+
+      const lembagaBadge = alumni.lembaga ? `<span class="ml-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${alumni.lembaga === 'MA' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-pink-500/20 text-pink-400 border border-pink-500/30'}">${alumni.lembaga}</span>` : '';
+
+      // Hitung Status Pembayaran/Donasi
+      let payBg = 'bg-slate-500/5';
+      let payBorder = 'border-white/5';
+      let payText = 'text-slate-400';
+      let payIcon = 'fas fa-exclamation-circle';
+      let payTitle = 'Status Donasi: Belum Ada Donasi';
+      let payDescription = 'Kami tidak menemukan catatan donasi Anda di sistem. Jika Anda sudah mentransfer donasi, silakan unggah bukti transfer di bawah ini.';
+      let payDescColor = 'text-slate-400';
+      let payAmtHtml = '';
+
+      if (payments && payments.length > 0) {
+        const approvedPayments = payments.filter(p => p.status === 'pemasukan');
+        const pendingPayments = payments.filter(p => p.status === 'pending_payment');
+        
+        if (approvedPayments.length > 0) {
+          const totalDonasi = approvedPayments.reduce((sum, p) => sum + (Number(p.nominal) || 0), 0);
+          payBg = 'bg-emerald-500/10';
+          payBorder = 'border-emerald-500/20';
+          payText = 'text-emerald-400';
+          payIcon = 'fas fa-receipt';
+          payTitle = 'Status Donasi: Terverifikasi (Lunas)';
+          payDescription = `Terima kasih! Donasi Anda telah diterima dan diverifikasi oleh bendahara reuni.`;
+          payDescColor = 'text-emerald-300/90';
+          payAmtHtml = `<div class="text-xs font-black text-white mt-1">Total Partisipasi: <span class="text-emerald-400">${fmt(totalDonasi)}</span></div>`;
+        } else if (pendingPayments.length > 0) {
+          payBg = 'bg-amber-500/10';
+          payBorder = 'border-amber-500/20';
+          payText = 'text-amber-400';
+          payIcon = 'fas fa-clock';
+          payTitle = 'Status Donasi: Menunggu Verifikasi';
+          payDescription = 'Bukti transfer donasi Anda sudah kami terima dan sedang diverifikasi oleh panitia bendahara.';
+          payDescColor = 'text-amber-300/90';
+        }
+      }
+
+      // Section untuk Alumni yang APPROVED: Upload Bukti
+      const approvedActions = alumni.status === 'approved' ? `
+        <div class="mt-4 pt-4 border-t border-white/10 space-y-3">
+          
+          <!-- Upload Bukti Transfer -->
+          <div id="upload-section-${alumni.id}" class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+            ${(alumni.bukti_transfer_alumni || proofUrl) ? `
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
+                <div>
+                   <div class="text-xs font-black text-emerald-400 uppercase">Bukti Transfer Terkirim</div>
+                   <a href="${alumni.bukti_transfer_alumni || proofUrl}" target="_blank" class="text-[10px] text-emerald-300 hover:text-white underline">Lihat bukti yang diunggah</a>
+                </div>
+              </div>
+            ` : `
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                  <i class="fas fa-upload text-emerald-400"></i>
+                </div>
+                <div>
+                  <div class="text-xs font-black text-white uppercase">Upload Bukti Donasi</div>
+                  <div class="text-[10px] text-slate-400">Foto/tangkapan layar transfer Anda</div>
+                </div>
+              </div>
+              <div class="upload-area p-4 text-center mb-3" onclick="document.getElementById('file-bukti-${alumni.id}').click()">
+                <i class="fas fa-cloud-upload-alt text-2xl text-indigo-400 mb-2"></i>
+                <p class="text-xs text-slate-400 font-bold">Klik atau drag & drop gambar</p>
+                <p class="text-[10px] text-slate-500">JPG, PNG, WEBP (maks. 5 MB)</p>
+              </div>
+              <input type="file" id="file-bukti-${alumni.id}" accept="image/*" class="hidden" onchange="document.getElementById('file-name-${alumni.id}').textContent = this.files[0]?.name || 'Belum dipilih'" />
+              <p id="file-name-${alumni.id}" class="text-[10px] text-slate-500 mb-2 text-center italic">Belum ada file dipilih</p>
+              <div id="upload-progress-${alumni.id}" class="hidden mb-3">
+                <div class="flex justify-between text-[9px] text-slate-400 mb-1">
+                  <span>Mengunggah...</span><span id="progress-text-${alumni.id}">0%</span>
+                </div>
+                <div class="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
+                  <div id="progress-bar-${alumni.id}" class="progress-bar-animated h-full w-0 rounded-full transition-all"></div>
+                </div>
+              </div>
+              <button id="btn-upload-${alumni.id}"
+                onclick="window.uploadBuktiTransfer('${alumni.id}', '${(alumni.nama||'').replace(/'/g,"\\'")}')"
+                class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                <i class="fas fa-paper-plane"></i> Kirim Bukti Donasi
+              </button>
+            `}
+          </div>
+
+          <!-- Tombol navigasi -->
+          <div class="flex gap-3">
+            <a href="pembayaran.html" class="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-2.5 rounded-xl text-center text-xs font-black uppercase tracking-widest transition-all border border-white/10">
+              <i class="fas fa-wallet mr-1"></i> Donasi
+            </a>
+            <a href="Rundown.html" class="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-2.5 rounded-xl text-center text-xs font-black uppercase tracking-widest transition-all border border-white/10">
+              <i class="fas fa-list-ol mr-1"></i> Rundown
+            </a>
+          </div>
+        </div>
+      ` : '';
+
+      // Section untuk pending: info menunggu
+      const pendingInfo = alumni.status === 'pending' ? `
+        <div class="mt-4 pt-4 border-t border-white/10">
+          <p class="text-xs text-amber-400/80 text-center"><i class="fas fa-info-circle mr-1"></i>Proses verifikasi biasanya memakan waktu 1-2 hari kerja.</p>
+        </div>
+      ` : '';
+
+      return `
+        <div class="glass rounded-2xl p-6 border ${cfg.cardClass} transition-all">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 ${cfg.iconBg} rounded-2xl flex items-center justify-center flex-shrink-0 ${cfg.pulse}">
+              <i class="${cfg.icon} text-xl ${cfg.iconColor}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center flex-wrap gap-2 mb-2">
+                <h3 class="font-black text-white text-base">${alumni.nama || '-'}${lembagaBadge}</h3>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${cfg.badge}">${cfg.badgeText}</span>
+              </div>
+              <div class="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-400 mb-3">
+                <span><i class="fas fa-graduation-cap mr-1 text-indigo-400"></i>Tahun Lulus ${alumni.angkatan || '-'}</span>
+                <span><i class="fas fa-calendar mr-1 text-amber-400"></i>Daftar: ${tgl}</span>
+              </div>
+
+              <!-- STATUS DONASI / PEMBAYARAN -->
+              <div class="p-4 rounded-2xl space-y-1 mt-3 ${payBg} border ${payBorder} text-left">
+                <div class="text-[10px] font-black ${payText} uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                  <i class="${payIcon}"></i> ${payTitle}
+                </div>
+                <p class="text-xs ${payDescColor} leading-relaxed">${payDescription}</p>
+                ${payAmtHtml}
+              </div>
+
+              <div class="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2 mt-3">
+                <div class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5 mb-1"><i class="fas fa-map-marked-alt text-[10px]"></i> Alamat Lengkap Domisili</div>
+                <div class="text-xs text-slate-300 space-y-1 text-left">
+                  <div><span class="text-slate-500 font-medium">Jalan/RT/RW:</span> ${alumni.alamat || '-'}</div>
+                  <div><span class="text-slate-500 font-medium">Desa/Kelurahan:</span> ${alumni.desa || '-'}</div>
+                  <div><span class="text-slate-500 font-medium">Kecamatan:</span> ${alumni.kecamatan || '-'}</div>
+                  <div><span class="text-slate-500 font-medium">Kabupaten/Kota:</span> ${alumni.kabupaten || '-'}</div>
+                  <div><span class="text-slate-500 font-medium">Provinsi:</span> ${alumni.provinsi || '-'}</div>
+                </div>
+                <button onclick="window.openEditAddressModal('${alumni.id}')" class="mt-3 w-full py-2 bg-indigo-500/10 hover:bg-indigo-500 hover:text-white border border-indigo-500/20 hover:border-transparent text-indigo-400 rounded-xl text-center text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5">
+                  <i class="fas fa-edit text-[10px]"></i> Perbarui Data / Alamat
+                </button>
+              </div>
+              <p class="text-slate-400 text-sm leading-relaxed mt-4">${cfg.desc}</p>
+            </div>
+          </div>
+          ${approvedActions}
+          ${pendingInfo}
+        </div>`;
+    }
+
+    // ── Current search state ───────────────────────────────────────────────
+    let lastSearchWA = '';
+
+    // ── Refresh status (tanpa reload halaman) ─────────────────────────────
+    window.refreshStatus = async function() {
+      if (!lastSearchWA) return;
+      const btnRef = document.getElementById('btn-refresh');
+      if (btnRef) { btnRef.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memperbarui...'; btnRef.disabled = true; }
+      try {
+        const q = query(collection(db, 'alumni'), where('nowa', '==', lastSearchWA));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+          // Fetch finance docs
+          const alumniIds = records.map(r => r.id);
+          const financeRecords = {};
+          if (alumniIds.length > 0) {
+            const qFinance = query(collection(db, 'finance'), where('ref_alumni_id', 'in', alumniIds));
+            const snapFinance = await getDocs(qFinance);
+            snapFinance.forEach(doc => {
+              const fData = { id: doc.id, ...doc.data() };
+              const refId = fData.ref_alumni_id;
+              if (!financeRecords[refId]) {
+                financeRecords[refId] = [];
+              }
+              financeRecords[refId].push(fData);
+            });
+          }
+
+          document.getElementById('result-cards').innerHTML = records.map(r => renderCard(r, financeRecords[r.id] || [])).join('');
+          notify('Status diperbarui.', 'success');
+        }
+      } catch(e) { notify('Gagal memperbarui.', 'error'); }
+      if (btnRef) { btnRef.innerHTML = '<i class="fas fa-sync-alt"></i> Perbarui'; btnRef.disabled = false; }
+    };
+
+    // ── Submit Form ───────────────────────────────────────────────────────
+    document.getElementById('form-cek').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const raw = document.getElementById('inp-wa').value.trim();
+      if (!raw) return notify('Masukkan nomor WhatsApp terlebih dahulu.');
+
+      const norm = normalizeWA(raw);
+      lastSearchWA = norm;
+
+      const btnText    = document.getElementById('btn-text');
+      const btnLoading = document.getElementById('btn-loading');
+      const btnCek     = document.getElementById('btn-cek');
+      btnText.classList.add('hidden');
+      btnLoading.classList.remove('hidden');
+      btnCek.disabled = true;
+
+      document.getElementById('result-area').classList.add('hidden');
+      document.getElementById('not-found').classList.add('hidden');
+      document.getElementById('skeleton-area').classList.remove('hidden');
+      document.getElementById('btn-share-result').classList.add('hidden');
+
+      try {
+        const q    = query(collection(db, 'alumni'), where('nowa', '==', norm));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          document.getElementById('skeleton-area').classList.add('hidden');
+          document.getElementById('not-found').classList.remove('hidden');
+        } else {
+          const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+          // Fetch finance docs
+          const alumniIds = records.map(r => r.id);
+          const financeRecords = {};
+          if (alumniIds.length > 0) {
+            const qFinance = query(collection(db, 'finance'), where('ref_alumni_id', 'in', alumniIds));
+            const snapFinance = await getDocs(qFinance);
+            snapFinance.forEach(doc => {
+              const fData = { id: doc.id, ...doc.data() };
+              const refId = fData.ref_alumni_id;
+              if (!financeRecords[refId]) {
+                financeRecords[refId] = [];
+              }
+              financeRecords[refId].push(fData);
+            });
+          }
+
+          const cards   = document.getElementById('result-cards');
+          cards.innerHTML = records.map(r => renderCard(r, financeRecords[r.id] || [])).join('');
+          document.getElementById('result-count').textContent =
+            records.length === 1 ? '1 data ditemukan' : `${records.length} data ditemukan untuk nomor ini`;
+          document.getElementById('skeleton-area').classList.add('hidden');
+          document.getElementById('result-area').classList.remove('hidden');
+          // Tampilkan tombol share WA
+          document.getElementById('btn-share-result').classList.remove('hidden');
+
+          // Simpan data untuk share
+          window._lastResultRecords = records;
+
+          // Update URL untuk bisa dibookmark/share
+          const url = new URL(window.location.href);
+          url.searchParams.set('wa', norm);
+          window.history.replaceState({}, '', url);
+        }
+      } catch(err) {
+        console.error(err);
+        if (err.code === 'permission-denied' || (err.message && err.message.toLowerCase().includes('permission'))) {
+          notify('Akses ditolak (Missing Permissions). Update Firebase Rules Anda.', 'error');
+        } else {
+          notify('Gagal terhubung ke server. Periksa koneksi Anda.', 'error');
+        }
+      } finally {
+        btnText.classList.remove('hidden');
+        btnLoading.classList.add('hidden');
+        btnCek.disabled = false;
+        document.getElementById('skeleton-area').classList.add('hidden');
+      }
+    });
+
+    // ── Share Result via WhatsApp ──────────────────────────────────────────
+    window.shareResult = function() {
+      const records = window._lastResultRecords;
+      if (!records || records.length === 0) return;
+      const r = records[0];
+      const statusMap = { approved: 'DISETUJUI ✅', pending: 'Menunggu Verifikasi ⏳', rejected: 'Tidak Disetujui ❌' };
+      const statusText = statusMap[r.status] || r.status;
+      const pageUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'cek-status.html?wa=' + encodeURIComponent(lastSearchWA);
+      const msg = [
+        '🕌 *Reuni Akbar Pondok Pesantren AL-FATAH*',
+        '',
+        `Halo! Saya sudah mendaftar untuk Reuni Akbar Al-Fatah.`,
+        `Nama: *${r.nama || '-'}*`,
+        `Tahun Lulus: *${r.angkatan || '-'}*`,
+        `Status: *${statusText}*`,
+        '',
+        'Cek status pendaftaranmu juga di:',
+        pageUrl,
+        '',
+        '_Yuk ikut daftar! 🎉_'
+      ].join('\n');
+      const waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
+      window.open(waUrl, '_blank');
+    };
+
+    // ── Edit Modal Logic ──────────────────────────────────────────────────
+    window.openEditAddressModal = function(id) {
+      const records = window._lastResultRecords;
+      if (!records) return;
+      const r = records.find(x => x.id === id);
+      if (!r) return;
+
+      document.getElementById('edit-id').value = r.id;
+      document.getElementById('edit-nama').value = r.nama || '';
+      document.getElementById('edit-angkatan').value = r.angkatan || '';
+      document.getElementById('edit-lembaga').value = r.lembaga || 'MA';
+      document.getElementById('edit-alamat').value = r.alamat || '';
+      document.getElementById('edit-desa').value = r.desa || '';
+      document.getElementById('edit-kecamatan').value = r.kecamatan || '';
+      document.getElementById('edit-kabupaten').value = r.kabupaten || '';
+      document.getElementById('edit-provinsi').value = r.provinsi || '';
+
+      document.getElementById('modal-edit-alumni').classList.remove('hidden');
+    };
+
+    window.closeEditModal = function() {
+      document.getElementById('modal-edit-alumni').classList.add('hidden');
+    };
+
+    function capitalizeName(name) {
+      if (!name) return "";
+      return name.trim().toLowerCase().replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
+    }
+
+    function normalizeWilayahName(name) {
+      if (!name) return "";
+      const stripped = name
+          .trim()
+          .replace(/^(KABUPATEN|KOTA|KAB\.|KAB|KEC\.|KEC|KECAMATAN|DESA|KEL\.|KELURAHAN)\s+/i, "")
+          .trim();
+      
+      const lower = stripped.toLowerCase();
+      if (lower === "tegalwaru" || lower === "tegal waru" || lower === "tgw") {
+        return "Tegal Waru";
+      }
+      if (lower === "plered") {
+        return "Plered";
+      }
+      if (lower === "sukatani") {
+        return "Sukatani";
+      }
+      
+      return stripped.replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
+    }
+
+    document.getElementById('form-edit-alumni').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('edit-id').value;
+      const nama = document.getElementById('edit-nama').value.trim();
+      const angkatan = document.getElementById('edit-angkatan').value.trim();
+      const lembaga = document.getElementById('edit-lembaga').value;
+      const alamat = document.getElementById('edit-alamat').value.trim();
+      const desa = document.getElementById('edit-desa').value.trim();
+      const kecamatan = document.getElementById('edit-kecamatan').value.trim();
+      const kabupaten = document.getElementById('edit-kabupaten').value.trim();
+      const provinsi = document.getElementById('edit-provinsi').value.trim();
+
+      // Validasi Input
+      if (nama.length < 3) {
+        notify('Nama lengkap minimal 3 karakter!', 'error');
+        document.getElementById('edit-nama').focus();
+        return;
+      }
+      const angkVal = parseInt(angkatan);
+      if (isNaN(angkVal) || angkVal < 1970 || angkVal > 2030) {
+        notify('Tahun lulus tidak valid (1970–2030)!', 'error');
+        document.getElementById('edit-angkatan').focus();
+        return;
+      }
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      const origText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan Perubahan...';
+
+      // Normalisasi Input
+      const finalNama = capitalizeName(nama);
+      const finalAngkatan = Number(angkVal);
+      const finalProv = normalizeWilayahName(provinsi);
+      const finalKab = normalizeWilayahName(kabupaten);
+      const finalKec = normalizeWilayahName(kecamatan);
+      const finalDesa = normalizeWilayahName(desa);
+
+      try {
+        const alumniRef = doc(db, "alumni", id);
+        
+        // Simpan perubahan ke Firestore
+        await updateDoc(alumniRef, {
+          nama: finalNama,
+          angkatan: finalAngkatan,
+          lembaga,
+          alamat,
+          desa: finalDesa,
+          kecamatan: finalKec,
+          kabupaten: finalKab,
+          provinsi: finalProv,
+          status: "pending" // Atur ulang status agar diverifikasi panitia
+        });
+
+        // Trigger sync_state untuk invalidasi cache dashboard admin
+        try {
+          const syncRef = doc(db, "settings", "sync_state");
+          await updateDoc(syncRef, { alumni_version: Date.now().toString() });
+        } catch(syncErr) {
+          console.warn('[SYNC] Gagal update sync_state:', syncErr);
+        }
+
+        notify('Data berhasil diperbarui! Menunggu verifikasi ulang panitia.', 'success');
+        closeEditModal();
+        
+        // Refresh pencarian secara instan setelah update
+        setTimeout(() => {
+          document.getElementById('form-cek').requestSubmit();
+        }, 600);
+
+      } catch (err) {
+        console.error(err);
+        notify('Gagal memperbarui: ' + (err.message || 'Periksa koneksi'), 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    });
+
+    // ── Run Ekstrak Domisili Logic ──────────────────────────────────────────
+    window.runEkstrakDomisili = async function() {
+      const addr = document.getElementById('edit-alamat').value.trim();
+      if (!addr) {
+        notify('Ketik alamat lengkap terlebih dahulu.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-ekstrak-domisili');
+      const origText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...';
+
+      try {
+        const result = await window.extractAddressOnline(addr);
+        
+        if (!result || !result.provinsi) {
+          notify('Wilayah tidak terdeteksi. Sertakan nama kabupaten/kota secara jelas.', 'warning');
+          return;
+        }
+
+        const toTitleCase = (s) => (s || '').toLowerCase().replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
+
+        if (result.provinsi) document.getElementById('edit-provinsi').value = toTitleCase(result.provinsi);
+        if (result.kabupaten) document.getElementById('edit-kabupaten').value = toTitleCase(result.kabupaten);
+        if (result.kecamatan) document.getElementById('edit-kecamatan').value = toTitleCase(result.kecamatan);
+        if (result.desa) document.getElementById('edit-desa').value = toTitleCase(result.desa);
+
+        const pn = toTitleCase(result.provinsi);
+        const rn = result.kabupaten ? toTitleCase(result.kabupaten) : null;
+        const dn = result.kecamatan ? toTitleCase(result.kecamatan) : null;
+        const vn = result.desa ? toTitleCase(result.desa) : null;
+        const chain = [pn, rn, dn, vn].filter(Boolean).join(' › ');
+        const filled = [pn, rn, dn, vn].filter(Boolean).length;
+
+        if (filled === 4) {
+          notify(`✅ Semua wilayah ditemukan!\n${chain}`, 'success');
+        } else if (filled >= 2) {
+          notify(`Ditemukan ${filled} dari 4 level wilayah:\n${chain}\nSisanya lengkapi manual.`, 'success');
+        } else {
+          notify(`Hanya provinsi terdeteksi (${pn}). Lengkapi sisanya manual.`, 'warning');
+        }
+
+      } catch (err) {
+        console.error(err);
+        notify('Gagal mengekstrak wilayah.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origText;
+      }
+    };
+  </script>
+
+  <!-- MODAL EDIT DATA (Direct Child of Body to resolve Stacking Context / z-index overlap issues) -->
+  <div id="modal-edit-alumni" class="fixed inset-0 bg-black/70 backdrop-blur-md z-[10000] flex items-center justify-center p-4 hidden">
+    <div class="glass p-6 md:p-8 rounded-[2.5rem] border border-white/10 shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-4 relative">
+      <div class="flex items-center justify-between">
+        <h3 class="font-black text-white text-base uppercase">Perbarui Data Alumni</h3>
+        <button onclick="window.closeEditModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+      </div>
+      <form id="form-edit-alumni" class="space-y-4 text-left pb-4">
+        <input type="hidden" id="edit-id" />
+        
+        <div>
+          <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Nama Lengkap</label>
+          <input type="text" id="edit-nama" class="input-field" required />
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Tahun Lulus</label>
+            <input type="number" id="edit-angkatan" class="input-field" required />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Lembaga</label>
+            <select id="edit-lembaga" class="input-field" required>
+              <option value="MA">MA</option>
+              <option value="MTs">MTs</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest">Alamat Lengkap (Jalan/RT/RW/No)</label>
+            <button type="button" id="btn-ekstrak-domisili" onclick="window.runEkstrakDomisili()" class="text-[9px] font-black text-indigo-400 hover:text-white uppercase tracking-widest flex items-center gap-1 transition-colors">
+              <i class="fas fa-magic"></i> Ekstrak Wilayah
+            </button>
+          </div>
+          <textarea id="edit-alamat" rows="2" class="input-field py-3 resize-none animate-none" required></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Desa/Kelurahan</label>
+            <input type="text" id="edit-desa" class="input-field" required />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Kecamatan</label>
+            <input type="text" id="edit-kecamatan" class="input-field" required />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Kabupaten/Kota</label>
+            <input type="text" id="edit-kabupaten" class="input-field" required />
+          </div>
+          <div>
+            <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Provinsi</label>
+            <input type="text" id="edit-provinsi" class="input-field" required />
+          </div>
+        </div>
+
+        <div class="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-2">
+          <i class="fas fa-exclamation-triangle text-amber-400 text-sm mt-0.5"></i>
+          <p class="text-[10px] text-amber-300 leading-normal font-medium">
+            PENTING: Menyimpan perubahan akan mengatur ulang status pendaftaran Anda menjadi <strong>Menunggu Verifikasi</strong> agar panitia dapat memverifikasi kebenaran data baru Anda.
+          </p>
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3.5 rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+            Simpan Perubahan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Address Extractor Engine -->
+  <script src="js/address-extractor.js"></script>
+
+  <!-- Shared Floating Nav -->
+  <script src="js/transitions.js"></script>
+  <script src="js/nav-component.js"></script>
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('[PWA] Registered:', reg.scope))
+          .catch((err) => console.error('[PWA] Failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+document.getElementById("form-alumni").onsubmit = async (e) => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target).entries());
+
+  // === PROTEKSI WILAYAH UNTUK KOORDINATOR WILAYAH (OVERRIDE DARI SESSION USER) ===
+  if (window.STATE.user) {
+    const u = window.STATE.user;
+    const role = u.role;
+    if (role === 'korwil_kabupaten') {
+      d.kabupaten = u.wilayah_kabupaten || d.kabupaten;
+    } else if (role === 'korwil_kecamatan') {
+      d.kabupaten = u.wilayah_kabupaten || d.kabupaten;
+      d.kecamatan = u.wilayah_kecamatan || d.kecamatan;
+    } else if (role === 'korwil_desa') {
+      d.kabupaten = u.wilayah_kabupaten || d.kabupaten;
+      d.kecamatan = u.wilayah_kecamatan || d.kecamatan;
+      d.desa = u.wilayah_desa || d.desa;
+    }
+  }
+
+  // === VALIDASI INPUT ===
+  const nama = (d.nama || "").trim();
+  if (nama.length < 3) return window.notify("Nama minimal 3 karakter!", "error");
+  const normalizedAngkatan = window.normalizeAngkatanYear(d.angkatan, d.lembaga);
+  const angkatan = Number(normalizedAngkatan);
+  if (!d.angkatan || isNaN(angkatan) || angkatan < 1900 || angkatan > 2100)
+    return window.notify("Angkatan harus berupa tahun yang valid (1900–2100)!", "error");
+  if (d.nowa && !/^[0-9+\-\s]+$/.test(d.nowa))
+    return window.notify("Nomor WhatsApp hanya boleh berisi angka!", "error");
+  
+  // === FITUR 3: WARNING KABUPATEN JIKA TIDAK DI DATALIST ===
+  const kabVal = (d.kabupaten || "").trim();
+  if (kabVal) {
+    const listKab = document.getElementById("alm-list-kabupaten");
+    const options = listKab ? Array.from(listKab.options).map(o => o.value.toUpperCase()) : [];
+    if (options.length > 0 && !options.includes(kabVal.toUpperCase())) {
+      const proceed = await window.showConfirm({
+        title: '⚠️ Kabupaten Tidak Terdaftar',
+        message: `Kabupaten/Kota "${kabVal}" tidak ditemukan dalam daftar rekomendasi resmi. Tetap simpan?`,
+        confirmText: 'Ya, Simpan',
+        cancelText: 'Perbaiki',
+        danger: false
+      });
+      if (!proceed) {
+        const inputKab = document.getElementById("alm-kabupaten");
+        if (inputKab) {
+          inputKab.focus();
+          inputKab.classList.add("border-amber-500");
+        }
+        return;
+      }
+    }
+  }
+  // =======================================================
+
+  window.toggleLoading(true, "Menyimpan Alumni...");
+  d.nama = nama;
+  d.angkatan = angkatan;
+  const id = d.id;
+  delete d.id;
+  d.status = "approved";
+  if (d.nowa) d.nowa = window.normalizePhoneNumber(d.nowa);
+
+  // === FITUR 3: AUTO-NORMALIZE NAMA WILAYAH SEBELUM SIMPAN ===
+  if (d.kabupaten) d.kabupaten = window.normalizeWilayahName(d.kabupaten);
+  if (d.kecamatan) d.kecamatan = window.normalizeWilayahName(d.kecamatan);
+  if (d.desa) d.desa = window.normalizeWilayahName(d.desa);
+  if (d.provinsi) d.provinsi = window.normalizeWilayahName(d.provinsi);
+  // ===========================================================
+
+  try {
+    if (id) {
+      const oldDoc = await db.collection("alumni").doc(id).get();
+      if (!oldDoc.exists) {
+        window.notify("Data tidak ditemukan!", "error");
+        window.toggleLoading(false);
+        return;
+      }
+      const oldData = oldDoc.data();
+
+      // === PROTEKSI WILAYAH: VALIDASI EDIT DATA ALUMNI ===
+      if (window.STATE.user) {
+        if (!window.canUserManageAlumnus(window.STATE.user, { id, ...oldData })) {
+          window.notify("Anda tidak memiliki akses untuk mengubah data alumni ini!", "error");
+          window.toggleLoading(false);
+          return;
+        }
+      }
+
+      // === FITUR 6: SIMPAN CHANGELOG SEBELUM UPDATE ===
+      try {
+        const changedFields = {};
+        const trackedFields = ['nama','angkatan','lembaga','nowa','kabupaten','kecamatan','desa','alamat','provinsi'];
+        trackedFields.forEach(f => {
+          if (String(oldData[f]||'') !== String(d[f]||'')) {
+            changedFields[f] = { before: oldData[f]||'', after: d[f]||'' };
+          }
+        });
+        if (Object.keys(changedFields).length > 0) {
+          await db.collection("alumni_changelog").add({
+            alumniId: id,
+            alumniNama: d.nama,
+            changedBy: window.STATE.user ? window.STATE.user.nama : 'Unknown',
+            changedAt: new Date().toISOString(),
+            changes: changedFields
+          });
+        }
+      } catch(logErr) { console.warn('Gagal simpan changelog:', logErr); }
+      // ================================================
+      await db.collection("alumni").doc(id).update(d);
+      await window.logActivity("alumni_edit", `Mengubah data alumni ${d.nama} (${d.angkatan})`);
+      await window.incrementSyncVersion('alumni');
+      
+      // Update local state instantly
+      if (Array.isArray(window.STATE.rawAlumni)) {
+        window.STATE.rawAlumni = window.STATE.rawAlumni.map(a => a.id === id ? { ...a, ...d } : a);
+        localStorage.setItem('cached_alumni', JSON.stringify(window.STATE.rawAlumni));
+        window.processCombinedData();
+      }
+    } else {
+      d.created_at = new Date().toISOString();
+      const res = await db.collection("alumni").add(d);
+      await window.logActivity("alumni_add", `Menambahkan alumni baru ${d.nama} (${d.angkatan})`);
+      await window.incrementSyncVersion('alumni');
+      
+      // Update local state instantly
+      if (Array.isArray(window.STATE.rawAlumni)) {
+        window.STATE.rawAlumni.push({ id: res.id, ...d });
+        localStorage.setItem('cached_alumni', JSON.stringify(window.STATE.rawAlumni));
+        window.processCombinedData();
+      }
+    }
+    window.closeModal("modal-alumni");
+    window.notify("Tersimpan");
+    e.target.reset();
+    if (typeof window.applyAlumniFilters === "function") {
+      window.applyAlumniFilters();
+    }
+  } catch (e) {
+    window.notify("Gagal menyimpan: " + (e.message || "Periksa koneksi"), "error");
+  } finally {
+    window.toggleLoading(false);
+  }
+}
