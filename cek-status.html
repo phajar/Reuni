@@ -158,6 +158,15 @@
       <!-- RESULT AREA -->
       <div id="result-area" class="hidden mt-8 space-y-4">
         <hr class="border-white/10" />
+        
+        <!-- Scroll Guide Banner -->
+        <div class="flex flex-col items-center justify-center py-3 px-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-indigo-300 animate-pulse text-[11px] font-black uppercase tracking-widest gap-1.5 text-center">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-arrow-down text-[11px]"></i>
+            <span>Scroll ke bawah untuk melihat detail data Anda</span>
+            <i class="fas fa-arrow-down text-[11px]"></i>
+          </div>
+        </div>
         <div class="flex items-center justify-between flex-wrap gap-2">
           <p class="text-xs font-black text-slate-500 uppercase tracking-widest" id="result-count"></p>
           <div class="flex items-center gap-3">
@@ -483,7 +492,7 @@
               <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
               <div>
                  <div class="text-xs font-black text-emerald-400 uppercase">Bukti Transfer Terkirim</div>
-                 <a href="${downloadURL}" target="_blank" class="text-[10px] text-emerald-300 hover:text-white underline">Lihat bukti yang diunggah</a>
+                 <a href="${downloadURL}" target="_blank" class="text-[10px] text-emerald-300 hover:text-white underline font-bold">Lihat bukti yang diunggah</a>
               </div>
             </div>
           `;
@@ -506,7 +515,10 @@
         ? new Date(alumni.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })
         : '-';
 
-      const lembagaBadge = alumni.lembaga ? `<span class="ml-2 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${alumni.lembaga === 'MA' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-pink-500/20 text-pink-400 border border-pink-500/30'}">${alumni.lembaga}</span>` : '';
+      const lembagaBadge = alumni.lembaga ? `<span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${alumni.lembaga === 'MA' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-pink-500/20 text-pink-400 border border-pink-500/30'}">${alumni.lembaga}</span>` : '';
+      
+      // Lencana tahun kelulusan yang mencolok dan jelas
+      const angkatanBadge = alumni.angkatan ? `<span class="px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 tracking-wider">🎓 LULUSAN ${alumni.angkatan}</span>` : '';
 
       // Hitung Status Pembayaran/Donasi
       let payBg = 'bg-slate-500/5';
@@ -529,9 +541,9 @@
           payText = 'text-emerald-400';
           payIcon = 'fas fa-receipt';
           payTitle = 'Status Donasi: Terverifikasi (Lunas)';
-          payDescription = `Terima kasih! Donasi Anda telah diterima dan diverifikasi oleh bendahara reuni.`;
+          payDescription = `Terima kasih! Donasi Anda sebesar ${fmt(totalDonasi)} telah diterima dan diverifikasi oleh bendahara reuni.`;
           payDescColor = 'text-emerald-300/90';
-          payAmtHtml = `<div class="text-xs font-black text-white mt-1">Total Partisipasi: <span class="text-emerald-400">${fmt(totalDonasi)}</span></div>`;
+          payAmtHtml = `<div class="text-[11px] font-black text-white mt-1.5 flex items-center gap-1"><i class="fas fa-check-circle text-emerald-400"></i> Total Partisipasi: <span class="text-emerald-400 text-xs font-extrabold bg-emerald-500/10 px-2 py-0.5 rounded">${fmt(totalDonasi)}</span></div>`;
         } else if (pendingPayments.length > 0) {
           payBg = 'bg-amber-500/10';
           payBorder = 'border-amber-500/20';
@@ -554,7 +566,7 @@
                 <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
                 <div>
                    <div class="text-xs font-black text-emerald-400 uppercase">Bukti Transfer Terkirim</div>
-                   <a href="${alumni.bukti_transfer_alumni || proofUrl}" target="_blank" class="text-[10px] text-emerald-300 hover:text-white underline">Lihat bukti yang diunggah</a>
+                   <a href="${alumni.bukti_transfer_alumni || proofUrl}" target="_blank" class="text-[10px] text-emerald-300 hover:text-white underline font-bold">Lihat bukti yang diunggah</a>
                 </div>
               </div>
             ` : `
@@ -573,7 +585,7 @@
                 <p class="text-[10px] text-slate-500">JPG, PNG, WEBP (maks. 5 MB)</p>
               </div>
               <input type="file" id="file-bukti-${alumni.id}" accept="image/*" class="hidden" onchange="document.getElementById('file-name-${alumni.id}').textContent = this.files[0]?.name || 'Belum dipilih'" />
-              <p id="file-name-${alumni.id}" class="text-[10px] text-slate-500 mb-2 text-center italic">Belum ada file dipilih</p>
+              <p id="file-name-${alumni.id}" class="text-[10px] text-slate-500 mb-2 text-center italic font-bold">Belum ada file dipilih</p>
               <div id="upload-progress-${alumni.id}" class="hidden mb-3">
                 <div class="flex justify-between text-[9px] text-slate-400 mb-1">
                   <span>Mengunggah...</span><span id="progress-text-${alumni.id}">0%</span>
@@ -605,7 +617,7 @@
       // Section untuk pending: info menunggu
       const pendingInfo = alumni.status === 'pending' ? `
         <div class="mt-4 pt-4 border-t border-white/10">
-          <p class="text-xs text-amber-400/80 text-center"><i class="fas fa-info-circle mr-1"></i>Proses verifikasi biasanya memakan waktu 1-2 hari kerja.</p>
+          <p class="text-xs text-amber-400/80 text-center font-bold"><i class="fas fa-info-circle mr-1"></i>Proses verifikasi biasanya memakan waktu 1-2 hari kerja.</p>
         </div>
       ` : '';
 
@@ -617,36 +629,55 @@
             </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center flex-wrap gap-2 mb-2">
-                <h3 class="font-black text-white text-base">${alumni.nama || '-'}${lembagaBadge}</h3>
+                <h3 class="font-black text-white text-base flex items-center flex-wrap gap-1.5">${alumni.nama || '-'}${lembagaBadge}${angkatanBadge}</h3>
                 <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${cfg.badge}">${cfg.badgeText}</span>
               </div>
               <div class="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-400 mb-3">
-                <span><i class="fas fa-graduation-cap mr-1 text-indigo-400"></i>Tahun Lulus ${alumni.angkatan || '-'}</span>
-                <span><i class="fas fa-calendar mr-1 text-amber-400"></i>Daftar: ${tgl}</span>
+                <span><i class="fas fa-graduation-cap mr-1 text-indigo-400"></i>Angkatan Lulus: <b>${alumni.angkatan || '-'}</b></span>
+                <span><i class="fas fa-calendar mr-1 text-amber-400"></i>Tanggal Daftar: <b>${tgl}</b></span>
               </div>
 
-              <!-- STATUS DONASI / PEMBAYARAN -->
-              <div class="p-4 rounded-2xl space-y-1 mt-3 ${payBg} border ${payBorder} text-left">
-                <div class="text-[10px] font-black ${payText} uppercase tracking-widest flex items-center gap-1.5 mb-1">
-                  <i class="${payIcon}"></i> ${payTitle}
+              <!-- 1. DATA ALAMAT DOMISILI (Ditampilkan di atas) -->
+              <div class="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2 mt-3 text-left">
+                <div class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5 border-b border-white/5 pb-1.5">
+                  <i class="fas fa-map-marked-alt text-[10px]"></i> Alamat Lengkap Domisili
                 </div>
-                <p class="text-xs ${payDescColor} leading-relaxed">${payDescription}</p>
-                ${payAmtHtml}
-              </div>
-
-              <div class="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2 mt-3">
-                <div class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5 mb-1"><i class="fas fa-map-marked-alt text-[10px]"></i> Alamat Lengkap Domisili</div>
-                <div class="text-xs text-slate-300 space-y-1 text-left">
-                  <div><span class="text-slate-500 font-medium">Jalan/RT/RW:</span> ${alumni.alamat || '-'}</div>
-                  <div><span class="text-slate-500 font-medium">Desa/Kelurahan:</span> ${alumni.desa || '-'}</div>
-                  <div><span class="text-slate-500 font-medium">Kecamatan:</span> ${alumni.kecamatan || '-'}</div>
-                  <div><span class="text-slate-500 font-medium">Kabupaten/Kota:</span> ${alumni.kabupaten || '-'}</div>
-                  <div><span class="text-slate-500 font-medium">Provinsi:</span> ${alumni.provinsi || '-'}</div>
+                <div class="text-xs text-slate-300 space-y-2">
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span class="text-slate-500 font-bold w-28 flex-shrink-0">Jalan / RT / RW:</span>
+                    <span class="text-slate-200 font-extrabold">${alumni.alamat || '-'}</span>
+                  </div>
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span class="text-slate-500 font-bold w-28 flex-shrink-0">Desa / Kelurahan:</span>
+                    <span class="text-slate-200 font-extrabold">${alumni.desa || '-'}</span>
+                  </div>
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span class="text-slate-500 font-bold w-28 flex-shrink-0">Kecamatan:</span>
+                    <span class="text-slate-200 font-extrabold">${alumni.kecamatan || '-'}</span>
+                  </div>
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span class="text-slate-500 font-bold w-28 flex-shrink-0">Kabupaten / Kota:</span>
+                    <span class="text-slate-200 font-extrabold">${alumni.kabupaten || '-'}</span>
+                  </div>
+                  <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <span class="text-slate-500 font-bold w-28 flex-shrink-0">Provinsi:</span>
+                    <span class="text-slate-200 font-extrabold">${alumni.provinsi || '-'}</span>
+                  </div>
                 </div>
-                <button onclick="window.openEditAddressModal('${alumni.id}')" class="mt-3 w-full py-2 bg-indigo-500/10 hover:bg-indigo-500 hover:text-white border border-indigo-500/20 hover:border-transparent text-indigo-400 rounded-xl text-center text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5">
+                <button onclick="window.openEditAddressModal('${alumni.id}')" class="mt-4 w-full py-2.5 bg-indigo-500/10 hover:bg-indigo-500 hover:text-white border border-indigo-500/20 hover:border-transparent text-indigo-400 rounded-xl text-center text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5">
                   <i class="fas fa-edit text-[10px]"></i> Perbarui Data / Alamat
                 </button>
               </div>
+
+              <!-- 2. DATA DONASI / PEMBAYARAN (Ditampilkan di bawah) -->
+              <div class="p-4 rounded-2xl space-y-1.5 mt-3 ${payBg} border ${payBorder} text-left">
+                <div class="text-[10px] font-black ${payText} uppercase tracking-widest flex items-center gap-1.5 mb-1.5 border-b border-white/5 pb-1.5">
+                  <i class="${payIcon}"></i> ${payTitle}
+                </div>
+                <p class="text-xs ${payDescColor} leading-relaxed font-semibold">${payDescription}</p>
+                ${payAmtHtml}
+              </div>
+
               <p class="text-slate-400 text-sm leading-relaxed mt-4">${cfg.desc}</p>
             </div>
           </div>
@@ -687,6 +718,12 @@
 
           document.getElementById('result-cards').innerHTML = records.map(r => renderCard(r, financeRecords[r.id] || [])).join('');
           notify('Status diperbarui.', 'success');
+          
+          // Scroll halus ke arah data hasil setelah update
+          setTimeout(() => {
+            const el = document.getElementById('result-area');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 100);
         }
       } catch(e) { notify('Gagal memperbarui.', 'error'); }
       if (btnRef) { btnRef.innerHTML = '<i class="fas fa-sync-alt"></i> Perbarui'; btnRef.disabled = false; }
@@ -747,6 +784,12 @@
           document.getElementById('result-area').classList.remove('hidden');
           // Tampilkan tombol share WA
           document.getElementById('btn-share-result').classList.remove('hidden');
+          
+          // Scroll halus otomatis langsung mengarah ke data hasil pencarian
+          setTimeout(() => {
+            const el = document.getElementById('result-area');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 100);
 
           // Simpan data untuk share
           window._lastResultRecords = records;
