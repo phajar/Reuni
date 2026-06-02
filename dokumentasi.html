@@ -75,7 +75,7 @@
       </div>
     </div>
 
-    <!-- MAIN IFRAME GALLERY CONTAINER -->
+    <!-- MAIN GALLERY CONTAINER -->
     <main class="reveal">
       <div class="glass rounded-[2.5rem] p-4 md:p-6 shadow-2xl relative border border-white/10 overflow-hidden">
         
@@ -88,10 +88,10 @@
           <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Menghubungkan ke Google Drive...</p>
         </div>
 
-        <!-- Google Drive Embedded Frame -->
-        <div class="iframe-wrapper w-full relative min-h-[600px] md:min-h-[700px] z-10 flex flex-col items-center justify-center">
+        <!-- Google Drive Native Gallery Frame -->
+        <div class="w-full relative min-h-[400px] z-10 flex flex-col justify-center">
           <!-- Placeholder untuk Folder ID yang belum diatur/valid -->
-          <div id="gallery-placeholder" class="hidden flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto space-y-4 my-auto">
+          <div id="gallery-placeholder" class="hidden flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto space-y-4 my-auto py-12">
             <div class="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl flex items-center justify-center text-3xl text-indigo-400">
               <i class="fas fa-folder-open"></i>
             </div>
@@ -99,12 +99,10 @@
             <p class="text-xs text-slate-400 leading-relaxed">ID Folder Google Drive untuk kategori ini belum diatur atau masih menggunakan ID contoh. Silakan atur ID Folder yang valid di **Pusat Pengaturan & Sistem -> Galeri Dokumentasi** untuk menampilkan foto reuni.</p>
           </div>
 
-          <iframe 
-            id="drive-iframe" 
-            src="" 
-            class="absolute top-0 left-0 w-full h-full border-none shadow-inner"
-            allow="autoplay">
-          </iframe>
+          <!-- Native Gallery Grid (Guaranteed 2 columns on mobile!) -->
+          <div id="native-gallery" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 lg:gap-5">
+            <!-- Kartu gambar akan diisi secara dinamis -->
+          </div>
         </div>
 
         <!-- Quick Access Link Button -->
@@ -126,6 +124,46 @@
       </div>
     </main>
 
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div id="lightbox-modal" onclick="window.closeLightbox()" class="hidden fixed inset-0 z-[1000] flex flex-col items-center justify-center p-4 bg-black/95 backdrop-blur-md opacity-0 transition-opacity duration-300">
+    <!-- Close Button -->
+    <button onclick="window.closeLightbox()" class="absolute top-4 right-4 z-50 w-12 h-12 bg-white/10 hover:bg-red-500 hover:text-white rounded-full flex items-center justify-center text-white border border-white/20 transition-all shadow-lg active:scale-95">
+      <i class="fas fa-times text-xl"></i>
+    </button>
+    
+    <!-- Navigation Buttons -->
+    <button onclick="window.prevImage(event)" class="absolute left-4 top-1/2 -translate-y-1/2 z-40 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white border border-white/20 transition-all shadow-lg active:scale-95">
+      <i class="fas fa-chevron-left text-lg"></i>
+    </button>
+    <button onclick="window.nextImage(event)" class="absolute right-4 top-1/2 -translate-y-1/2 z-40 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white border border-white/20 transition-all shadow-lg active:scale-95">
+      <i class="fas fa-chevron-right text-lg"></i>
+    </button>
+
+    <!-- Main Content Card -->
+    <div class="relative max-w-4xl w-full flex flex-col items-center select-none" onclick="event.stopPropagation()">
+      <div class="glass p-2.5 rounded-[2rem] border border-white/10 shadow-2xl w-full flex flex-col items-center overflow-hidden">
+        <!-- Image Area -->
+        <div class="w-full relative min-h-[250px] max-h-[70vh] flex items-center justify-center bg-black/40 rounded-[1.5rem] overflow-hidden">
+          <div id="lightbox-img-loader" class="absolute inset-0 flex items-center justify-center z-10 bg-[#0c0f24]/50">
+            <div class="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+          </div>
+          <img id="lightbox-image" src="" class="max-h-[70vh] max-w-full rounded-[1.5rem] object-contain shadow-inner" onload="document.getElementById('lightbox-img-loader').classList.add('hidden')" />
+        </div>
+        
+        <!-- Info Footer -->
+        <div class="w-full mt-4 flex flex-col sm:flex-row justify-between items-center gap-3 px-2">
+          <div class="text-left w-full sm:w-auto">
+            <h4 id="lightbox-title" class="text-xs font-black text-white uppercase tracking-wider truncate max-w-md">Nama Foto</h4>
+            <p id="lightbox-counter" class="text-[9px] text-slate-500 uppercase font-black mt-0.5 tracking-wider">Foto 1 dari 10</p>
+          </div>
+          <a id="btn-download-image" href="" download target="_blank" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-lg">
+            <i class="fas fa-download"></i> Unduh Foto
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- FIREBASE ENGINE & AUTH SYSTEM -->
@@ -216,22 +254,24 @@
       });
     };
 
-    window.switchFolder = function(categoryId) {
+    let currentFolderFiles = [];
+    let currentImageIndex = 0;
+
+    window.switchFolder = async function(categoryId) {
       const selectedCat = window.activeCategories.find(cat => cat.id === categoryId);
       if (!selectedCat) return;
 
       const folderId = selectedCat.folder_id ? selectedCat.folder_id.trim() : "";
       
-      // Deteksi apakah ID folder adalah placeholder/dummy/bawaan contoh
       const isDummy = !folderId || 
                       folderId.toLowerCase().includes("example") || 
                       folderId.toLowerCase().includes("default") || 
                       folderId.length < 15;
 
-      const iframe = document.getElementById('drive-iframe');
       const loader = document.getElementById('gallery-loader');
       const extLink = document.getElementById('btn-external-link');
       const placeholder = document.getElementById('gallery-placeholder');
+      const galleryGrid = document.getElementById('native-gallery');
 
       // Aktifkan tab terpilih secara visual
       window.activeCategories.forEach(cat => {
@@ -244,9 +284,12 @@
         }
       });
 
+      // Reset data
+      if (galleryGrid) galleryGrid.innerHTML = "";
+      currentFolderFiles = [];
+
       if (isDummy) {
-        // Tampilkan placeholder, sembunyikan iframe & loader
-        if (iframe) iframe.classList.add('hidden');
+        if (galleryGrid) galleryGrid.classList.add('hidden');
         if (placeholder) placeholder.classList.remove('hidden');
         if (loader) {
           loader.style.opacity = '0';
@@ -254,8 +297,7 @@
         }
         if (extLink) extLink.classList.add('hidden');
       } else {
-        // Sembunyikan placeholder, tampilkan iframe & loader
-        if (iframe) iframe.classList.remove('hidden');
+        if (galleryGrid) galleryGrid.classList.remove('hidden');
         if (placeholder) placeholder.classList.add('hidden');
         if (extLink) extLink.classList.remove('hidden');
 
@@ -264,29 +306,156 @@
           loader.classList.remove('pointer-events-none');
         }
 
-        // Update iframe source
-        iframe.src = `https://drive.google.com/embeddedfolderview?id=${folderId}#grid`;
-        
         // Update link eksternal Google Drive
         if (extLink) extLink.href = `https://drive.google.com/drive/folders/${folderId}`;
+
+        try {
+          // Menggunakan CORS proxy allorigins publik untuk mengambil data HTML folder tersemat secara aman
+          const corsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://drive.google.com/embeddedfolderview?id=' + folderId + '#grid')}`;
+          const response = await fetch(corsUrl);
+          if (!response.ok) throw new Error("Gagal mengambil data dari Google Drive.");
+          const html = await response.text();
+
+          // Ekstrak berkas dari HTML menggunakan pencocokan regex
+          const pattern = /class="flip-entry"\s+id="entry-([^"]+)"[\s\S]*?class="flip-entry-title">([^<]+)<\/div>/g;
+          let match;
+          const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+          while ((match = pattern.exec(html)) !== null) {
+            const fid = match[1];
+            const fname = match[2];
+            const ext = fname.split('.').pop().toLowerCase();
+            if (imageExtensions.includes(ext)) {
+              currentFolderFiles.push({ id: fid, name: fname });
+            }
+          }
+
+          if (currentFolderFiles.length === 0) {
+            if (galleryGrid) {
+              galleryGrid.innerHTML = `
+                <div class="col-span-full py-16 flex flex-col items-center justify-center text-center space-y-4">
+                  <div class="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center text-2xl text-slate-500 border border-white/5 shadow-inner">
+                    <i class="fas fa-images"></i>
+                  </div>
+                  <h4 class="text-sm font-black text-white uppercase tracking-wider">Tidak Ada Foto Ditemukan</h4>
+                  <p class="text-xs text-slate-500 max-w-xs leading-relaxed">Folder Google Drive ini kosong atau tidak memiliki berkas gambar yang didukung (JPG, PNG, WEBP).</p>
+                </div>
+              `;
+            }
+          } else {
+            // Render foto ke grid native (2 kolom di mobile!)
+            if (galleryGrid) {
+              currentFolderFiles.forEach((file, index) => {
+                const card = document.createElement('div');
+                card.className = "group relative aspect-square glass rounded-2xl border border-white/5 overflow-hidden cursor-pointer hover:border-indigo-500/30 transition-all duration-300 transform hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-black/40";
+                card.onclick = () => window.openLightbox(index);
+                card.innerHTML = `
+                  <div class="w-full h-full relative overflow-hidden bg-black/20">
+                    <img 
+                      src="https://drive.google.com/thumbnail?id=${file.id}&sz=w600" 
+                      alt="${file.name}" 
+                      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy" 
+                    />
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <div class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-sm scale-75 group-hover:scale-100 transition-all duration-300">
+                        <i class="fas fa-search-plus"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/85 to-transparent pt-6">
+                    <p class="text-[9px] font-bold text-slate-300 truncate w-full uppercase tracking-wider pl-1 select-none text-left">${file.name}</p>
+                  </div>
+                `;
+                galleryGrid.appendChild(card);
+              });
+            }
+          }
+        } catch(err) {
+          console.error("Gagal memuat folder galeri:", err);
+          window.notify("Gagal memuat galeri. Pastikan folder diatur Publik (Siapa saja yang memiliki link)!", "error");
+          if (galleryGrid) {
+            galleryGrid.innerHTML = `
+              <div class="col-span-full py-16 flex flex-col items-center justify-center text-center space-y-4">
+                <div class="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center text-2xl text-red-400 shadow-inner">
+                  <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h4 class="text-sm font-black text-white uppercase tracking-wider">Gagal Menghubungkan Folder</h4>
+                <p class="text-xs text-slate-500 max-w-xs leading-relaxed">Terjadi kendala saat menghubungkan ke Google Drive. Silakan periksa kembali koneksi internet atau status pembagian akses folder Anda.</p>
+              </div>
+            `;
+          }
+        } finally {
+          if (loader) {
+            loader.style.opacity = '0';
+            loader.classList.add('pointer-events-none');
+          }
+        }
       }
     };
 
-    window.hideLoader = function() {
-      const loader = document.getElementById('gallery-loader');
-      if (loader) {
-        loader.style.opacity = '0';
-        loader.classList.add('pointer-events-none');
+    // ── LIGHTBOX CONTROLLERS ──────────────────────────────────────────────
+    window.openLightbox = function(index) {
+      if (index < 0 || index >= currentFolderFiles.length) return;
+      currentImageIndex = index;
+      const file = currentFolderFiles[index];
+      
+      const modal = document.getElementById('lightbox-modal');
+      const img = document.getElementById('lightbox-image');
+      const title = document.getElementById('lightbox-title');
+      const counter = document.getElementById('lightbox-counter');
+      const downloadBtn = document.getElementById('btn-download-image');
+      const loader = document.getElementById('lightbox-img-loader');
+
+      if (loader) loader.classList.remove('hidden');
+      if (img) img.src = `https://drive.google.com/thumbnail?id=${file.id}&sz=w1600`;
+      if (title) title.textContent = file.name;
+      if (counter) counter.textContent = `Foto ${index + 1} dari ${currentFolderFiles.length}`;
+      if (downloadBtn) {
+        downloadBtn.href = `https://drive.google.com/uc?export=download&id=${file.id}`;
+      }
+
+      if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+          modal.classList.remove('opacity-0');
+        }, 10);
       }
     };
 
-    // Registrasi event listener onload secara programmatik pada iframe
-    const iframe = document.getElementById('drive-iframe');
-    if (iframe) {
-      iframe.addEventListener('load', () => {
-        window.hideLoader();
-      });
-    }
+    window.closeLightbox = function() {
+      const modal = document.getElementById('lightbox-modal');
+      if (modal) {
+        modal.classList.add('opacity-0');
+        setTimeout(() => {
+          modal.classList.add('hidden');
+        }, 300);
+      }
+    };
+
+    window.nextImage = function(event) {
+      if (event) event.stopPropagation();
+      if (currentFolderFiles.length === 0) return;
+      const nextIndex = (currentImageIndex + 1) % currentFolderFiles.length;
+      window.openLightbox(nextIndex);
+    };
+
+    window.prevImage = function(event) {
+      if (event) event.stopPropagation();
+      if (currentFolderFiles.length === 0) return;
+      const prevIndex = (currentImageIndex - 1 + currentFolderFiles.length) % currentFolderFiles.length;
+      window.openLightbox(prevIndex);
+    };
+
+    // Dukungan navigasi tombol keyboard
+    window.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('lightbox-modal');
+      if (modal && !modal.classList.contains('hidden')) {
+        if (e.key === 'ArrowRight') window.nextImage();
+        if (e.key === 'ArrowLeft') window.prevImage();
+        if (e.key === 'Escape') window.closeLightbox();
+      }
+    });
 
     // ── Toast Notification System ─────────────────────────────────────────
     window.notify = function(msg, type='info') {
