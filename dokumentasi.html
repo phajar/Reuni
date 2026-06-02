@@ -24,6 +24,9 @@
 </head>
 <body class="relative min-h-screen pb-32">
 
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
+
   <!-- Ambient Glow Effects -->
   <div class="neon-blur w-[350px] h-[350px] bg-indigo-500/10 top-[-100px] left-[-100px]"></div>
   <div class="neon-blur w-[400px] h-[400px] bg-pink-500/10 top-[20%] right-[-150px]"></div>
@@ -46,16 +49,8 @@
 
     <!-- INTERACTIVE TAB FILTER -->
     <div class="flex justify-center mb-8 reveal">
-      <div class="glass p-1.5 rounded-[2rem] flex flex-wrap gap-1 max-w-full overflow-x-auto shadow-2xl">
-        <button id="tab-acara" onclick="switchFolder('acara')" class="px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 text-white bg-indigo-600 shadow-[0_4px_15px_rgba(99,102,241,0.4)]">
-          <i class="fas fa-images"></i> Acara Utama
-        </button>
-        <button id="tab-nostalgia" onclick="switchFolder('nostalgia')" class="px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 text-slate-400 hover:text-white hover:bg-white/5">
-          <i class="fas fa-history"></i> Foto Sekolah Lawas
-        </button>
-        <button id="tab-panitia" onclick="switchFolder('panitia')" class="px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 text-slate-400 hover:text-white hover:bg-white/5">
-          <i class="fas fa-users-cog"></i> Persiapan Panitia
-        </button>
+      <div id="gallery-tabs-container" class="glass p-1.5 rounded-[2rem] flex flex-wrap gap-1 max-w-full overflow-x-auto shadow-2xl">
+        <div class="px-6 py-3 text-xs text-slate-500 font-bold uppercase tracking-wider">Memuat Kategori...</div>
       </div>
     </div>
 
@@ -73,13 +68,21 @@
         </div>
 
         <!-- Google Drive Embedded Frame -->
-        <div class="w-full relative min-h-[600px] md:min-h-[700px] z-10">
+        <div class="w-full relative min-h-[600px] md:min-h-[700px] z-10 flex flex-col items-center justify-center">
+          <!-- Placeholder untuk Folder ID yang belum diatur/valid -->
+          <div id="gallery-placeholder" class="hidden flex flex-col items-center justify-center p-8 text-center max-w-md mx-auto space-y-4 my-auto">
+            <div class="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl flex items-center justify-center text-3xl text-indigo-400">
+              <i class="fas fa-folder-open"></i>
+            </div>
+            <h3 class="text-lg font-black text-white uppercase tracking-tight">Kategori Belum Dikonfigurasi</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">ID Folder Google Drive untuk kategori ini belum diatur atau masih menggunakan ID contoh. Silakan atur ID Folder yang valid di **Pusat Pengaturan & Sistem -> Galeri Dokumentasi** untuk menampilkan foto reuni.</p>
+          </div>
+
           <iframe 
             id="drive-iframe" 
             src="" 
             class="absolute top-0 left-0 w-full h-full border-none shadow-inner"
-            allow="autoplay"
-            onload="hideLoader()">
+            allow="autoplay">
           </iframe>
         </div>
 
@@ -89,9 +92,14 @@
             <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest"><i class="fas fa-info-circle mr-1 text-pink-400"></i> Panduan Galeri</h4>
             <p class="text-[10px] text-slate-500 leading-relaxed">Klik foto untuk memperbesar, mengunduh, atau membuka folder eksternal langsung di aplikasi Google Drive Anda.</p>
           </div>
-          <a id="btn-external-link" href="" target="_blank" class="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-wider border border-white/10 flex items-center gap-1.5 transition-all">
-            <i class="fas fa-external-link-alt text-[10px]"></i> Buka di Google Drive
-          </a>
+          <div class="flex flex-wrap gap-2">
+            <a id="btn-external-link" href="" target="_blank" class="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-wider border border-white/10 flex items-center gap-1.5 transition-all">
+              <i class="fas fa-external-link-alt text-[10px]"></i> Buka di Google Drive
+            </a>
+            <button id="btn-download-zip" onclick="window.downloadAsZipGuide()" class="px-4 py-2.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider border border-indigo-500/20 hover:border-indigo-500 flex items-center gap-1.5 transition-all shadow-lg shadow-indigo-600/5">
+              <i class="fas fa-file-archive text-[10px]"></i> Unduh Folder (ZIP)
+            </button>
+          </div>
         </div>
 
       </div>
@@ -105,11 +113,16 @@
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     // ── FIREBASE CONFIGURATION ───────────────────────────────────────────────
-    // Dapatkan konfigurasi firebase yang sudah terpasang dari global config
     let app, db;
     try {
-      const configRes = await fetch("backend/config-api.json");
-      const firebaseConfig = await configRes.json();
+      const firebaseConfig = {
+        apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
+        authDomain: "reuniakbar.firebaseapp.com",
+        projectId: "reuniakbar",
+        storageBucket: "reuniakbar.firebasestorage.app",
+        messagingSenderId: "542951643652",
+        appId: "1:542951643652:web:1b4b7dac6c676a5d6c3351"
+      };
       app = initializeApp(firebaseConfig);
       db = getFirestore(app);
     } catch(err) {
@@ -118,11 +131,13 @@
 
     // ── CONFIGURATION FOR GOOGLE DRIVE FOLDERS ────────────────────────────────
     // ID Folder di bawah ini dapat diubah oleh pengguna sesuai folder publik Google Drive mereka
-    const DRIVE_FOLDERS = {
-      acara: '1fAHTu-B2b5wW-bU4c8gD5e9F_EXAMPLE1',
-      nostalgia: '1fAHTu-B2b5wW-bU4c8gD5e9F_EXAMPLE2',
-      panitia: '1fAHTu-B2b5wW-bU4c8gD5e9F_EXAMPLE3'
-    };
+    let activeCategories = [
+      { id: 'acara', name: 'Acara Utama', folder_id: '1fAHTu-B2b5wW-bU4c8gD5e9F_EXAMPLE1', icon: 'fas fa-images' },
+      { id: 'nostalgia', name: 'Foto Sekolah Lawas', folder_id: '1fAHTu-B2b5wW-bU4c8gD5e9F_EXAMPLE2', icon: 'fas fa-history' },
+      { id: 'panitia', name: 'Persiapan Panitia', folder_id: '1fAHTu-B2b5wW-bU4c8gD5e9F_EXAMPLE3', icon: 'fas fa-users-cog' }
+    ];
+
+    window.activeCategories = activeCategories;
 
     // Muat folder dinamis dari Firestore jika ada
     if (db) {
@@ -130,46 +145,110 @@
         const docSnap = await getDoc(doc(db, "settings", "documentation"));
         if (docSnap.exists()) {
           const data = docSnap.data();
-          if (data.folder_acara) DRIVE_FOLDERS.acara = data.folder_acara;
-          if (data.folder_nostalgia) DRIVE_FOLDERS.nostalgia = data.folder_nostalgia;
-          if (data.folder_panitia) DRIVE_FOLDERS.panitia = data.folder_panitia;
-          console.log("[Firestore] Google Drive Folder IDs loaded dynamically!");
+          if (data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+            // Gunakan kategori dinamis buatan pengguna
+            const icons = ['fas fa-images', 'fas fa-history', 'fas fa-camera', 'fas fa-users', 'fas fa-folder-open'];
+            window.activeCategories = data.categories.map((cat, idx) => ({
+              id: cat.id || `cat_${idx}`,
+              name: cat.name,
+              folder_id: cat.folder_id,
+              icon: icons[idx % icons.length]
+            }));
+          } else {
+            // Fallback migrasi jika hanya ada field individual dari format lama
+            const legacyCats = [];
+            if (data.folder_acara) legacyCats.push({ id: 'acara', name: 'Acara Utama', folder_id: data.folder_acara, icon: 'fas fa-images' });
+            if (data.folder_nostalgia) legacyCats.push({ id: 'nostalgia', name: 'Foto Sekolah Lawas', folder_id: data.folder_nostalgia, icon: 'fas fa-history' });
+            if (data.folder_panitia) legacyCats.push({ id: 'panitia', name: 'Persiapan Panitia', folder_id: data.folder_panitia, icon: 'fas fa-users-cog' });
+            
+            if (legacyCats.length > 0) {
+              window.activeCategories = legacyCats;
+            }
+          }
+          console.log("[Firestore] Dynamic categories loaded successfully!", window.activeCategories);
         }
       } catch (e) {
         console.warn("Gagal meload konfigurasi dinamis folder dari database:", e);
       }
     }
 
-    // Ekspos fungsi global
-    window.DRIVE_FOLDERS = DRIVE_FOLDERS;
-    window.switchFolder = function(category) {
-      const folderId = window.DRIVE_FOLDERS[category];
+    // Fungsi untuk me-render tombol-tombol tab kategori secara dinamis
+    window.renderCategoryTabs = function() {
+      const container = document.getElementById("gallery-tabs-container");
+      if (!container) return;
+
+      container.innerHTML = "";
+      window.activeCategories.forEach((cat, idx) => {
+        const btn = document.createElement("button");
+        btn.id = `tab-${cat.id}`;
+        btn.onclick = () => window.switchFolder(cat.id);
+        
+        // Tab pertama aktif secara default
+        if (idx === 0) {
+          btn.className = "px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 text-white bg-indigo-600 shadow-[0_4px_15px_rgba(99,102,241,0.4)]";
+        } else {
+          btn.className = "px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 text-slate-400 hover:text-white hover:bg-white/5";
+        }
+
+        btn.innerHTML = `<i class="${cat.icon || 'fas fa-camera'}"></i> ${cat.name}`;
+        container.appendChild(btn);
+      });
+    };
+
+    window.switchFolder = function(categoryId) {
+      const selectedCat = window.activeCategories.find(cat => cat.id === categoryId);
+      if (!selectedCat) return;
+
+      const folderId = selectedCat.folder_id ? selectedCat.folder_id.trim() : "";
+      
+      // Deteksi apakah ID folder adalah placeholder/dummy/bawaan contoh
+      const isDummy = !folderId || 
+                      folderId.toLowerCase().includes("example") || 
+                      folderId.toLowerCase().includes("default") || 
+                      folderId.length < 15;
+
       const iframe = document.getElementById('drive-iframe');
       const loader = document.getElementById('gallery-loader');
       const extLink = document.getElementById('btn-external-link');
-
-      // Tampilkan loader terlebih dahulu
-      if (loader) {
-        loader.style.opacity = '1';
-        loader.classList.remove('pointer-events-none');
-      }
+      const placeholder = document.getElementById('gallery-placeholder');
 
       // Aktifkan tab terpilih secara visual
-      ['acara', 'nostalgia', 'panitia'].forEach(cat => {
-        const btn = document.getElementById(`tab-${cat}`);
-        if (cat === category) {
+      window.activeCategories.forEach(cat => {
+        const btn = document.getElementById(`tab-${cat.id}`);
+        if (!btn) return;
+        if (cat.id === categoryId) {
           btn.className = "px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 text-white bg-indigo-600 shadow-[0_4px_15px_rgba(99,102,241,0.4)]";
         } else {
           btn.className = "px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 text-slate-400 hover:text-white hover:bg-white/5";
         }
       });
 
-      // Update iframe source
-      // Menggunakan link tersemat Google Drive folder view dalam tata letak grid (#grid)
-      iframe.src = `https://drive.google.com/embeddedfolderview?id=${folderId}#grid`;
-      
-      // Update link eksternal Google Drive
-      extLink.href = `https://drive.google.com/drive/folders/${folderId}`;
+      if (isDummy) {
+        // Tampilkan placeholder, sembunyikan iframe & loader
+        if (iframe) iframe.classList.add('hidden');
+        if (placeholder) placeholder.classList.remove('hidden');
+        if (loader) {
+          loader.style.opacity = '0';
+          loader.classList.add('pointer-events-none');
+        }
+        if (extLink) extLink.classList.add('hidden');
+      } else {
+        // Sembunyikan placeholder, tampilkan iframe & loader
+        if (iframe) iframe.classList.remove('hidden');
+        if (placeholder) placeholder.classList.add('hidden');
+        if (extLink) extLink.classList.remove('hidden');
+
+        if (loader) {
+          loader.style.opacity = '1';
+          loader.classList.remove('pointer-events-none');
+        }
+
+        // Update iframe source
+        iframe.src = `https://drive.google.com/embeddedfolderview?id=${folderId}#grid`;
+        
+        // Update link eksternal Google Drive
+        if (extLink) extLink.href = `https://drive.google.com/drive/folders/${folderId}`;
+      }
     };
 
     window.hideLoader = function() {
@@ -180,8 +259,47 @@
       }
     };
 
-    // Tampilkan folder utama saat pertama kali dimuat
-    window.switchFolder('acara');
+    // Registrasi event listener onload secara programmatik pada iframe
+    const iframe = document.getElementById('drive-iframe');
+    if (iframe) {
+      iframe.addEventListener('load', () => {
+        window.hideLoader();
+      });
+    }
+
+    // ── Toast Notification System ─────────────────────────────────────────
+    window.notify = function(msg, type='info') {
+      const c = document.getElementById('toast-container');
+      if (!c) return;
+      
+      const t = document.createElement('div');
+      t.className = `p-4 rounded-2xl backdrop-blur border-l-4 ${type==='error'?'border-red-500 bg-red-900/30':(type==='success'?'border-emerald-500 bg-emerald-900/30':'border-indigo-500 bg-indigo-900/30')} font-bold text-xs uppercase shadow-2xl text-white transform transition-all duration-300 translate-x-full opacity-0 max-w-sm`;
+      t.innerHTML = `<div class="flex items-center"><i class="fas ${type==='error'?'fa-exclamation-circle text-red-400':(type==='success'?'fa-check-circle text-emerald-400':'fa-info-circle text-indigo-400')} mr-3 text-lg"></i><span>${msg}</span></div>`;
+      c.appendChild(t);
+      setTimeout(() => t.classList.remove('translate-x-full','opacity-0'), 10);
+      setTimeout(() => { t.classList.add('translate-x-full','opacity-0'); setTimeout(()=>t.remove(),300); }, 6000);
+    };
+
+    window.downloadAsZipGuide = function() {
+      // Dapatkan URL folder aktif dari link eksternal
+      const extLink = document.getElementById('btn-external-link');
+      if (!extLink || !extLink.href) {
+        window.notify("Pilih kategori dokumentasi terlebih dahulu!", "error");
+        return;
+      }
+      
+      // Buka link Google Drive eksternal di tab baru
+      window.open(extLink.href, '_blank');
+      
+      // Tampilkan notifikasi panduan langkah demi langkah
+      window.notify("Panduan Unduh ZIP: Klik tanda panah di sebelah nama folder di bagian atas layar Google Drive, lalu pilih 'Download' untuk mengunduh seluruh folder secara otomatis sebagai berkas ZIP!", "info");
+    };
+
+    // Render tab dinamis & muat folder pertama
+    window.renderCategoryTabs();
+    if (window.activeCategories.length > 0) {
+      window.switchFolder(window.activeCategories[0].id);
+    }
   </script>
 
   <!-- Reveal Animations on Scroll -->

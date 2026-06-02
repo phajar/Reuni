@@ -1563,6 +1563,9 @@
           <button onclick="window.clickLogoSubMenu('utilities')" id="subbtn-logo-utilities" class="nav-sub-btn">
             <i class="fas fa-toolbox text-[11px] w-4"></i> Tools & Notif
           </button>
+          <button onclick="window.clickLogoSubMenu('gallery')" id="subbtn-logo-gallery" class="nav-sub-btn hidden">
+            <i class="fas fa-camera text-[11px] w-4"></i> Galeri Dokumentasi
+          </button>
         </div>
       </div>
 
@@ -2635,6 +2638,9 @@
             <button onclick="window.switchSettingsSubTab('utilities')" id="subbtn-mobile-settings-utilities" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300">
               <i class="fas fa-toolbox text-emerald-400 text-sm"></i> Tools
             </button>
+            <button onclick="window.switchSettingsSubTab('gallery')" id="subbtn-mobile-settings-gallery" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300 hidden">
+              <i class="fas fa-camera text-pink-400 text-sm"></i> Galeri
+            </button>
           </div>
           
           <!-- Navigasi Sub-Tab Pengaturan (Kiri/Atas) -->
@@ -2674,6 +2680,11 @@
               <button onclick="window.switchSettingsSubTab('utilities')" id="subbtn-settings-utilities" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal">
                 <i class="fas fa-toolbox text-base w-5 text-center text-emerald-400"></i>
                 <span>Tools & Notif</span>
+              </button>
+
+              <button onclick="window.switchSettingsSubTab('gallery')" id="subbtn-settings-gallery" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal hidden">
+                <i class="fas fa-camera text-base w-5 text-center text-pink-400"></i>
+                <span>Galeri Dokumentasi</span>
               </button>
 
             </div>
@@ -2984,6 +2995,31 @@
 
             </div>
 
+          </div>
+
+          <!-- Sub-Tab 8: Galeri Dokumentasi -->
+          <div id="subtab-settings-gallery" class="settings-sub-content hidden premium-card p-6 md:p-8 space-y-6">
+            <div class="flex justify-between items-center pb-4 border-b border-white/5">
+              <h4 class="text-sm font-black uppercase text-pink-400 tracking-wider flex items-center gap-2">
+                <i class="fas fa-camera"></i>
+                <span>Pengaturan Galeri Dokumentasi</span>
+              </h4>
+              <button type="button" onclick="window.addGalleryCategoryRow()" class="btn-md3 btn-md3-emerald py-2 px-3 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                <i class="fas fa-plus"></i> Tambah Kategori
+              </button>
+            </div>
+            <p class="text-xs text-slate-300">Kelola kategori galeri foto/video dokumentasi reuni secara real-time. Anda dapat menambah, menghapus, atau mengubah nama kategori secara bebas.</p>
+            
+            <form id="form-gallery-settings" onsubmit="window.handleGallerySettingsSubmit(event)" class="space-y-4">
+              <!-- Container untuk baris kategori dinamis -->
+              <div id="gallery-categories-container" class="space-y-4">
+                <!-- Baris kategori akan di-render secara dinamis di sini -->
+              </div>
+
+              <button type="submit" id="btn-save-gallery-settings" class="btn-md3 btn-md3-primary w-full mt-6 flex items-center justify-center gap-2 py-3.5 shadow-lg">
+                <i class="fas fa-save"></i> Simpan Pengaturan Galeri
+              </button>
+            </form>
           </div>
 
         </div>

@@ -293,6 +293,42 @@ window.switchSettingsSubTab = (subTabName) => {
               console.error("Gagal memuat Cloudinary config di sub-tab", err);
           }
       })();
+  } else if (subTabName === 'gallery') {
+      (async () => {
+          try {
+              const doc = await db.collection("settings").doc("documentation").get();
+              const container = document.getElementById("gallery-categories-container");
+              if (container) container.innerHTML = ""; // Bersihkan kontainer terlebih dahulu
+
+              if (doc.exists) {
+                  const data = doc.data();
+                  if (data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+                      data.categories.forEach(cat => {
+                          window.addGalleryCategoryRow(cat.name, cat.folder_id, cat.id);
+                      });
+                  } else {
+                      // Fallback migrasi jika hanya ada field individual dari format lama
+                      const ac = data.folder_acara || "";
+                      const ns = data.folder_nostalgia || "";
+                      const pn = data.folder_panitia || "";
+                      
+                      if (ac) window.addGalleryCategoryRow("Acara Utama", ac);
+                      if (ns) window.addGalleryCategoryRow("Foto Sekolah Lawas", ns);
+                      if (pn) window.addGalleryCategoryRow("Persiapan Panitia", pn);
+                      
+                      if (!ac && !ns && !pn) {
+                          // Jika masih kosong sama sekali, tampilkan 1 baris kosong
+                          window.addGalleryCategoryRow("", "");
+                      }
+                  }
+              } else {
+                  // Default awal jika dokumen belum ada
+                  window.addGalleryCategoryRow("", "");
+              }
+          } catch(err) {
+              console.error("Gagal memuat konfigurasi folder galeri:", err);
+          }
+      })();
   } else if (subTabName === 'profile') {
 
       if (window.STATE && window.STATE.user) {
@@ -782,6 +818,7 @@ auth.onAuthStateChanged(async (user) => {
         koordinator_wilayah: "Koordinator Wilayah",
         panitia_divisi: "Panitia Divisi",
         viewer: "Viewer / Tamu",
+        publikasi: "Humas Publikasi",
       };
       sRoleEl.innerText = roleNames[r] || r.toUpperCase();
     }
@@ -801,6 +838,7 @@ auth.onAuthStateChanged(async (user) => {
         koordinator_wilayah: "Koordinator Wilayah",
         panitia_divisi: "Panitia Divisi",
         viewer: "Viewer / Tamu",
+        publikasi: "Humas Publikasi",
       };
       sidebarRoleEl.innerText = roleNames[r] || r.toUpperCase();
     }
@@ -842,6 +880,11 @@ auth.onAuthStateChanged(async (user) => {
     showElement("subbtn-settings-ai", canAccessApi);
     showElement("subbtn-logo-ai", canAccessApi);
     showElement("subbtn-mobile-settings-ai", canAccessApi);
+
+    const canAccessGallery = r === "admin_utama" || r === "creator" || r === "publikasi";
+    showElement("subbtn-settings-gallery", canAccessGallery);
+    showElement("subbtn-logo-gallery", canAccessGallery);
+    showElement("subbtn-mobile-settings-gallery", canAccessGallery);
 
     const canAccessWaApi = ["admin_utama", "creator", "bendahara", "sekretaris"].includes(r);
     showElement("btn-broadcast-alumni", canAccessWaApi);
@@ -8214,6 +8257,99 @@ window.handleCloudinarySettingsSubmit = async (e) => {
         window.notify("Gagal menyimpan: " + err.message, "error");
     }
     window.toggleLoading(false);
+};
+
+window.addGalleryCategoryRow = (name = "", folderId = "", id = null) => {
+    const container = document.getElementById("gallery-categories-container");
+    if (!container) return;
+
+    const rowId = id || "cat_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+
+    const div = document.createElement("div");
+    div.id = `row-${rowId}`;
+    div.className = "gallery-category-row premium-card bg-black/40 p-4 border border-white/5 rounded-2xl flex flex-col md:flex-row gap-4 items-end relative group transition-all duration-300 hover:border-indigo-500/30 animate-enter";
+    div.innerHTML = `
+      <div class="flex-1 w-full text-left">
+        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Nama Kategori</label>
+        <input type="text" class="input-field mt-1 category-name" required value="${name}" placeholder="Cth: Acara Utama / Malam Puncak" />
+      </div>
+      <div class="flex-[1.5] w-full text-left">
+        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">ID Folder Google Drive</label>
+        <input type="text" class="input-field mt-1 category-folder-id" required value="${folderId}" placeholder="Cth: 1fAHTu-B2b5wW-bU4c8gD5e9F_..." />
+      </div>
+      <button type="button" onclick="window.removeGalleryCategoryRow('${rowId}')" class="w-12 h-12 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-xl flex items-center justify-center border border-red-500/20 hover:border-red-500 transition-all duration-200" title="Hapus Kategori">
+        <i class="fas fa-trash-alt text-sm"></i>
+      </button>
+    `;
+    container.appendChild(div);
+};
+
+window.removeGalleryCategoryRow = (rowId) => {
+    const row = document.getElementById(`row-${rowId}`);
+    if (row) {
+        row.classList.add("scale-95", "opacity-0");
+        setTimeout(() => {
+            row.remove();
+        }, 200);
+    }
+};
+
+window.handleGallerySettingsSubmit = async (e) => {
+    e.preventDefault();
+    
+    const container = document.getElementById("gallery-categories-container");
+    if (!container) return;
+
+    const rows = container.querySelectorAll(".gallery-category-row");
+    const categories = [];
+
+    rows.forEach(row => {
+        const nameInput = row.querySelector(".category-name");
+        const folderInput = row.querySelector(".category-folder-id");
+        
+        if (nameInput && folderInput) {
+            const name = nameInput.value.trim();
+            const folderId = folderInput.value.trim();
+            
+            if (name && folderId) {
+                const id = row.id.replace("row-", "");
+                categories.push({
+                    id: id,
+                    name: name,
+                    folder_id: folderId
+                });
+            }
+        }
+    });
+
+    if (categories.length === 0) {
+        window.notify("Minimal harus ada satu kategori dengan nama dan ID folder yang terisi!", "error");
+        return;
+    }
+
+    window.toggleLoading(true, "Menyimpan Konfigurasi Galeri...");
+    try {
+        // Hapus field format lama agar database bersih, ganti dengan array categories
+        await db.collection("settings").doc("documentation").set({
+            categories: categories,
+            updated_at: new Date().toISOString()
+        });
+
+        // Update sync_state untuk memicu sinkronisasi Cloudinary jika diperlukan
+        try {
+            await db.collection("settings").doc("sync_state").set({
+                gallery_version: Date.now().toString()
+            }, { merge: true });
+        } catch(syncErr) {
+            console.warn("[SYNC] Gagal update sync_state:", syncErr);
+        }
+
+        window.notify("Konfigurasi Galeri Berhasil Disimpan!", "success");
+    } catch(err) {
+        window.notify("Gagal menyimpan: " + err.message, "error");
+    } finally {
+        window.toggleLoading(false);
+    }
 };
 
 // Validasi ukuran berkas berdasarkan konfigurasi Cloudinary aktif
