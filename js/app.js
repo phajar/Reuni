@@ -232,6 +232,12 @@ window.switchSettingsSubTab = (subTabName) => {
   const activeBtn = document.getElementById(`subbtn-settings-${subTabName}`);
   if (activeBtn) activeBtn.classList.add("active");
 
+  const sidebarSubBtns = document.querySelectorAll(".nav-sub-btn");
+  sidebarSubBtns.forEach(btn => btn.classList.remove("active"));
+
+  const activeSidebarBtn = document.getElementById(`subbtn-sidebar-${subTabName}`);
+  if (activeSidebarBtn) activeSidebarBtn.classList.add("active");
+
   // ---- INTEGRATED AUTO-LOAD DATA HOOKS FOR ALL SUB-TABS ----
   if (subTabName === 'ai') {
       (async () => {
@@ -386,6 +392,34 @@ window.toggleTheme = () => {
 };
 window.applyTheme();
 
+window.toggleSettingsDropdown = () => {
+  const menu = document.getElementById("settings-dropdown-menu");
+  const arrow = document.getElementById("settings-dropdown-arrow");
+  if (!menu) return;
+  
+  const isHidden = menu.classList.contains("hidden");
+  if (isHidden) {
+    menu.classList.remove("hidden");
+    if (arrow) arrow.style.transform = "rotate(180deg)";
+  } else {
+    menu.classList.add("hidden");
+    if (arrow) arrow.style.transform = "rotate(0deg)";
+  }
+};
+
+window.clickSettingsSubMenu = (subTabName) => {
+  window.showTab('settings');
+  window.switchSettingsSubTab(subTabName);
+  
+  // Otomatis tutup sidebar di HP setelah diklik
+  if (window.innerWidth < 768) {
+    const sidebar = document.getElementById("main-sidebar");
+    if (sidebar && !sidebar.classList.contains("-translate-x-full")) {
+      window.toggleSidebar();
+    }
+  }
+};
+
 // FUNGSI BUKA-TUTUP SIDEBAR (HP)
 window.toggleSidebar = () => {
   const sidebar = document.getElementById("main-sidebar");
@@ -420,6 +454,10 @@ window.showTab = (tabId) => {
   }
   
   if (tabId === 'settings') {
+      const activeSidebarSubBtn = document.querySelector(".nav-sub-btn.active");
+      if (!activeSidebarSubBtn) {
+          window.switchSettingsSubTab("profile");
+      }
       setTimeout(() => {
           const btnEnable = document.getElementById("btn-enable-notif");
           if (btnEnable) {
@@ -750,6 +788,12 @@ auth.onAuthStateChanged(async (user) => {
     showElement("subbtn-settings-users", isAdmin);
     showElement("subbtn-settings-approve", isAdmin);
     showElement("subbtn-settings-audit", isAdmin);
+    
+    showElement("subbtn-sidebar-event", isAdmin);
+    showElement("subbtn-sidebar-users", isAdmin);
+    showElement("subbtn-sidebar-approve", isAdmin);
+    showElement("subbtn-sidebar-audit", isAdmin);
+    
     showElement("card-data-tools-tab", isAdmin);
 
     const allowedApiRoles =
@@ -758,6 +802,7 @@ auth.onAuthStateChanged(async (user) => {
         : ["admin_utama", "creator"];
     const canAccessApi = allowedApiRoles.includes(r);
     showElement("subbtn-settings-ai", canAccessApi);
+    showElement("subbtn-sidebar-ai", canAccessApi);
 
     const canAccessWaApi = ["admin_utama", "creator", "bendahara", "sekretaris"].includes(r);
     showElement("btn-broadcast-alumni", canAccessWaApi);
@@ -4219,6 +4264,14 @@ window.openSettings = () => {
     }
     window.showTab("settings");
     window.switchSettingsSubTab("profile");
+    
+    // Auto-expand the settings dropdown in sidebar
+    const menu = document.getElementById("settings-dropdown-menu");
+    const arrow = document.getElementById("settings-dropdown-arrow");
+    if (menu) {
+      menu.classList.remove("hidden");
+      if (arrow) arrow.style.transform = "rotate(180deg)";
+    }
   };
   window.openModalIDCard = () => {
     document.getElementById("idcard-nama").value = "";

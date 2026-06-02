@@ -325,6 +325,42 @@
       } 
     }
     
+    .nav-sub-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      transition: all 0.2s ease;
+      background: transparent;
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+    }
+    .nav-sub-btn:hover {
+      background: rgba(255, 255, 255, 0.03);
+      color: #e2e8f0;
+    }
+    .nav-sub-btn.active {
+      color: #818cf8 !important;
+      background: rgba(99, 102, 241, 0.08) !important;
+    }
+    body.light-theme .nav-sub-btn {
+      color: #475569;
+    }
+    body.light-theme .nav-sub-btn:hover {
+      background: rgba(0, 0, 0, 0.03);
+      color: #0f172a;
+    }
+    body.light-theme .nav-sub-btn.active {
+      color: #4f46e5 !important;
+      background: rgba(79, 70, 229, 0.08) !important;
+    }
+
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #20274e; border-radius: 10px; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -1420,7 +1456,38 @@
         <span id="heading-integrasi" class="hidden"></span>
         <span id="heading-sistem" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Sistem & Integrasi</span>
         <button onclick="showTab('whatsapp')" id="btn-whatsapp" class="nav-btn text-emerald-400 hidden"><i class="fab fa-whatsapp text-base w-5 text-center"></i> WhatsApp Center</button>
-        <button onclick="showTab('settings')" id="btn-settings" class="nav-btn"><i class="fas fa-sliders-h text-base w-5 text-center"></i> Pusat Pengaturan</button>
+        <div class="relative w-full">
+          <button onclick="window.toggleSettingsDropdown()" id="btn-settings" class="nav-btn w-full flex items-center justify-between">
+            <span class="flex items-center gap-2">
+              <i class="fas fa-sliders-h text-base w-5 text-center"></i>
+              <span>Pusat Pengaturan</span>
+            </span>
+            <i id="settings-dropdown-arrow" class="fas fa-chevron-down text-[10px] transition-transform duration-300"></i>
+          </button>
+          <div id="settings-dropdown-menu" class="hidden flex flex-col pl-7 pr-2 py-1 space-y-0.5 bg-black/10 rounded-xl mt-0.5 overflow-hidden transition-all duration-300">
+            <button onclick="window.clickSettingsSubMenu('profile')" id="subbtn-sidebar-profile" class="nav-sub-btn">
+              <i class="fas fa-user-cog text-[11px] w-4"></i> Profil Saya
+            </button>
+            <button onclick="window.clickSettingsSubMenu('event')" id="subbtn-sidebar-event" class="nav-sub-btn hidden">
+              <i class="fas fa-calendar-check text-[11px] w-4"></i> Info Acara
+            </button>
+            <button onclick="window.clickSettingsSubMenu('ai')" id="subbtn-sidebar-ai" class="nav-sub-btn hidden">
+              <i class="fas fa-brain text-[11px] w-4"></i> Konfigurasi AI
+            </button>
+            <button onclick="window.clickSettingsSubMenu('users')" id="subbtn-sidebar-users" class="nav-sub-btn hidden">
+              <i class="fas fa-users-cog text-[11px] w-4"></i> Manajemen User
+            </button>
+            <button onclick="window.clickSettingsSubMenu('approve')" id="subbtn-sidebar-approve" class="nav-sub-btn hidden">
+              <i class="fas fa-user-check text-[11px] w-4"></i> Persetujuan
+            </button>
+            <button onclick="window.clickSettingsSubMenu('audit')" id="subbtn-sidebar-audit" class="nav-sub-btn hidden">
+              <i class="fas fa-history text-[11px] w-4"></i> Log Aktivitas
+            </button>
+            <button onclick="window.clickSettingsSubMenu('utilities')" id="subbtn-sidebar-utilities" class="nav-sub-btn">
+              <i class="fas fa-toolbox text-[11px] w-4"></i> Tools & Notif
+            </button>
+          </div>
+        </div>
       </nav>
 
       <!-- SIDEBAR FOOTER -->
@@ -2500,7 +2567,7 @@
         <div class="flex flex-col lg:flex-row gap-6">
           
           <!-- Navigasi Sub-Tab Pengaturan (Kiri/Atas) -->
-          <div class="w-full lg:w-64 flex-shrink-0 flex flex-col gap-2">
+          <div class="w-full lg:w-64 flex-shrink-0 flex flex-col gap-2 hidden">
             <div class="premium-card p-3 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible custom-scrollbar select-none z-10">
               
               <button onclick="window.switchSettingsSubTab('profile')" id="subbtn-settings-profile" class="settings-sub-btn active flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal">
