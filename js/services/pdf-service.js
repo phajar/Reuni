@@ -3,7 +3,7 @@
 
   // Helper to draw official committee signatures (Ketua, Sekretaris, Bendahara) automatically
   // Standard Tata Naskah Dinas: Baris 1 Kiri = Sekretaris, Baris 1 Kanan = Bendahara. Baris 2 Tengah = Ketua Panitia (Mengetahui)
-  const drawCommitteeSignatures = (doc, finalY) => {
+  const drawCommitteeSignatures = (doc, finalY, type = "data") => {
       const list = (window.STATE && window.STATE.panitia) ? window.STATE.panitia : [];
       let ketua = null;
       let sekretaris = null;
@@ -36,53 +36,42 @@
       const sigSekretaris = sekretaris || { nama: "", jabatan: "Sekretaris", tanda_tangan: null };
       const sigBendahara = bendahara || { nama: "", jabatan: "Bendahara", tanda_tangan: null };
 
-      // --- ROW 1: Sekretaris (Left, x=45) & Bendahara (Right, x=165) ---
+      // We draw exactly TWO signatures side-by-side in a single row:
+      // Left side: Sekretaris (for 'data') or Bendahara (for 'finance')
+      // Right side: Ketua Panitia (knowing/approval)
       
-      // 1. Sekretaris (Left, Center x=45)
+      const isFinance = type === "finance";
+      const leftSig = isFinance ? sigBendahara : sigSekretaris;
+      const rightSig = sigKetua;
+
+      // Left signature (Center x=55, line x=35 to 75)
       doc.setFont("times", "bold");
-      doc.text(sigSekretaris.jabatan || "Sekretaris,", 45, finalY, { align: "center" });
-      if (sigSekretaris.tanda_tangan) {
+      doc.text(leftSig.jabatan || (isFinance ? "Bendahara," : "Sekretaris,"), 55, finalY, { align: "center" });
+      if (leftSig.tanda_tangan) {
           try {
-              doc.addImage(sigSekretaris.tanda_tangan, 'PNG', 25, finalY + 1, 40, 18);
+              doc.addImage(leftSig.tanda_tangan, 'PNG', 35, finalY + 1, 40, 18);
           } catch (err) {
-              console.error("Gagal menambahkan tanda tangan Sekretaris:", err);
+              console.error(`Gagal menambahkan tanda tangan ${isFinance ? 'Bendahara' : 'Sekretaris'}:`, err);
           }
       }
-      doc.line(25, finalY + 20, 65, finalY + 20);
+      doc.line(35, finalY + 20, 75, finalY + 20);
       doc.setFont("times", "normal");
-      doc.text(sigSekretaris.nama ? `( ${sigSekretaris.nama} )` : "( ____________________ )", 45, finalY + 25, { align: "center" });
+      doc.text(leftSig.nama ? `( ${leftSig.nama} )` : "( ____________________ )", 55, finalY + 25, { align: "center" });
 
-      // 2. Bendahara (Right, Center x=165)
+      // Right signature (Center x=155, line x=135 to 175)
       doc.setFont("times", "bold");
-      doc.text(sigBendahara.jabatan || "Bendahara,", 165, finalY, { align: "center" });
-      if (sigBendahara.tanda_tangan) {
+      doc.text("Mengetahui,", 155, finalY - 5, { align: "center" });
+      doc.text(rightSig.jabatan || "Ketua Panitia,", 155, finalY, { align: "center" });
+      if (rightSig.tanda_tangan) {
           try {
-              doc.addImage(sigBendahara.tanda_tangan, 'PNG', 145, finalY + 1, 40, 18);
-          } catch (err) {
-              console.error("Gagal menambahkan tanda tangan Bendahara:", err);
-          }
-      }
-      doc.line(145, finalY + 20, 185, finalY + 20);
-      doc.setFont("times", "normal");
-      doc.text(sigBendahara.nama ? `( ${sigBendahara.nama} )` : "( ____________________ )", 165, finalY + 25, { align: "center" });
-
-      // --- ROW 2: Ketua Panitia (Center, x=105, offset +35mm) ---
-      const row2Y = finalY + 35;
-      
-      doc.setFont("times", "normal");
-      doc.text("Mengetahui,", 105, row2Y - 3, { align: "center" });
-      doc.setFont("times", "bold");
-      doc.text(sigKetua.jabatan || "Ketua Panitia,", 105, row2Y, { align: "center" });
-      if (sigKetua.tanda_tangan) {
-          try {
-              doc.addImage(sigKetua.tanda_tangan, 'PNG', 85, row2Y + 1, 40, 18);
+              doc.addImage(rightSig.tanda_tangan, 'PNG', 135, finalY + 1, 40, 18);
           } catch (err) {
               console.error("Gagal menambahkan tanda tangan Ketua:", err);
           }
       }
-      doc.line(85, row2Y + 20, 125, row2Y + 20);
+      doc.line(135, finalY + 20, 175, finalY + 20);
       doc.setFont("times", "normal");
-      doc.text(sigKetua.nama ? `( ${sigKetua.nama} )` : "( ____________________ )", 105, row2Y + 25, { align: "center" });
+      doc.text(rightSig.nama ? `( ${rightSig.nama} )` : "( ____________________ )", 155, finalY + 25, { align: "center" });
   };
 
   // --- Extracted from app.js (window.savePDF) ---
@@ -475,7 +464,7 @@
     
     finalY += 15;
     
-    drawCommitteeSignatures(doc, finalY);
+    drawCommitteeSignatures(doc, finalY, "data");
 
     const pdfFileName = isRekapTab ? "Laporan_Alumni_Wilayah.pdf" : "Laporan_Alumni.pdf";
     await window.savePDF(doc, pdfFileName);
@@ -577,7 +566,7 @@
     
     finalY += 15;
     
-    drawCommitteeSignatures(doc, finalY);
+    drawCommitteeSignatures(doc, finalY, "data");
 
     window.savePDF(doc, `Daftar_Hadir.pdf`);
     window.closeModal("modal-export");
@@ -706,7 +695,7 @@
     
     finalY += 15;
     
-    drawCommitteeSignatures(doc, finalY);
+    drawCommitteeSignatures(doc, finalY, "finance");
 
     window.savePDF(doc, `Keuangan.pdf`);
   };
@@ -811,7 +800,7 @@
     
     finalY += 15;
     
-    drawCommitteeSignatures(doc, finalY);
+    drawCommitteeSignatures(doc, finalY, "finance");
 
     window.savePDF(doc, `RAB_Reuni.pdf`);
   };
@@ -943,7 +932,7 @@
       
       finalY += 15;
       
-      drawCommitteeSignatures(docPdf, finalY);
+      drawCommitteeSignatures(docPdf, finalY, "finance");
 
       fileBlob = docPdf.output("blob");
       fileName = "Laporan_Keuangan_Reuni.pdf";
@@ -1309,7 +1298,7 @@ window.exportOfficialLPJPDF = async () => {
         
         finalY += 15;
         
-        drawCommitteeSignatures(doc, finalY);
+        drawCommitteeSignatures(doc, finalY, "finance");
         
         await window.savePDF(doc, "LPJ_Keuangan_Resmi_AlFatah.pdf");
         window.notify("Laporan LPJ Resmi Keuangan berhasil dibuat & diunduh!", "success");
