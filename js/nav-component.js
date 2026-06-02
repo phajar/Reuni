@@ -6,6 +6,22 @@
  */
 (function () {
   const NAV_HTML = `
+  <style>
+    @media (max-width: 480px) {
+      #floating-nav-component nav a span {
+        display: none !important;
+      }
+      #floating-nav-component nav a {
+        padding: 12px 6px !important;
+      }
+      #floating-nav-component nav a i {
+        font-size: 20px !important;
+      }
+      #floating-nav-component {
+        bottom: 12px !important;
+      }
+    }
+  </style>
   <div id="floating-nav-component" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] pointer-events-none" style="width:95%;max-width:30rem;">
     <nav class="glass rounded-3xl border border-white/10 p-2 flex justify-around items-center shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-xl bg-[#060813]/90 pointer-events-auto">
       <a href="countdown.html"   data-nav="countdown.html"   class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-slate-400 hover:bg-white/5 relative">
