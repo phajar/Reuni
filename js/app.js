@@ -1004,6 +1004,72 @@ window.processCombinedData = () => {
   }
 };
 
+window.updateBadges = () => {
+  const pendingRequestsCount =
+    (window.STATE.requests ? window.STATE.requests.length : 0) +
+    (window.STATE.pendingFinance ? window.STATE.pendingFinance.length : 0);
+
+  const pendingUsersCount = window.STATE.users
+    ? window.STATE.users.filter((u) => u.role === "pending").length
+    : 0;
+
+  // 1. Desktop Sidebar Requests Badge
+  const badgeRequests = document.getElementById("badge-requests");
+  if (badgeRequests) {
+    if (pendingRequestsCount > 0) {
+      badgeRequests.innerText = pendingRequestsCount;
+      badgeRequests.classList.remove("hidden");
+    } else {
+      badgeRequests.classList.add("hidden");
+    }
+  }
+
+  // 2. Desktop Sidebar settings/approve submenu badge
+  const badgeApproveSidebar = document.getElementById("badge-sidebar-approve");
+  if (badgeApproveSidebar) {
+    if (pendingUsersCount > 0) {
+      badgeApproveSidebar.innerText = pendingUsersCount;
+      badgeApproveSidebar.classList.remove("hidden");
+    } else {
+      badgeApproveSidebar.classList.add("hidden");
+    }
+  }
+  
+  // 3. Mobile bottom nav "Lainnya" (Menu) badge (sum of requests + user approvals)
+  const badgeMobileMore = document.getElementById("badge-mobile-more");
+  if (badgeMobileMore) {
+    const totalMobileMore = pendingRequestsCount + pendingUsersCount;
+    if (totalMobileMore > 0) {
+      badgeMobileMore.innerText = totalMobileMore;
+      badgeMobileMore.classList.remove("hidden");
+    } else {
+      badgeMobileMore.classList.add("hidden");
+    }
+  }
+
+  // 4. Mobile sheet "Verifikasi" button badge
+  const badgeMobileRequests = document.getElementById("badge-mobile-requests");
+  if (badgeMobileRequests) {
+    if (pendingRequestsCount > 0) {
+      badgeMobileRequests.innerText = pendingRequestsCount;
+      badgeMobileRequests.classList.remove("hidden");
+    } else {
+      badgeMobileRequests.classList.add("hidden");
+    }
+  }
+
+  // 5. Mobile sheet "Pusat Pengaturan" button badge
+  const badgeMobileSettings = document.getElementById("badge-mobile-settings");
+  if (badgeMobileSettings) {
+    if (pendingUsersCount > 0) {
+      badgeMobileSettings.innerText = pendingUsersCount;
+      badgeMobileSettings.classList.remove("hidden");
+    } else {
+      badgeMobileSettings.classList.add("hidden");
+    }
+  }
+};
+
 window.renderAllTabs = () => {
   try {
     window.renderHome();
@@ -1033,15 +1099,8 @@ window.renderAllTabs = () => {
     window.renderGuestbookTable();
   } catch (e) {}
 
-  const badge = document.getElementById("badge-requests");
-  if (badge) {
-    const totalPending =
-      (window.STATE.requests ? window.STATE.requests.length : 0) +
-      (window.STATE.pendingFinance ? window.STATE.pendingFinance.length : 0);
-    if (totalPending > 0) {
-      badge.innerText = totalPending;
-      badge.classList.remove("hidden");
-    } else badge.classList.add("hidden");
+  if (typeof window.updateBadges === "function") {
+    window.updateBadges();
   }
 
   if (window.STATE.user) {
@@ -1088,6 +1147,8 @@ window.loadDataRealtime = () => {
       !document.getElementById("modal-approve-users").classList.contains("hidden")
     )
       window.renderApproveUsers();
+    
+    if (typeof window.updateBadges === "function") window.updateBadges();
   });
   db.collection("rundown")
     .orderBy("waktu", "asc")
