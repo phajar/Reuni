@@ -238,6 +238,12 @@ window.switchSettingsSubTab = (subTabName) => {
   const activeSidebarBtn = document.getElementById(`subbtn-sidebar-${subTabName}`);
   if (activeSidebarBtn) activeSidebarBtn.classList.add("active");
 
+  const mobileSubBtns = document.querySelectorAll(".mobile-settings-sub-btn");
+  mobileSubBtns.forEach(btn => btn.classList.remove("active"));
+
+  const activeMobileBtn = document.getElementById(`subbtn-mobile-settings-${subTabName}`);
+  if (activeMobileBtn) activeMobileBtn.classList.add("active");
+
   // ---- INTEGRATED AUTO-LOAD DATA HOOKS FOR ALL SUB-TABS ----
   if (subTabName === 'ai') {
       (async () => {
@@ -793,6 +799,11 @@ auth.onAuthStateChanged(async (user) => {
     showElement("subbtn-sidebar-users", isAdmin);
     showElement("subbtn-sidebar-approve", isAdmin);
     showElement("subbtn-sidebar-audit", isAdmin);
+
+    showElement("subbtn-mobile-settings-event", isAdmin);
+    showElement("subbtn-mobile-settings-users", isAdmin);
+    showElement("subbtn-mobile-settings-approve", isAdmin);
+    showElement("subbtn-mobile-settings-audit", isAdmin);
     
     showElement("card-data-tools-tab", isAdmin);
 
@@ -803,6 +814,7 @@ auth.onAuthStateChanged(async (user) => {
     const canAccessApi = allowedApiRoles.includes(r);
     showElement("subbtn-settings-ai", canAccessApi);
     showElement("subbtn-sidebar-ai", canAccessApi);
+    showElement("subbtn-mobile-settings-ai", canAccessApi);
 
     const canAccessWaApi = ["admin_utama", "creator", "bendahara", "sekretaris"].includes(r);
     showElement("btn-broadcast-alumni", canAccessWaApi);
@@ -1066,6 +1078,17 @@ window.updateBadges = () => {
       badgeMobileSettings.classList.remove("hidden");
     } else {
       badgeMobileSettings.classList.add("hidden");
+    }
+  }
+
+  // 6. Mobile sheet settings sub-tab "Setujui" pill badge
+  const badgeMobileSettingsApprove = document.getElementById("badge-mobile-settings-approve");
+  if (badgeMobileSettingsApprove) {
+    if (pendingUsersCount > 0) {
+      badgeMobileSettingsApprove.innerText = pendingUsersCount;
+      badgeMobileSettingsApprove.classList.remove("hidden");
+    } else {
+      badgeMobileSettingsApprove.classList.add("hidden");
     }
   }
 };
