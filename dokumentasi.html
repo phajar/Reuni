@@ -149,7 +149,7 @@
           <div id="lightbox-img-loader" class="absolute inset-0 flex items-center justify-center z-10 bg-[#0c0f24]/50">
             <div class="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
           </div>
-          <img id="lightbox-image" src="" class="max-h-[70vh] max-w-full rounded-[1.5rem] object-contain shadow-inner" onload="document.getElementById('lightbox-img-loader').classList.add('hidden')" />
+          <img id="lightbox-image" src="" referrerpolicy="no-referrer" class="max-h-[70vh] max-w-full rounded-[1.5rem] object-contain shadow-inner" onload="document.getElementById('lightbox-img-loader').classList.add('hidden')" />
         </div>
         
         <!-- Info Footer -->
@@ -365,6 +365,7 @@
                       alt="${file.name}" 
                       class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy" 
+                      referrerpolicy="no-referrer"
                     />
                     <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <div class="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white text-sm scale-75 group-hover:scale-100 transition-all duration-300">
