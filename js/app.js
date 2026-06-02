@@ -8277,11 +8277,49 @@ window.addGalleryCategoryRow = (name = "", folderId = "", id = null) => {
         <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Link atau ID Folder Google Drive</label>
         <input type="text" class="input-field mt-1 category-folder-id" required value="${folderId}" placeholder="Tempel Link Folder atau ID saja" />
       </div>
-      <button type="button" onclick="window.removeGalleryCategoryRow('${rowId}')" class="w-12 h-12 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-xl flex items-center justify-center border border-red-500/20 hover:border-red-500 transition-all duration-200" title="Hapus Kategori">
-        <i class="fas fa-trash-alt text-sm"></i>
-      </button>
+      <div class="flex gap-2 w-full md:w-auto justify-end">
+        <button type="button" onclick="window.moveGalleryCategoryRow('${rowId}', -1)" class="w-12 h-12 bg-white/5 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-xl flex items-center justify-center border border-white/10 hover:border-indigo-500 transition-all duration-200 active:scale-95" title="Pindahkan Ke Atas">
+          <i class="fas fa-chevron-up text-xs"></i>
+        </button>
+        <button type="button" onclick="window.moveGalleryCategoryRow('${rowId}', 1)" class="w-12 h-12 bg-white/5 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-xl flex items-center justify-center border border-white/10 hover:border-indigo-500 transition-all duration-200 active:scale-95" title="Pindahkan Ke Bawah">
+          <i class="fas fa-chevron-down text-xs"></i>
+        </button>
+        <button type="button" onclick="window.removeGalleryCategoryRow('${rowId}')" class="w-12 h-12 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-xl flex items-center justify-center border border-red-500/20 hover:border-red-500 transition-all duration-200 active:scale-95" title="Hapus Kategori">
+          <i class="fas fa-trash-alt text-sm"></i>
+        </button>
+      </div>
     `;
     container.appendChild(div);
+};
+
+window.moveGalleryCategoryRow = (rowId, direction) => {
+    const row = document.getElementById(`row-${rowId}`);
+    if (!row) return;
+
+    const container = document.getElementById("gallery-categories-container");
+    if (!container) return;
+
+    if (direction === -1) {
+        const prev = row.previousElementSibling;
+        if (prev) {
+            container.insertBefore(row, prev);
+            // Animasi transisi halus
+            row.classList.add("scale-[0.98]", "bg-indigo-500/5");
+            setTimeout(() => row.classList.remove("scale-[0.98]", "bg-indigo-500/5"), 300);
+        } else {
+            window.notify("Kategori sudah berada di posisi paling atas!", "info");
+        }
+    } else if (direction === 1) {
+        const next = row.nextElementSibling;
+        if (next) {
+            container.insertBefore(next, row);
+            // Animasi transisi halus
+            row.classList.add("scale-[0.98]", "bg-indigo-500/5");
+            setTimeout(() => row.classList.remove("scale-[0.98]", "bg-indigo-500/5"), 300);
+        } else {
+            window.notify("Kategori sudah berada di posisi paling bawah!", "info");
+        }
+    }
 };
 
 window.removeGalleryCategoryRow = (rowId) => {
