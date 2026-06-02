@@ -279,6 +279,9 @@ window.switchSettingsSubTab = (subTabName) => {
           if (setEventGuestEl) setEventGuestEl.value = window.STATE.eventGuest || "";
           if (setEventWaHumasEl) setEventWaHumasEl.value = window.STATE.eventWaHumas || "";
           
+          const setEventWaDisabledEl = document.getElementById("set-event-wa-disabled");
+          if (setEventWaDisabledEl) setEventWaDisabledEl.checked = window.STATE.eventInfo && window.STATE.eventInfo.wa_disabled === true;
+          
           const apiAccess = window.STATE.eventInfo && window.STATE.eventInfo.api_access_roles
               ? window.STATE.eventInfo.api_access_roles
               : ["admin_utama", "creator"];
@@ -4158,6 +4161,7 @@ window.handleUpdateEventInfo = async (e) => {
     apiAccess.push("sekretaris");
   
   const waHumasVal = document.getElementById("set-event-wa-humas").value.trim().replace(/\D/g, "");
+  const waDisabledVal = document.getElementById("set-event-wa-disabled").checked;
   
   try {
     await db
@@ -4169,6 +4173,7 @@ window.handleUpdateEventInfo = async (e) => {
           event_time: document.getElementById("set-event-time").value,
           event_guest: document.getElementById("set-event-guest").value,
           wa_humas: waHumasVal,
+          wa_disabled: waDisabledVal,
           api_access_roles: apiAccess,
         },
         { merge: true },
@@ -7536,6 +7541,13 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
 
   window.handleWASettingsSubmit = async (e) => {
     e.preventDefault();
+    
+    // Batasi akses hanya untuk role 'creator'
+    if (!window.STATE.user || window.STATE.user.role !== 'creator') {
+      window.notify("Akses ditolak! Hanya Kreator yang dapat menyunting pengaturan API WhatsApp.", "error");
+      return;
+    }
+    
     const providerVerifikasi = document.getElementById("set-wa-provider-verifikasi").value;
     const tokenVerifikasi = document.getElementById("set-wa-token-verifikasi").value;
     const providerBroadcast = document.getElementById("set-wa-provider-broadcast").value;

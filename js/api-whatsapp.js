@@ -206,6 +206,12 @@ window.requestWaPairing = () => {
 // 1. Lingkungan Aplikasi (Capacitor NodeJS): Menggunakan server lokal Node.js
 // 2. Lingkungan Web (Browser): Menggunakan REST API langsung (Fonnte, WooWA, StarSender, Custom/Hugging Face)
 window.sendWhatsAppInternal = async (target, message, fileUrl = null, roleName = null, fileType = null) => {
+    // Bypass WhatsApp sending if globally disabled in settings (Testing Mode)
+    if (window.STATE && window.STATE.eventInfo && window.STATE.eventInfo.wa_disabled === true) {
+        console.log(`[WA] WhatsApp is globally disabled (Testing Mode). Skipping message to ${target}`);
+        return true; 
+    }
+
     // A. JIKA BERJALAN DI LINGKUNGAN APLIKASI (Capacitor NodeJS)
     if (window.Capacitor && window.Capacitor.Plugins.CapacitorNodeJS) {
         return new Promise((resolve, reject) => {
@@ -1839,6 +1845,13 @@ window.loadWaApiSettingsIntoTab = async () => {
 
 window.handleWASettingsSubmitTab = async (e) => {
     if (e) e.preventDefault();
+    
+    // Batasi akses hanya untuk role 'creator'
+    if (!window.STATE.user || window.STATE.user.role !== 'creator') {
+        window.notify("Akses ditolak! Hanya Kreator yang dapat menyunting pengaturan API WhatsApp.", "error");
+        return;
+    }
+    
     window.toggleLoading(true, "Menyimpan pengaturan WA...");
     try {
         const verifikasi_provider = document.getElementById("set-wa-provider-verifikasi-tab").value;
@@ -1888,6 +1901,35 @@ window.openWASettingsWeb = async () => {
         }
         if (typeof window.renderWASettingsGroups === "function") {
             window.renderWASettingsGroups();
+        }
+
+        // Kunci input jika bukan role 'creator'
+        const isCreator = window.STATE.user && window.STATE.user.role === 'creator';
+        const form = document.getElementById("form-wa-settings");
+        if (form) {
+            const inputs = form.querySelectorAll("input, select, button");
+            inputs.forEach(inp => {
+                if (inp.id !== "btn-close-wa-settings") {
+                    inp.disabled = !isCreator;
+                    if (!isCreator && inp.type !== 'submit') {
+                        inp.style.opacity = "0.5";
+                        inp.style.cursor = "not-allowed";
+                    }
+                }
+            });
+            
+            let warningEl = document.getElementById("wa-api-creator-only-warning");
+            if (!isCreator) {
+                if (!warningEl) {
+                    warningEl = document.createElement("div");
+                    warningEl.id = "wa-api-creator-only-warning";
+                    warningEl.className = "p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-center text-xs font-black uppercase tracking-wider mb-5 flex items-center justify-center gap-2";
+                    warningEl.innerHTML = '<i class="fas fa-lock text-sm"></i> Hanya Kreator yang dapat menyunting pengaturan API WhatsApp';
+                    form.parentNode.insertBefore(warningEl, form);
+                }
+            } else {
+                if (warningEl) warningEl.remove();
+            }
         }
     } catch (e) {
         console.error("Gagal memuat setting WA Web", e);
