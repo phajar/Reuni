@@ -310,16 +310,16 @@
         if (extLink) extLink.href = `https://drive.google.com/drive/folders/${folderId}`;
 
         try {
-          // Menggunakan CORS proxy ganda (AllOrigins & CorsProxy.io sebagai cadangan) untuk menjamin pemuatan andal
+          // Menggunakan CORS proxy ganda (CorsProxy.io & AllOrigins sebagai cadangan) untuk menjamin pemuatan andal
           let html = "";
           try {
-            const corsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://drive.google.com/embeddedfolderview?id=' + folderId + '#grid')}`;
+            const corsUrl = `https://corsproxy.io/?${encodeURIComponent('https://drive.google.com/embeddedfolderview?id=' + folderId + '#grid')}`;
             const response = await fetch(corsUrl);
-            if (!response.ok) throw new Error("AllOrigins failed");
+            if (!response.ok) throw new Error("CorsProxy failed");
             html = await response.text();
           } catch (firstErr) {
-            console.warn("AllOrigins gagal, mencoba proxy cadangan CorsProxy.io:", firstErr);
-            const backupCorsUrl = `https://corsproxy.io/?${encodeURIComponent('https://drive.google.com/embeddedfolderview?id=' + folderId + '#grid')}`;
+            console.warn("CorsProxy.io gagal, mencoba proxy cadangan AllOrigins:", firstErr);
+            const backupCorsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://drive.google.com/embeddedfolderview?id=' + folderId + '#grid')}`;
             const response = await fetch(backupCorsUrl);
             if (!response.ok) throw new Error("Kedua proxy CORS gagal memproses permintaan.");
             html = await response.text();
@@ -361,7 +361,7 @@
                 card.innerHTML = `
                   <div class="w-full h-full relative overflow-hidden bg-black/20">
                     <img 
-                      src="https://drive.google.com/thumbnail?id=${file.id}&sz=w600" 
+                      src="https://lh3.googleusercontent.com/d/${file.id}=s600" 
                       alt="${file.name}" 
                       class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy" 
@@ -417,7 +417,7 @@
       const loader = document.getElementById('lightbox-img-loader');
 
       if (loader) loader.classList.remove('hidden');
-      if (img) img.src = `https://drive.google.com/thumbnail?id=${file.id}&sz=w1600`;
+      if (img) img.src = `https://lh3.googleusercontent.com/d/${file.id}=s1600`;
       if (title) title.textContent = file.name;
       if (counter) counter.textContent = `Foto ${index + 1} dari ${currentFolderFiles.length}`;
       if (downloadBtn) {
