@@ -235,8 +235,8 @@ window.switchSettingsSubTab = (subTabName) => {
   const sidebarSubBtns = document.querySelectorAll(".nav-sub-btn");
   sidebarSubBtns.forEach(btn => btn.classList.remove("active"));
 
-  const activeSidebarBtn = document.getElementById(`subbtn-sidebar-${subTabName}`);
-  if (activeSidebarBtn) activeSidebarBtn.classList.add("active");
+  const activeLogoBtn = document.getElementById(`subbtn-logo-${subTabName}`);
+  if (activeLogoBtn) activeLogoBtn.classList.add("active");
 
   const mobileSubBtns = document.querySelectorAll(".mobile-settings-sub-btn");
   mobileSubBtns.forEach(btn => btn.classList.remove("active"));
@@ -398,24 +398,36 @@ window.toggleTheme = () => {
 };
 window.applyTheme();
 
-window.toggleSettingsDropdown = () => {
-  const menu = document.getElementById("settings-dropdown-menu");
-  const arrow = document.getElementById("settings-dropdown-arrow");
-  if (!menu) return;
+window.toggleProfilePopover = () => {
+  const popover = document.getElementById("profile-popover");
+  if (!popover) return;
   
-  const isHidden = menu.classList.contains("hidden");
-  if (isHidden) {
-    menu.classList.remove("hidden");
-    if (arrow) arrow.style.transform = "rotate(180deg)";
+  if (popover.classList.contains("hidden")) {
+    popover.classList.remove("hidden");
+    const logoMenu = document.getElementById("logo-dropdown-menu");
+    if (logoMenu) logoMenu.classList.add("hidden");
   } else {
-    menu.classList.add("hidden");
-    if (arrow) arrow.style.transform = "rotate(0deg)";
+    popover.classList.add("hidden");
   }
 };
 
-window.clickSettingsSubMenu = (subTabName) => {
+window.toggleLogoDropdown = () => {
+  const menu = document.getElementById("logo-dropdown-menu");
+  if (!menu) return;
+  
+  if (menu.classList.contains("hidden")) {
+    menu.classList.remove("hidden");
+    const popover = document.getElementById("profile-popover");
+    if (popover) popover.classList.add("hidden");
+  } else {
+    menu.classList.add("hidden");
+  }
+};
+
+window.clickLogoSubMenu = (subTabName) => {
   window.showTab('settings');
   window.switchSettingsSubTab(subTabName);
+  window.toggleLogoDropdown();
   
   // Otomatis tutup sidebar di HP setelah diklik
   if (window.innerWidth < 768) {
@@ -425,6 +437,21 @@ window.clickSettingsSubMenu = (subTabName) => {
     }
   }
 };
+
+// Auto-close popups when clicking outside
+document.addEventListener("click", (e) => {
+  const popover = document.getElementById("profile-popover");
+  const profileCard = document.querySelector("[onclick='window.toggleProfilePopover()']");
+  if (popover && !popover.classList.contains("hidden") && profileCard && !profileCard.contains(e.target) && !popover.contains(e.target)) {
+    popover.classList.add("hidden");
+  }
+  
+  const logoMenu = document.getElementById("logo-dropdown-menu");
+  const logoCircle = document.querySelector("[onclick='window.toggleLogoDropdown()']");
+  if (logoMenu && !logoMenu.classList.contains("hidden") && logoCircle && !logoCircle.contains(e.target) && !logoMenu.contains(e.target)) {
+    logoMenu.classList.add("hidden");
+  }
+});
 
 // FUNGSI BUKA-TUTUP SIDEBAR (HP)
 window.toggleSidebar = () => {
@@ -795,10 +822,10 @@ auth.onAuthStateChanged(async (user) => {
     showElement("subbtn-settings-approve", isAdmin);
     showElement("subbtn-settings-audit", isAdmin);
     
-    showElement("subbtn-sidebar-event", isAdmin);
-    showElement("subbtn-sidebar-users", isAdmin);
-    showElement("subbtn-sidebar-approve", isAdmin);
-    showElement("subbtn-sidebar-audit", isAdmin);
+    showElement("subbtn-logo-event", isAdmin);
+    showElement("subbtn-logo-users", isAdmin);
+    showElement("subbtn-logo-approve", isAdmin);
+    showElement("subbtn-logo-audit", isAdmin);
 
     showElement("subbtn-mobile-settings-event", isAdmin);
     showElement("subbtn-mobile-settings-users", isAdmin);
@@ -813,7 +840,7 @@ auth.onAuthStateChanged(async (user) => {
         : ["admin_utama", "creator"];
     const canAccessApi = allowedApiRoles.includes(r);
     showElement("subbtn-settings-ai", canAccessApi);
-    showElement("subbtn-sidebar-ai", canAccessApi);
+    showElement("subbtn-logo-ai", canAccessApi);
     showElement("subbtn-mobile-settings-ai", canAccessApi);
 
     const canAccessWaApi = ["admin_utama", "creator", "bendahara", "sekretaris"].includes(r);
@@ -1036,14 +1063,14 @@ window.updateBadges = () => {
     }
   }
 
-  // 2. Desktop Sidebar settings/approve submenu badge
-  const badgeApproveSidebar = document.getElementById("badge-sidebar-approve");
-  if (badgeApproveSidebar) {
+  // 2. Reuni Logo settings/approve submenu badge
+  const badgeApproveLogo = document.getElementById("badge-logo-approve");
+  if (badgeApproveLogo) {
     if (pendingUsersCount > 0) {
-      badgeApproveSidebar.innerText = pendingUsersCount;
-      badgeApproveSidebar.classList.remove("hidden");
+      badgeApproveLogo.innerText = pendingUsersCount;
+      badgeApproveLogo.classList.remove("hidden");
     } else {
-      badgeApproveSidebar.classList.add("hidden");
+      badgeApproveLogo.classList.add("hidden");
     }
   }
   
@@ -4349,12 +4376,10 @@ window.openSettings = () => {
     window.showTab("settings");
     window.switchSettingsSubTab("profile");
     
-    // Auto-expand the settings dropdown in sidebar
-    const menu = document.getElementById("settings-dropdown-menu");
-    const arrow = document.getElementById("settings-dropdown-arrow");
+    // Auto-expand the settings dropdown on logo
+    const menu = document.getElementById("logo-dropdown-menu");
     if (menu) {
       menu.classList.remove("hidden");
-      if (arrow) arrow.style.transform = "rotate(180deg)";
     }
   };
   window.openModalIDCard = () => {

@@ -387,6 +387,13 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
+    body.light-theme #logo-dropdown-menu,
+    body.light-theme #profile-popover {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border-color: rgba(0, 0, 0, 0.1) !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+    }
+    
     .sort-icon { opacity: 0.3; transition: all 0.2s; }
     .sort-icon.active { opacity: 1; color: #818cf8; }
  
@@ -1477,60 +1484,35 @@
         <span id="heading-integrasi" class="hidden"></span>
         <span id="heading-sistem" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Sistem & Integrasi</span>
         <button onclick="showTab('whatsapp')" id="btn-whatsapp" class="nav-btn text-emerald-400 hidden"><i class="fab fa-whatsapp text-base w-5 text-center"></i> WhatsApp Center</button>
-        <div class="relative w-full">
-          <button onclick="window.toggleSettingsDropdown()" id="btn-settings" class="nav-btn w-full flex items-center justify-between">
-            <span class="flex items-center gap-2">
-              <i class="fas fa-sliders-h text-base w-5 text-center"></i>
-              <span>Pusat Pengaturan</span>
-            </span>
-            <i id="settings-dropdown-arrow" class="fas fa-chevron-down text-[10px] transition-transform duration-300"></i>
-          </button>
-          <div id="settings-dropdown-menu" class="hidden flex flex-col pl-7 pr-2 py-1 space-y-0.5 bg-black/10 rounded-xl mt-0.5 overflow-hidden transition-all duration-300">
-            <button onclick="window.clickSettingsSubMenu('profile')" id="subbtn-sidebar-profile" class="nav-sub-btn">
-              <i class="fas fa-user-cog text-[11px] w-4"></i> Profil Saya
-            </button>
-            <button onclick="window.clickSettingsSubMenu('event')" id="subbtn-sidebar-event" class="nav-sub-btn hidden">
-              <i class="fas fa-calendar-check text-[11px] w-4"></i> Info Acara
-            </button>
-            <button onclick="window.clickSettingsSubMenu('ai')" id="subbtn-sidebar-ai" class="nav-sub-btn hidden">
-              <i class="fas fa-brain text-[11px] w-4"></i> Konfigurasi AI
-            </button>
-            <button onclick="window.clickSettingsSubMenu('users')" id="subbtn-sidebar-users" class="nav-sub-btn hidden">
-              <i class="fas fa-users-cog text-[11px] w-4"></i> Manajemen User
-            </button>
-            <button onclick="window.clickSettingsSubMenu('approve')" id="subbtn-sidebar-approve" class="nav-sub-btn hidden justify-between items-center pr-3">
-              <span class="flex items-center gap-2">
-                <i class="fas fa-user-check text-[11px] w-4"></i> Persetujuan
-              </span>
-              <span id="badge-sidebar-approve" class="hidden w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span>
-            </button>
-            <button onclick="window.clickSettingsSubMenu('audit')" id="subbtn-sidebar-audit" class="nav-sub-btn hidden">
-              <i class="fas fa-history text-[11px] w-4"></i> Log Aktivitas
-            </button>
-            <button onclick="window.clickSettingsSubMenu('utilities')" id="subbtn-sidebar-utilities" class="nav-sub-btn">
-              <i class="fas fa-toolbox text-[11px] w-4"></i> Tools & Notif
-            </button>
-          </div>
-        </div>
+        <!-- Pusat Pengaturan menu removed from here and moved to Logo -->
       </nav>
 
       <!-- SIDEBAR FOOTER -->
-      <div class="mt-auto border-t border-white/10 pt-4 flex flex-col gap-3">
-        <!-- User Profile Card -->
-        <div class="flex items-center gap-3 px-2">
+      <div class="mt-auto border-t border-white/10 pt-4 flex flex-col gap-3 relative">
+        <!-- Profile Popover Menu (hidden by default) -->
+        <div id="profile-popover" class="hidden absolute bottom-20 left-2 right-2 bg-[#060813]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-2xl z-[150] space-y-1 transition-all duration-200">
+          <button onclick="window.openSettings(); window.toggleProfilePopover()" class="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-300 hover:bg-white/5 rounded-xl text-left transition-colors">
+            <i class="fas fa-user-cog text-indigo-400 w-4"></i> Edit Profil
+          </button>
+          <button onclick="openModal('modal-logout'); window.toggleProfilePopover()" class="w-full flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-rose-400 hover:bg-rose-500/10 rounded-xl text-left transition-colors">
+            <i class="fas fa-sign-out-alt w-4"></i> Keluar
+          </button>
+        </div>
+
+        <!-- Clickable User Profile Card -->
+        <div onclick="window.toggleProfilePopover()" class="flex items-center gap-3 px-2 py-2.5 rounded-2xl hover:bg-white/5 active:scale-95 transition-all cursor-pointer select-none">
           <img id="sidebar-user-avatar" src="https://ui-avatars.com/api/?name=User" class="w-10 h-10 rounded-full object-cover border border-white/20" alt="Avatar">
           <div class="flex-1 min-w-0">
             <div id="sidebar-user-name" class="text-xs font-bold text-white truncate">User Name</div>
             <div id="sidebar-user-role" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest truncate">Role</div>
           </div>
+          <i class="fas fa-chevron-up text-slate-500 text-[10px] ml-auto"></i>
         </div>
-        <!-- Footer Actions -->
+
+        <!-- Footer Actions (only Theme remains) -->
         <div class="flex gap-2">
-          <button onclick="toggleTheme()" class="btn-md3 btn-md3-outlined flex-1 !py-2 !px-3 text-[9px] flex items-center justify-center gap-1.5" title="Ubah Tema">
+          <button onclick="toggleTheme()" class="btn-md3 btn-md3-outlined w-full !py-2.5 text-[9px] flex items-center justify-center gap-1.5" title="Ubah Tema">
             <i id="sidebar-theme-icon" class="fas fa-moon text-sm"></i> <span>Tema</span>
-          </button>
-          <button onclick="openModal('modal-logout')" class="btn-md3 btn-md3-danger flex-1 !py-2 !px-3 text-[9px] flex items-center justify-center gap-1.5" title="Keluar">
-            <i class="fas fa-sign-out-alt"></i> <span>Keluar</span>
           </button>
         </div>
       </div>
@@ -1542,9 +1524,46 @@
             <i class="fas fa-bars text-xl"></i>
         </button>
 
-      <!-- Logo at absolute top right -->
-      <div class="fixed top-4 right-4 lg:top-8 lg:right-8 z-[100] w-12 h-12 lg:w-16 lg:h-16 bg-white/10 backdrop-blur-xl rounded-full p-0 flex items-center justify-center border border-white/20 shadow-xl pointer-events-none overflow-hidden">
-         <img src="img/logo.png" class="w-full h-full object-cover drop-shadow-md rounded-full" alt="Logo" />
+      <!-- Logo at absolute top right (Clickable Settings Entry) -->
+      <div class="fixed top-4 right-4 lg:top-8 lg:right-8 z-[200]">
+        <!-- The Clickable Logo Circle -->
+        <div onclick="window.toggleLogoDropdown()" class="w-12 h-12 lg:w-16 lg:h-16 bg-white/10 backdrop-blur-xl rounded-full p-0 flex items-center justify-center border border-white/20 shadow-xl cursor-pointer hover:scale-105 active:scale-95 transition-all overflow-hidden relative group" title="Buka Pengaturan Sistem">
+          <img src="img/logo.png" class="w-full h-full object-cover drop-shadow-md rounded-full" alt="Logo" />
+          <div class="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/10 transition-colors"></div>
+        </div>
+
+        <!-- Logo Dropdown Menu (Positioned absolute below the logo) -->
+        <div id="logo-dropdown-menu" class="hidden absolute right-0 mt-3 w-56 bg-[#060813]/95 backdrop-blur-xl border border-white/10 rounded-3xl p-3 shadow-2xl z-[210] space-y-1 transition-all duration-200">
+          <div class="px-3 py-2 border-b border-white/5 mb-1">
+            <h4 class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Konfigurasi Sistem</h4>
+            <p class="text-[8px] text-slate-500 uppercase font-bold tracking-wider">Akses Portal Pengaturan</p>
+          </div>
+          
+          <button onclick="window.clickLogoSubMenu('profile')" id="subbtn-logo-profile" class="nav-sub-btn">
+            <i class="fas fa-user-cog text-[11px] w-4"></i> Profil Saya
+          </button>
+          <button onclick="window.clickLogoSubMenu('event')" id="subbtn-logo-event" class="nav-sub-btn hidden">
+            <i class="fas fa-calendar-check text-[11px] w-4"></i> Info Acara
+          </button>
+          <button onclick="window.clickLogoSubMenu('ai')" id="subbtn-logo-ai" class="nav-sub-btn hidden">
+            <i class="fas fa-brain text-[11px] w-4"></i> Konfigurasi AI
+          </button>
+          <button onclick="window.clickLogoSubMenu('users')" id="subbtn-logo-users" class="nav-sub-btn hidden">
+            <i class="fas fa-users-cog text-[11px] w-4"></i> Manajemen User
+          </button>
+          <button onclick="window.clickLogoSubMenu('approve')" id="subbtn-logo-approve" class="nav-sub-btn hidden justify-between items-center pr-3">
+            <span class="flex items-center gap-2">
+              <i class="fas fa-user-check text-[11px] w-4"></i> Persetujuan
+            </span>
+            <span id="badge-logo-approve" class="hidden w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span>
+          </button>
+          <button onclick="window.clickLogoSubMenu('audit')" id="subbtn-logo-audit" class="nav-sub-btn hidden">
+            <i class="fas fa-history text-[11px] w-4"></i> Log Aktivitas
+          </button>
+          <button onclick="window.clickLogoSubMenu('utilities')" id="subbtn-logo-utilities" class="nav-sub-btn">
+            <i class="fas fa-toolbox text-[11px] w-4"></i> Tools & Notif
+          </button>
+        </div>
       </div>
 
       <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 pt-4 lg:pt-0">
