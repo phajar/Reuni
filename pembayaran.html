@@ -1765,29 +1765,55 @@ try {
       resultEl.classList.add('hidden');
 
       try {
-        const db = _db || getFirestore(getApps()[0]);
+        let matchingAlumni = [];
+        let payments = [];
+        let loadedFromCloudinary = false;
 
-        // Cari di koleksi alumni berdasarkan nowa
-        const alumniSnap = await getDocs(query(collection(db, 'alumni'), where('nowa', '==', normalizedWA)));
-        const alumniIds = alumniSnap.docs.map(d => d.id);
+        // Coba memuat dari Cloudinary raw JSON (Sangat cepat, hemat kuota reads & gratis!)
+        try {
+          const resAlumni = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni_all.json?t=" + Date.now());
+          if (resAlumni.ok) {
+            const allAlumni = await resAlumni.json();
+            matchingAlumni = allAlumni.filter(a => window.normalizeWA(a.nowa) === normalizedWA);
 
-        // Cari di finance berdasarkan ref_alumni_id
-        let paySnap = { docs: [] };
-        if (alumniIds.length > 0) {
-          paySnap = await getDocs(query(collection(db, 'finance'), where('ref_alumni_id', 'in', alumniIds)));
+            if (matchingAlumni.length > 0) {
+              const resFinance = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/finance.json?t=" + Date.now());
+              if (resFinance.ok) {
+                const allFinance = await resFinance.json();
+                const alumniIds = matchingAlumni.map(a => a.id);
+                payments = allFinance.filter(p => alumniIds.includes(p.ref_alumni_id));
+                loadedFromCloudinary = true;
+                console.log("[Cloudinary Cek Status] Berhasil memuat data dari Cloudinary JSON!");
+              }
+            }
+          }
+        } catch (cloudinaryErr) {
+          console.warn("[Cloudinary Cek Status] Gagal memuat JSON Cloudinary, menggunakan fallback Firestore:", cloudinaryErr);
+        }
+
+        // Fallback jika gagal memuat JSON atau data tidak ditemukan di JSON (misal pendaftar baru)
+        if (!loadedFromCloudinary || matchingAlumni.length === 0) {
+          console.log("[Firestore Cek Status] Menggunakan fallback kueri Firestore...");
+          const db = _db || getFirestore(getApps()[0]);
+          const alumniSnap = await getDocs(query(collection(db, 'alumni'), where('nowa', '==', normalizedWA)));
+          matchingAlumni = alumniSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+          const alumniIds = matchingAlumni.map(a => a.id);
+          if (alumniIds.length > 0) {
+            const paySnap = await getDocs(query(collection(db, 'finance'), where('ref_alumni_id', 'in', alumniIds)));
+            payments = paySnap.docs.map(pd => ({ id: pd.id, ...pd.data() }));
+          }
         }
 
         let html = '';
         let found = false;
 
-        alumniSnap.docs.forEach(alumniDoc => {
+        matchingAlumni.forEach(x => {
           found = true;
-          const x = alumniDoc.data();
-          const alumniId = alumniDoc.id;
+          const alumniId = x.id;
 
           // Cari data pembayaran yang terhubung dengan alumni ini
-          const payments = paySnap.docs.map(pd => ({ id: pd.id, ...pd.data() }))
-                                       .filter(p => p.ref_alumni_id === alumniId);
+          const filteredPayments = payments.filter(p => p.ref_alumni_id === alumniId);
 
           const regStatus = x.status || 'pending';
           const regIcon = regStatus === 'approved' ? 'fa-check-circle text-emerald-400' : regStatus === 'rejected' ? 'fa-times-circle text-red-400' : 'fa-clock text-amber-400';
@@ -1796,14 +1822,14 @@ try {
 
           // Render riwayat seluruh transaksi donasi
           let paymentsHtml = '';
-          if (payments.length > 0) {
+          if (filteredPayments.length > 0) {
             paymentsHtml = `<div class="mt-4 pt-3 border-t border-white/5">
               <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1">
                 <i class="fas fa-history text-[10px]"></i> Riwayat Transaksi / Donasi Anda
               </div>
               <div class="space-y-3">`;
 
-            payments.forEach((p, pIdx) => {
+            filteredPayments.forEach((p, pIdx) => {
               const statusMap = {
                 pemasukan: { text: 'Lunas / Sukses', badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: 'fa-check-circle' },
                 approved: { text: 'Lunas / Sukses', badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: 'fa-check-circle' },
@@ -1814,7 +1840,7 @@ try {
               };
               const s = statusMap[p.status] || { text: p.status, badge: 'bg-slate-500/10 text-slate-300 border-white/10', icon: 'fa-info-circle' };
               const pDate = p.tanggal || (p.created_at ? new Date(p.created_at).toLocaleString('id-ID') : '-');
-              const pNominal = p.nominal ? 'Rp ' + p.nominal.toLocaleString('id-ID').replace(/,/g, '.') : 'Rp 0';
+              const pNominal = p.nominal ? 'Rp ' + Number(p.nominal).toLocaleString('id-ID').replace(/,/g, '.') : 'Rp 0';
               
               // Tautan Bukti Transfer jika ada
               let proofHtml = '';

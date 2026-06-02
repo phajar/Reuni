@@ -821,33 +821,61 @@
     let lastSearchWA = '';
 
     // ── Refresh status (tanpa reload halaman) ─────────────────────────────
+    async function getStatusData(normalizedWA) {
+      let matchingAlumni = [];
+      let payments = [];
+      let loadedFromCloudinary = false;
+
+      // Coba memuat dari Cloudinary raw JSON (Sangat cepat, hemat kuota reads & gratis!)
+      try {
+        const resAlumni = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni_all.json?t=" + Date.now());
+        if (resAlumni.ok) {
+          const allAlumni = await resAlumni.json();
+          matchingAlumni = allAlumni.filter(a => window.normalizeWA(a.nowa) === normalizedWA);
+
+          if (matchingAlumni.length > 0) {
+            const resFinance = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/finance.json?t=" + Date.now());
+            if (resFinance.ok) {
+              const allFinance = await resFinance.json();
+              const alumniIds = matchingAlumni.map(a => a.id);
+              payments = allFinance.filter(p => alumniIds.includes(p.ref_alumni_id));
+              loadedFromCloudinary = true;
+              console.log("[Cloudinary Cek Status] Berhasil memuat data dari Cloudinary JSON!");
+            }
+          }
+        }
+      } catch (cloudinaryErr) {
+        console.warn("[Cloudinary Cek Status] Gagal memuat JSON Cloudinary, menggunakan fallback Firestore:", cloudinaryErr);
+      }
+
+      // Fallback jika gagal memuat JSON atau data tidak ditemukan di JSON (misal pendaftar baru)
+      if (!loadedFromCloudinary || matchingAlumni.length === 0) {
+        console.log("[Firestore Cek Status] Menggunakan fallback kueri Firestore...");
+        const db = _db || getFirestore(getApps()[0]);
+        const q = query(collection(db, 'alumni'), where('nowa', '==', normalizedWA));
+        const snap = await getDocs(q);
+        matchingAlumni = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        const alumniIds = matchingAlumni.map(a => a.id);
+        if (alumniIds.length > 0) {
+          const qFinance = query(collection(db, 'finance'), where('ref_alumni_id', 'in', alumniIds));
+          const snapFinance = await getDocs(qFinance);
+          payments = snapFinance.docs.map(pd => ({ id: pd.id, ...pd.data() }));
+        }
+      }
+
+      return { matchingAlumni, payments };
+    }
+
+    // ── Refresh status (tanpa reload halaman) ─────────────────────────────
     window.refreshStatus = async function() {
       if (!lastSearchWA) return;
       const btnRef = document.getElementById('btn-refresh');
       if (btnRef) { btnRef.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memperbarui...'; btnRef.disabled = true; }
       try {
-        const q = query(collection(db, 'alumni'), where('nowa', '==', lastSearchWA));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-          // Fetch finance docs
-          const alumniIds = records.map(r => r.id);
-          const financeRecords = {};
-          if (alumniIds.length > 0) {
-            const qFinance = query(collection(db, 'finance'), where('ref_alumni_id', 'in', alumniIds));
-            const snapFinance = await getDocs(qFinance);
-            snapFinance.forEach(doc => {
-              const fData = { id: doc.id, ...doc.data() };
-              const refId = fData.ref_alumni_id;
-              if (!financeRecords[refId]) {
-                financeRecords[refId] = [];
-              }
-              financeRecords[refId].push(fData);
-            });
-          }
-
-          document.getElementById('result-cards').innerHTML = records.map(r => renderCard(r, financeRecords[r.id] || [])).join('');
+        const { matchingAlumni, payments } = await getStatusData(lastSearchWA);
+        if (matchingAlumni.length > 0) {
+          document.getElementById('result-cards').innerHTML = matchingAlumni.map(r => renderCard(r, payments.filter(p => p.ref_alumni_id === r.id))).join('');
           notify('Status diperbarui.', 'success');
           
           // Scroll halus ke arah data hasil setelah update
@@ -882,35 +910,16 @@
       document.getElementById('btn-share-result').classList.add('hidden');
 
       try {
-        const q    = query(collection(db, 'alumni'), where('nowa', '==', norm));
-        const snap = await getDocs(q);
+        const { matchingAlumni, payments } = await getStatusData(norm);
 
-        if (snap.empty) {
+        if (matchingAlumni.length === 0) {
           document.getElementById('skeleton-area').classList.add('hidden');
           document.getElementById('not-found').classList.remove('hidden');
         } else {
-          const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-          // Fetch finance docs
-          const alumniIds = records.map(r => r.id);
-          const financeRecords = {};
-          if (alumniIds.length > 0) {
-            const qFinance = query(collection(db, 'finance'), where('ref_alumni_id', 'in', alumniIds));
-            const snapFinance = await getDocs(qFinance);
-            snapFinance.forEach(doc => {
-              const fData = { id: doc.id, ...doc.data() };
-              const refId = fData.ref_alumni_id;
-              if (!financeRecords[refId]) {
-                financeRecords[refId] = [];
-              }
-              financeRecords[refId].push(fData);
-            });
-          }
-
           const cards   = document.getElementById('result-cards');
-          cards.innerHTML = records.map(r => renderCard(r, financeRecords[r.id] || [])).join('');
+          cards.innerHTML = matchingAlumni.map(r => renderCard(r, payments.filter(p => p.ref_alumni_id === r.id))).join('');
           document.getElementById('result-count').textContent =
-            records.length === 1 ? '1 data ditemukan' : `${records.length} data ditemukan untuk nomor ini`;
+            matchingAlumni.length === 1 ? '1 data ditemukan' : `${matchingAlumni.length} data ditemukan untuk nomor ini`;
           document.getElementById('skeleton-area').classList.add('hidden');
           document.getElementById('result-area').classList.remove('hidden');
           // Tampilkan tombol share WA
@@ -923,7 +932,7 @@
           }, 100);
 
           // Simpan data untuk share
-          window._lastResultRecords = records;
+          window._lastResultRecords = matchingAlumni;
 
           // Update URL untuk bisa dibookmark/share
           const url = new URL(window.location.href);

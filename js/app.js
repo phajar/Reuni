@@ -1224,11 +1224,16 @@ window.loadDataRealtime = () => {
         if (typeof window.triggerAlumniCloudinaryUpload === 'function') {
             window.triggerAlumniCloudinaryUpload();
         }
+        if (typeof window.triggerAlumniAllCloudinaryUpload === 'function') {
+            window.triggerAlumniAllCloudinaryUpload();
+        }
 
       } else if (type === 'finance') {
         const newVer = (parseInt(data.finance_version) || 0) + 1;
         await syncRef.set({ finance_version: String(newVer) }, { merge: true });
-
+        if (typeof window.triggerFinanceCloudinaryUpload === 'function') {
+            window.triggerFinanceCloudinaryUpload();
+        }
       }
     } catch (e) {
       console.error("Gagal increment sync version:", e);
@@ -1263,16 +1268,100 @@ window.loadDataRealtime = () => {
             body: formData
         });
         const resData = await response.json();
-        console.log("[Cloudinary JSON Upload] Success:", resData.secure_url);
+        console.log("[Cloudinary JSON Upload] Success alumni.json:", resData.secure_url);
     } catch (e) {
-        console.error("[Cloudinary JSON Upload] Error:", e);
+        console.error("[Cloudinary JSON Upload] Error alumni.json:", e);
+    }
+  };
+
+  window.triggerAlumniAllCloudinaryUpload = async () => {
+    try {
+        console.log("[Cloudinary JSON Upload] Fetching all alumni list from Firestore...");
+        const snap = await db.collection("alumni").get();
+        const allAlumni = snap.docs.map(d => ({
+            id: d.id,
+            nama: d.data().nama,
+            angkatan: d.data().angkatan,
+            nowa: d.data().nowa || "",
+            status: d.data().status || "pending",
+            created_at: d.data().created_at || "",
+            alamat: d.data().alamat || "",
+            desa: d.data().desa || "",
+            kecamatan: d.data().kecamatan || "",
+            kabupaten: d.data().kabupaten || "",
+            provinsi: d.data().provinsi || "",
+            lembaga: d.data().lembaga || "",
+            bukti_transfer_alumni: d.data().bukti_transfer_alumni || ""
+        }));
+        
+        const jsonString = JSON.stringify(allAlumni);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const file = new File([blob], 'alumni_all.json', { type: 'application/json' });
+        
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "Reuniakbar");
+        formData.append("public_id", "alumni_all.json");
+        formData.append("resource_type", "raw");
+        
+        const response = await fetch("https://api.cloudinary.com/v1_1/dowih3wr7/raw/upload", {
+            method: "POST",
+            body: formData
+        });
+        const resData = await response.json();
+        console.log("[Cloudinary JSON Upload] Success alumni_all.json:", resData.secure_url);
+    } catch (e) {
+        console.error("[Cloudinary JSON Upload] Error alumni_all.json:", e);
+    }
+  };
+
+  window.triggerFinanceCloudinaryUpload = async () => {
+    try {
+        console.log("[Cloudinary JSON Upload] Fetching all finance records from Firestore...");
+        const snap = await db.collection("finance").get();
+        const allFinance = snap.docs.map(d => ({
+            id: d.id,
+            ref_alumni_id: d.data().ref_alumni_id || "",
+            nama_pembayar: d.data().nama_pembayar || "",
+            angkatan_pembayar: d.data().angkatan_pembayar || "",
+            lembaga_pembayar: d.data().lembaga_pembayar || "",
+            nominal: d.data().nominal || 0,
+            status: d.data().status || "pending",
+            kategori: d.data().kategori || "Donasi",
+            bukti_url: d.data().bukti_url || "",
+            bukti_hash: d.data().bukti_hash || "",
+            tanggal: d.data().tanggal || "",
+            created_at: d.data().created_at || "",
+            payment_method: d.data().payment_method || "Manual"
+        }));
+        
+        const jsonString = JSON.stringify(allFinance);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const file = new File([blob], 'finance.json', { type: 'application/json' });
+        
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "Reuniakbar");
+        formData.append("public_id", "finance.json");
+        formData.append("resource_type", "raw");
+        
+        const response = await fetch("https://api.cloudinary.com/v1_1/dowih3wr7/raw/upload", {
+            method: "POST",
+            body: formData
+        });
+        const resData = await response.json();
+        console.log("[Cloudinary JSON Upload] Success finance.json:", resData.secure_url);
+    } catch (e) {
+        console.error("[Cloudinary JSON Upload] Error finance.json:", e);
     }
   };
 
   window.manualSyncCloudinary = async () => {
     try {
-        window.toggleLoading(true, "Menyinkronkan data alumni ke Cloudinary...");
+        window.toggleLoading(true, "Menyinkronkan data alumni & keuangan ke Cloudinary...");
         await window.triggerAlumniCloudinaryUpload();
+        await window.triggerAlumniAllCloudinaryUpload();
+        await window.triggerFinanceCloudinaryUpload();
         window.notify("Sinkronisasi JSON Cloudinary Berhasil!", "success");
     } catch (e) {
         console.error(e);
@@ -1361,6 +1450,14 @@ window.loadDataRealtime = () => {
             localStorage.setItem('cached_alumni', JSON.stringify(freshAlumni));
             localStorage.setItem('alumni_version', syncData.alumni_version || "1");
             window.STATE.rawAlumni = freshAlumni;
+            
+            // Auto trigger Cloudinary uploads
+            if (typeof window.triggerAlumniCloudinaryUpload === 'function') {
+                window.triggerAlumniCloudinaryUpload();
+            }
+            if (typeof window.triggerAlumniAllCloudinaryUpload === 'function') {
+                window.triggerAlumniAllCloudinaryUpload();
+            }
         } catch (err) {
             console.error("Gagal sinkronisasi alumni:", err);
             window.STATE.rawAlumni = cachedAlumni;
@@ -1403,6 +1500,11 @@ window.loadDataRealtime = () => {
             localStorage.setItem('cached_finance', JSON.stringify(freshFinance));
             localStorage.setItem('finance_version', syncData.finance_version || "1");
             window.STATE.rawFinance = freshFinance;
+
+            // Auto trigger Cloudinary upload
+            if (typeof window.triggerFinanceCloudinaryUpload === 'function') {
+                window.triggerFinanceCloudinaryUpload();
+            }
         } catch (err) {
             console.error("Gagal sinkronisasi finance:", err);
             window.STATE.rawFinance = cachedFinance;
