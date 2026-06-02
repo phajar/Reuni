@@ -181,6 +181,38 @@ window.closeModal = (id) => {
   const el = document.getElementById(id);
   if (el) el.classList.add("hidden");
 };
+window.populateEventSettingsForm = () => {
+  const setEventDateEl = document.getElementById("set-event-date");
+  const setEventTbdEl = document.getElementById("set-event-tbd");
+  const setEventTimeEl = document.getElementById("set-event-time");
+  const setEventGuestEl = document.getElementById("set-event-guest");
+  const setEventWaHumasEl = document.getElementById("set-event-wa-humas");
+  const apiBendaharaEl = document.getElementById("api-access-bendahara");
+  const apiSekretarisEl = document.getElementById("api-access-sekretaris");
+  const setEventWaDisabledEl = document.getElementById("set-event-wa-disabled");
+
+  if (window.STATE) {
+      if (setEventDateEl) {
+          setEventDateEl.disabled = window.STATE.eventDate === "TBD";
+          setEventDateEl.value = window.STATE.eventDate !== "TBD" ? window.STATE.eventDate : "";
+      }
+      if (setEventTbdEl) setEventTbdEl.checked = window.STATE.eventDate === "TBD";
+      if (setEventTimeEl) setEventTimeEl.value = window.STATE.eventTime || "";
+      if (setEventGuestEl) setEventGuestEl.value = window.STATE.eventGuest || "";
+      if (setEventWaHumasEl) setEventWaHumasEl.value = window.STATE.eventWaHumas || "";
+      
+      if (setEventWaDisabledEl) {
+          setEventWaDisabledEl.checked = window.STATE.eventInfo && window.STATE.eventInfo.wa_disabled === true;
+      }
+      
+      const apiAccess = window.STATE.eventInfo && window.STATE.eventInfo.api_access_roles
+          ? window.STATE.eventInfo.api_access_roles
+          : ["admin_utama", "creator"];
+      if (apiBendaharaEl) apiBendaharaEl.checked = apiAccess.includes("bendahara");
+      if (apiSekretarisEl) apiSekretarisEl.checked = apiAccess.includes("sekretaris");
+  }
+};
+
 window.switchSettingsSubTab = (subTabName) => {
   const subContents = document.querySelectorAll(".settings-sub-content");
   subContents.forEach(el => {
@@ -261,32 +293,8 @@ window.switchSettingsSubTab = (subTabName) => {
           }
       }
   } else if (subTabName === 'event') {
-      const setEventDateEl = document.getElementById("set-event-date");
-      const setEventTbdEl = document.getElementById("set-event-tbd");
-      const setEventTimeEl = document.getElementById("set-event-time");
-      const setEventGuestEl = document.getElementById("set-event-guest");
-      const setEventWaHumasEl = document.getElementById("set-event-wa-humas");
-      const apiBendaharaEl = document.getElementById("api-access-bendahara");
-      const apiSekretarisEl = document.getElementById("api-access-sekretaris");
-      
-      if (window.STATE) {
-          if (setEventDateEl) {
-              setEventDateEl.disabled = window.STATE.eventDate === "TBD";
-              setEventDateEl.value = window.STATE.eventDate !== "TBD" ? window.STATE.eventDate : "";
-          }
-          if (setEventTbdEl) setEventTbdEl.checked = window.STATE.eventDate === "TBD";
-          if (setEventTimeEl) setEventTimeEl.value = window.STATE.eventTime || "";
-          if (setEventGuestEl) setEventGuestEl.value = window.STATE.eventGuest || "";
-          if (setEventWaHumasEl) setEventWaHumasEl.value = window.STATE.eventWaHumas || "";
-          
-          const setEventWaDisabledEl = document.getElementById("set-event-wa-disabled");
-          if (setEventWaDisabledEl) setEventWaDisabledEl.checked = window.STATE.eventInfo && window.STATE.eventInfo.wa_disabled === true;
-          
-          const apiAccess = window.STATE.eventInfo && window.STATE.eventInfo.api_access_roles
-              ? window.STATE.eventInfo.api_access_roles
-              : ["admin_utama", "creator"];
-          if (apiBendaharaEl) apiBendaharaEl.checked = apiAccess.includes("bendahara");
-          if (apiSekretarisEl) apiSekretarisEl.checked = apiAccess.includes("sekretaris");
+      if (typeof window.populateEventSettingsForm === 'function') {
+          window.populateEventSettingsForm();
       }
   } else if (subTabName === 'users') {
       if (typeof window.renderUsers === 'function') window.renderUsers();
@@ -1013,6 +1021,9 @@ window.loadDataRealtime = () => {
         window.STATE.eventGuest = data.event_guest || "";
         window.STATE.eventWaHumas = data.wa_humas || "";
         window.STATE.eventInfo = data;
+        if (typeof window.populateEventSettingsForm === "function") {
+          window.populateEventSettingsForm();
+        }
         if (typeof window.renderAllTabs === "function") window.renderAllTabs();
       }
     });
