@@ -8274,8 +8274,8 @@ window.addGalleryCategoryRow = (name = "", folderId = "", id = null) => {
         <input type="text" class="input-field mt-1 category-name" required value="${name}" placeholder="Cth: Acara Utama / Malam Puncak" />
       </div>
       <div class="flex-[1.5] w-full text-left">
-        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">ID Folder Google Drive</label>
-        <input type="text" class="input-field mt-1 category-folder-id" required value="${folderId}" placeholder="Cth: 1fAHTu-B2b5wW-bU4c8gD5e9F_..." />
+        <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Link atau ID Folder Google Drive</label>
+        <input type="text" class="input-field mt-1 category-folder-id" required value="${folderId}" placeholder="Tempel Link Folder atau ID saja" />
       </div>
       <button type="button" onclick="window.removeGalleryCategoryRow('${rowId}')" class="w-12 h-12 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-xl flex items-center justify-center border border-red-500/20 hover:border-red-500 transition-all duration-200" title="Hapus Kategori">
         <i class="fas fa-trash-alt text-sm"></i>
@@ -8309,7 +8309,26 @@ window.handleGallerySettingsSubmit = async (e) => {
         
         if (nameInput && folderInput) {
             const name = nameInput.value.trim();
-            const folderId = folderInput.value.trim();
+            let folderId = folderInput.value.trim();
+            
+            // Ekstrak ID Folder Google Drive jika pengguna menempelkan link penuh
+            if (folderId) {
+                const driveUrlRegex = /(?:https?:\/\/)?(?:drive\.google\.com\/)(?:drive\/(?:u\/\d+\/)?folders\/|open\?id=)([a-zA-Z0-9_-]{25,50})/i;
+                const match = folderId.match(driveUrlRegex);
+                if (match && match[1]) {
+                    folderId = match[1];
+                } else if (folderId.includes("drive.google.com")) {
+                    // Pencarian segmen cadangan jika pola URL berbeda
+                    const segments = folderId.split('/');
+                    for (const segment of segments) {
+                        const cleanSegment = segment.split('?')[0].split('#')[0];
+                        if (cleanSegment.length >= 25 && cleanSegment.length <= 50 && /^[a-zA-Z0-9_-]+$/.test(cleanSegment)) {
+                            folderId = cleanSegment;
+                            break;
+                        }
+                    }
+                }
+            }
             
             if (name && folderId) {
                 const id = row.id.replace("row-", "");
