@@ -5121,8 +5121,17 @@ window.openSettings = () => {
         window.sortConfig.alumni.dir = "asc";
       }
     }
+    const searchInput = document.getElementById("search-alumni-input");
+    const searchVal = (searchInput?.value || "").toLowerCase().trim();
     const dir = window.sortConfig.alumni.dir === "asc" ? -1 : 1;
     window.filteredAlumniData.sort((a, b) => {
+      if (searchVal) {
+        const scoreA = a.searchScore || 0;
+        const scoreB = b.searchScore || 0;
+        if (scoreB !== scoreA) {
+          return scoreB - scoreA; // Urutkan berdasarkan relevansi skor tertinggi terlebih dahulu
+        }
+      }
       let va = a[key],
         vb = b[key];
       if (["angkatan", "totalDonasi"].includes(key)) {
@@ -9507,6 +9516,7 @@ window.applyAlumniFilters = (keepPage = false) => {
         }
 
         if (isMatch) {
+            a.searchScore = score;
             matched.push({ alumni: a, score: score });
         }
     });
