@@ -344,7 +344,7 @@
       </div>
 
       <!-- PANEL CEK STATUS PEMBAYARAN -->
-      <div class="glass w-full p-6 md:p-8 rounded-[2.5rem] border border-indigo-500/20 shadow-xl mt-6 relative overflow-hidden">
+      <div id="panel-cek-status" class="glass w-full p-6 md:p-8 rounded-[2.5rem] border border-indigo-500/20 shadow-xl mt-6 relative overflow-hidden">
         <div class="absolute -top-6 -right-6 w-24 h-24 bg-indigo-500/10 blur-[30px] pointer-events-none"></div>
         <div class="flex items-center gap-3 mb-5">
           <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 border border-indigo-500/30">
@@ -2283,15 +2283,26 @@ try {
           if (typeof window.formatWAInputCekStatus === 'function') {
             window.formatWAInputCekStatus(statusInput);
           }
+          
+          // Scroll segera ke panel cek status pembayaran
+          setTimeout(() => {
+            const panelEl = document.getElementById('panel-cek-status');
+            if (panelEl) {
+              panelEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 150);
+
           // Jalankan pengecekan otomatis setelah inisialisasi Firebase selesai
           setTimeout(() => {
             if (typeof window.cekStatusPembayaran === 'function') {
               window.cekStatusPembayaran();
-              // Scroll ke hasil pencarian
-              const targetEl = document.getElementById('cek-status-result');
-              if (targetEl) {
-                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
+              // Scroll ke hasil pencarian setelah data ter-load
+              setTimeout(() => {
+                const targetEl = document.getElementById('cek-status-result');
+                if (targetEl) {
+                  targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }, 400);
             }
           }, 800);
         }
