@@ -206,7 +206,7 @@
           <button onclick="window.location.reload()" class="bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white py-3 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all border border-white/10 hover:border-white/20">
             <i class="fas fa-plus mr-2"></i>Daftar Lagi
           </button>
-          <a id="link-cek-status" href="cek-status.html" class="bg-indigo-600 hover:bg-indigo-500 text-white py-3 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105">
+          <a id="link-cek-status" href="pembayaran.html" class="bg-indigo-600 hover:bg-indigo-500 text-white py-3 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105">
             <i class="fas fa-search mr-2"></i>Cek Status
           </a>
           <a href="pembayaran.html" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-3 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/30 hover:scale-105">
@@ -302,7 +302,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, initializeFirestore, collection, addDoc, getDocs, query, where, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, initializeFirestore, collection, addDoc, getDocs, query, where, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
@@ -392,6 +392,126 @@
           .replace(/^(KABUPATEN|KOTA|KAB\.|KAB|KEC\.|KEC|KECAMATAN|DESA|KEL\.|KELURAHAN)\s+/i, "")
           .trim();
       return normalizeWilayah(stripped);
+    }
+
+    async function sendRegistrationWa(data) {
+      try {
+        console.log('[WA] Memulai proses pengiriman WA pendaftaran untuk:', data.nama);
+        // 1. Cek settings/event_info untuk wa_disabled
+        const eventInfoSnap = await getDoc(doc(db, "settings", "event_info"));
+        if (eventInfoSnap.exists()) {
+          const eventInfo = eventInfoSnap.data();
+          if (eventInfo.wa_disabled === true) {
+            console.log('[WA] Pengiriman WhatsApp dinonaktifkan secara global (Testing Mode).');
+            return;
+          }
+        }
+
+        // 2. Muat konfigurasi dari settings/whatsapp_api
+        const apiSnap = await getDoc(doc(db, "settings", "whatsapp_api"));
+        if (!apiSnap.exists()) {
+          console.warn('[WA] Pengaturan API WA (whatsapp_api) belum diset di Firestore.');
+          return;
+        }
+        const config = apiSnap.data();
+        
+        // Tentukan provider & token
+        const provider = config.provider_broadcast || 'fonnte';
+        const token = config.token_broadcast || '';
+
+        if (!token) {
+          console.warn('[WA] Token broadcast WhatsApp belum dikonfigurasi.');
+          return;
+        }
+
+        // Normalisasi nomor telepon target
+        const cleanPhone = normalizeWA(data.nowa);
+        if (!cleanPhone) {
+          console.warn('[WA] Nomor WhatsApp kosong atau tidak valid.');
+          return;
+        }
+
+        // Susun teks pesan
+        const message = `*PENDAFTARAN ALUMNI REUNI AKBAR AL-FATAH* ✨\n\nHalo *${data.nama}*,\n\nSelamat! Pendaftaran Anda untuk Reuni Akbar Pondok Pesantren AL-FATAH telah berhasil dikirim dan sedang dalam proses peninjauan oleh Panitia.\n\n*Rincian Pendaftaran:*\n- Nama: *${data.nama}*\n- Lembaga: *${data.lembaga || "-"}*\n- Angkatan: *${data.angkatan}*\n- No. WhatsApp: *+${cleanPhone}*\n- Wilayah: *${data.desa || "-"}, ${data.kecamatan || "-"}, ${data.kabupaten || "-"}, ${data.provinsi || "-"}*\n\n---\n\n*INFORMASI DONASI REUNI* 💳\nUntuk menyukseskan acara ini, Kakak dapat menyalurkan donasi/kontribusi sukarela ke rekening resmi panitia:\n- *Bank BJB*\n- Nomor Rekening: *0139190333100*\n- Atas Nama: *REUNI AKBAR AL FATAH*\n\nSetelah melakukan transfer, silakan konfirmasi pembayaran Kakak dengan mengunggah bukti transfer melalui link di bawah ini.\n\n---\n\n*CEK STATUS & KONFIRMASI PEMBAYARAN:*\n👉 https://phajar.github.io/Reuni/pembayaran.html?wa=${cleanPhone}\n\nTerima kasih atas partisipasi dan kontribusi Kakak. Sampai jumpa di reuni akbar! 🤝\n\n_Pesan ini dikirim otomatis oleh Sistem Reuni Al-Fatah._`;
+
+        // 3. Kirim ke REST API Provider yang sesuai
+        if (provider === 'fonnte') {
+          console.log(`[WA] Mengirim via Fonnte ke ${cleanPhone}`);
+          const formData = new FormData();
+          formData.append('target', cleanPhone);
+          formData.append('message', message);
+
+          const response = await fetch('https://api.fonnte.com/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': token.trim()
+            },
+            body: formData
+          });
+          const resData = await response.json();
+          if (resData.status === true || resData.status === 'true') {
+            console.log('[WA] Pesan terkirim via Fonnte ke', cleanPhone);
+          } else {
+            console.error('[WA] Gagal mengirim via Fonnte:', resData.reason || resData.message || resData);
+          }
+        } else if (provider === 'woowa') {
+          console.log(`[WA] Mengirim via WooWA ke ${cleanPhone}`);
+          const payload = {
+            key: token.trim(),
+            phone_no: cleanPhone,
+            message: message
+          };
+          const response = await fetch('https://api.woo-wa.com/send_message', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+          const text = await response.text();
+          console.log('[WA] Response WooWA:', text);
+        } else if (provider === 'starsender') {
+          console.log(`[WA] Mengirim via StarSender ke ${cleanPhone}`);
+          const payload = {
+            tujuan: cleanPhone + '@s.whatsapp.net',
+            number: cleanPhone,
+            message: message,
+            apikey: token.trim()
+          };
+          const response = await fetch('https://api.starsender.co/api/sendText', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': token.trim()
+            },
+            body: JSON.stringify(payload)
+          });
+          const resData = await response.json();
+          console.log('[WA] Response StarSender:', resData);
+        } else if (provider === 'custom') {
+          let serverUrl = token.trim();
+          if (serverUrl.endsWith('/')) {
+            serverUrl = serverUrl.slice(0, -1);
+          }
+          console.log(`[WA] Mengirim via Custom Server ${serverUrl} ke ${cleanPhone}`);
+          const response = await fetch(`${serverUrl}/send-message`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              phone: cleanPhone,
+              message: message
+            })
+          });
+          const resData = await response.json();
+          console.log('[WA] Response Custom Server:', resData);
+        } else {
+          console.warn('[WA] Provider tidak dikenal:', provider);
+        }
+      } catch (err) {
+        console.error('[WA] Gagal mengirim notifikasi WhatsApp:', err);
+      }
     }
 
     // ── Cek Duplikasi Nama (Menggunakan alumni.json lokal dari Cloudinary) ──
@@ -536,7 +656,7 @@
         localStorage.removeItem(draftKey); // Berhasil, hapus draft
         // Set link cek status dengan nomor WA
         const cekLink = document.getElementById('link-cek-status');
-        if (cekLink) cekLink.href = `cek-status.html?wa=${encodeURIComponent(data.nowa)}`;
+        if (cekLink) cekLink.href = `pembayaran.html?wa=${encodeURIComponent(data.nowa)}`;
         notify('Pendaftaran Anda berhasil dikirim dan sedang ditinjau oleh admin.', 'success');
         document.getElementById('form-register').classList.add('hidden');
         document.getElementById('form-steps').classList.add('hidden');
@@ -544,6 +664,9 @@
         document.getElementById('success-screen').scrollIntoView({ behavior:'smooth', block:'center' });
         // Launch celebratory confetti!
         setTimeout(() => { if (window.launchConfetti) window.launchConfetti(); }, 200);
+        
+        // Pemicu WhatsApp Otomatis
+        sendRegistrationWa(data);
       } catch(error) {
         console.error(error);
         notify('Koneksi bermasalah. Data tersimpan sementara – akan dikirim otomatis saat koneksi kembali.','error');
@@ -582,10 +705,13 @@
           const successEl = document.getElementById('success-screen');
           if (formEl && successEl) {
             const cekLink = document.getElementById('link-cek-status');
-            if (cekLink) cekLink.href = `cek-status.html?wa=${encodeURIComponent(parsedData.nowa || '')}`;
+            if (cekLink) cekLink.href = `pembayaran.html?wa=${encodeURIComponent(parsedData.nowa || '')}`;
             formEl.classList.add('hidden');
             successEl.classList.remove('hidden');
           }
+          
+          // Pemicu WhatsApp Otomatis
+          sendRegistrationWa(parsedData);
         } catch(e) { /* silent â€” akan coba lagi saat online berikutnya */ }
       });
     }

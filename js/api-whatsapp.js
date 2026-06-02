@@ -802,7 +802,7 @@ window.sendReceiptNotification = async (financeData) => {
         const dateStr = financeData.tanggal || new Date().toLocaleString("id-ID");
         const adminMail = financeData.updated_by || "Bendahara";
 
-        const msg = `*BUKTI PEMBAYARAN REUNI AL-FATAH* ✨\n\nHalo *${alumnus.nama}* (Angkatan ${alumnus.angkatan || "-"}),\n\nTerima kasih, pembayaran Anda telah berhasil dicatat oleh Bendahara Reuni Al-Fatah.\n\n*Rincian Transaksi:*\n- Kategori: *${financeData.kategori || "Uang Kas"}*\n- Jumlah: *${formattedNominal}*\n- Tanggal: *${dateStr}*\n- Status: *Lunas / Berhasil*\n- Catatan: *${financeData.keterangan || "-"}*\n- Admin: *${adminMail}*\n\nSemoga menjadi amal ibadah dan membawa keberkahan bagi kita semua. Sampai jumpa di hari H reuni! 🤝\n\n_Pesan ini dikirim otomatis oleh Sistem Reuni Al-Fatah._`;
+        const msg = `*BUKTI PEMBAYARAN REUNI AL-FATAH* ✨\n\nHalo *${alumnus.nama}* (Angkatan ${alumnus.angkatan || "-"}),\n\nTerima kasih, pembayaran Anda telah berhasil dicatat oleh Bendahara Reuni Al-Fatah.\n\n*Rincian Transaksi:*\n- Kategori: *${financeData.kategori || "Uang Kas"}*\n- Jumlah: *${formattedNominal}*\n- Tanggal: *${dateStr}*\n- Status: *Lunas / Berhasil*\n- Catatan: *${financeData.keterangan || "-"}*\n- Admin: *${adminMail}*\n\nUnduh kwitansi resmi Anda di sini:\n👉 https://phajar.github.io/Reuni/pembayaran.html?wa=${encodeURIComponent(alumnus.nowa)}\n\nSemoga menjadi amal ibadah dan membawa keberkahan bagi kita semua. Sampai jumpa di hari H reuni! 🤝\n\n_Pesan ini dikirim otomatis oleh Sistem Reuni Al-Fatah._`;
 
         const targetNum = window.normalizePhoneNumber(alumnus.nowa);
         await window.sendWhatsAppInternal(targetNum, msg, null, 'finance');

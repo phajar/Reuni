@@ -541,6 +541,7 @@ try {
             throw new Error("Gagal upload ke Cloudinary");
         }
     }
+    window.uploadToCloudinary = uploadToCloudinary;
 
 
     // 1. FITUR COPY KE CLIPBOARD (Salin Cepat)
@@ -1735,7 +1736,7 @@ try {
   <!-- CEK STATUS PEMBAYARAN: fungsi global -->
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, where, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const _app = getApps().length ? getApps()[0] : null;
     const _db = _app ? getFirestore(_app) : null;
@@ -1793,38 +1794,87 @@ try {
           const regLabel = regStatus === 'approved' ? 'Terverifikasi' : regStatus === 'rejected' ? 'Ditolak' : 'Menunggu Verifikasi';
           const regColor = regStatus === 'approved' ? 'text-emerald-400' : regStatus === 'rejected' ? 'text-red-400' : 'text-amber-400';
 
-          // Definisikan status donasi awal (jika belum ada donasi)
-          let payLabel = 'Belum Ada Catatan Donasi';
-          let payColor = 'text-slate-400';
-          let payIcon = 'fa-exclamation-circle text-slate-500';
-          let payColorBorder = 'border-white/10 bg-white/5';
-          let payAmtHtml = '';
-
+          // Render riwayat seluruh transaksi donasi
+          let paymentsHtml = '';
           if (payments.length > 0) {
-            const approvedPayments = payments.filter(p => p.status === 'pemasukan' || p.status === 'approved');
-            const pendingPayments = payments.filter(p => p.status === 'pending_payment' || p.status === 'pending');
+            paymentsHtml = `<div class="mt-4 pt-3 border-t border-white/5">
+              <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1">
+                <i class="fas fa-history text-[10px]"></i> Riwayat Transaksi / Donasi Anda
+              </div>
+              <div class="space-y-3">`;
 
-            if (approvedPayments.length > 0) {
-              const totalDonasi = approvedPayments.reduce((sum, p) => sum + (Number(p.nominal) || 0), 0);
-              payLabel = 'Donasi Terverifikasi (Lunas)';
-              payColor = 'text-emerald-400';
-              payIcon = 'fa-check-circle text-emerald-400';
-              payColorBorder = 'border-emerald-500/30 bg-emerald-500/5';
-              payAmtHtml = `<div class="text-xs font-black text-white mt-1">Total Partisipasi: <span class="text-emerald-400">Rp ${totalDonasi.toLocaleString('id-ID').replace(/,/g, '.')}</span></div>`;
-            } else if (pendingPayments.length > 0) {
-              payLabel = 'Menunggu Verifikasi Bendahara';
-              payColor = 'text-amber-400';
-              payIcon = 'fa-hourglass-half text-amber-400';
-              payColorBorder = 'border-amber-500/30 bg-amber-500/5';
-            } else {
-              payLabel = 'Donasi Ditolak / Dibatalkan';
-              payColor = 'text-red-400';
-              payIcon = 'fa-times-circle text-red-400';
-              payColorBorder = 'border-red-500/30 bg-red-500/5';
-            }
+            payments.forEach((p, pIdx) => {
+              const statusMap = {
+                pemasukan: { text: 'Lunas / Sukses', badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: 'fa-check-circle' },
+                approved: { text: 'Lunas / Sukses', badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: 'fa-check-circle' },
+                pending_payment: { text: 'Menunggu Verifikasi', badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: 'fa-clock' },
+                pending: { text: 'Menunggu Verifikasi', badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: 'fa-clock' },
+                expired: { text: 'Kedaluwarsa / Batal', badge: 'bg-slate-800 text-slate-400 border-slate-700/50', icon: 'fa-times-circle' },
+                failed: { text: 'Gagal / Ditolak', badge: 'bg-red-500/20 text-red-400 border-red-500/30', icon: 'fa-times-circle' }
+              };
+              const s = statusMap[p.status] || { text: p.status, badge: 'bg-slate-500/10 text-slate-300 border-white/10', icon: 'fa-info-circle' };
+              const pDate = p.tanggal || (p.created_at ? new Date(p.created_at).toLocaleString('id-ID') : '-');
+              const pNominal = p.nominal ? 'Rp ' + p.nominal.toLocaleString('id-ID').replace(/,/g, '.') : 'Rp 0';
+              
+              // Tautan Bukti Transfer jika ada
+              let proofHtml = '';
+              if (p.bukti_url) {
+                proofHtml = `<a href="${p.bukti_url}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300 hover:underline font-extrabold mt-1.5">
+                  <i class="fas fa-image"></i> Lihat Bukti Transfer
+                </a>`;
+              } else if ((p.status === 'pending_payment' || p.status === 'pending') && (!p.payment_method || p.payment_method.toLowerCase() === 'manual')) {
+                // Sediakan form upload bukti transfer khusus untuk transaksi manual pending ini
+                proofHtml = `
+                  <div id="tx-upload-box-${p.id}" class="mt-2.5 p-3.5 bg-white/5 border border-white/5 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2">
+                      <span class="text-[9px] font-black text-slate-400 uppercase"><i class="fas fa-upload mr-1"></i> Unggah Bukti Transaksi</span>
+                      <span id="tx-file-name-${p.id}" class="text-[8px] text-slate-500 italic max-w-[150px] truncate">Belum ada file</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <button type="button" onclick="document.getElementById('tx-file-input-${p.id}').click()" class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border border-white/5">Pilih File</button>
+                      <button type="button" onclick="window.uploadBuktiTransaksiSpesifik('${p.id}', '${alumniId}', '${x.nama.replace(/'/g, "\\'")}')" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">Upload</button>
+                    </div>
+                    <input type="file" id="tx-file-input-${p.id}" accept="image/*" class="hidden" onchange="document.getElementById('tx-file-name-${p.id}').textContent = this.files[0]?.name || 'Belum dipilih'" />
+                    <div id="tx-progress-container-${p.id}" class="hidden mt-2.5">
+                      <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                        <div id="tx-progress-bar-${p.id}" class="bg-indigo-500 h-full w-0 transition-all"></div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }
+
+              paymentsHtml += `
+                <div class="p-4 bg-white/5 border border-white/5 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded font-black uppercase">${p.kategori || 'Donasi'}</span>
+                      <span class="text-xs font-black text-white">${pNominal}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">Metode: <b>${p.payment_method || 'Manual'}</b> • Tanggal: <b>${pDate}</b></p>
+                    ${proofHtml}
+                  </div>
+                  <div class="flex flex-col items-start sm:items-end gap-1.5">
+                    <span class="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border ${s.badge} flex items-center gap-1">
+                      <i class="fas ${s.icon} text-[8px]"></i> ${s.text}
+                    </span>
+                  </div>
+                </div>
+              `;
+            });
+
+            paymentsHtml += `</div></div>`;
+          } else {
+            paymentsHtml = `
+              <div class="mt-4 pt-3 border-t border-white/5 text-center py-5 bg-white/5 rounded-2xl border border-white/5">
+                <i class="fas fa-heart-broken text-slate-500 text-xl mb-1.5 block"></i>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Belum Ada Transaksi Donasi</p>
+                <p class="text-[9px] text-slate-500 leading-normal mt-0.5">Kami tidak menemukan catatan donasi untuk akun Anda.</p>
+              </div>
+            `;
           }
 
-          html += `<div class="p-5 rounded-[2rem] border border-indigo-500/20 bg-[#0c0f24]/90 mb-4 text-left shadow-lg">
+          html += `<div class="p-5 rounded-[2.5rem] border border-indigo-500/20 bg-[#0c0f24]/90 mb-4 text-left shadow-lg">
             <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-white/5">
               <div>
                 <p class="font-black text-white text-sm">${_escHtml(x.nama)}</p>
@@ -1844,16 +1894,7 @@ try {
               </div>
               
               <!-- STATUS DONASI / PEMBAYARAN -->
-              <div class="p-4 rounded-2xl border ${payColorBorder} mt-2">
-                <div class="flex items-center gap-2.5 text-xs ${payColor}">
-                  <i class="fas ${payIcon} text-base flex-shrink-0"></i>
-                  <div>
-                    <span class="text-slate-500 font-bold block text-[10px] uppercase tracking-wider mb-0.5">Status Pembayaran Donasi</span>
-                    <span class="font-black uppercase text-xs">${payLabel}</span>
-                  </div>
-                </div>
-                ${payAmtHtml}
-              </div>
+              ${paymentsHtml}
             </div>
           </div>`;
         });
@@ -1875,6 +1916,95 @@ try {
       } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-search mr-1"></i> Cek';
+      }
+    };
+
+    window.uploadBuktiTransaksiSpesifik = async function(financeId, alumniId, nama) {
+      const fileInput = document.getElementById(`tx-file-input-${financeId}`);
+      const file = fileInput ? fileInput.files[0] : null;
+      if (!file) {
+        window.notify("Silakan pilih file bukti transfer terlebih dahulu.", "error");
+        return;
+      }
+
+      const progressContainer = document.getElementById(`tx-progress-container-${financeId}`);
+      const progressBar = document.getElementById(`tx-progress-bar-${financeId}`);
+      const uploadBox = document.getElementById(`tx-upload-box-${financeId}`);
+
+      if (progressContainer) progressContainer.classList.remove('hidden');
+      if (progressBar) progressBar.style.width = '20%';
+
+      try {
+        // 1. Kompresi gambar (menggunakan window.compressImage jika tersedia)
+        let compressedFile = file;
+        if (typeof window.compressImage === 'function') {
+          if (progressBar) progressBar.style.width = '40%';
+          compressedFile = await window.compressImage(file, 0.5);
+        }
+
+        // 2. Hitung SHA-256 hash dari file untuk bukti_hash
+        if (progressBar) progressBar.style.width = '60%';
+        let hash = '';
+        try {
+          const arrayBuffer = await compressedFile.arrayBuffer();
+          const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch(hashErr) {
+          console.error("Gagal menghitung hash berkas:", hashErr);
+        }
+
+        // 3. Upload ke Cloudinary
+        if (progressBar) progressBar.style.width = '80%';
+        
+        let uploadFn = window.uploadToCloudinary;
+        if (!uploadFn) {
+          throw new Error("Fungsi uploadToCloudinary tidak ditemukan.");
+        }
+        
+        const secureUrl = await uploadFn(compressedFile);
+        if (!secureUrl) {
+          throw new Error("Gagal mengunggah gambar ke server media.");
+        }
+
+        if (progressBar) progressBar.style.width = '95%';
+
+        // 4. Update data di Firestore
+        const db = _db || getFirestore(getApps()[0]);
+        const txRef = doc(db, 'finance', financeId);
+        await updateDoc(txRef, {
+          bukti_url: secureUrl,
+          bukti_hash: hash,
+          updated_at: new Date().toISOString()
+        });
+
+        // 5. Update sync_state untuk invalidasi cache dashboard
+        try {
+          const syncRef = doc(db, "settings", "sync_state");
+          await setDoc(syncRef, { finance_version: Date.now().toString() }, { merge: true });
+        } catch(syncErr) {
+          console.error('[SYNC] Gagal memperbarui sync_state:', syncErr);
+        }
+
+        if (progressBar) progressBar.style.width = '100%';
+        window.notify("Bukti transfer berhasil diunggah!", "success");
+
+        // Ganti tampilan uploadBox menjadi link bukti transfer sukses secara visual
+        if (uploadBox) {
+          uploadBox.innerHTML = `
+            <div class="text-xs text-emerald-400 font-bold flex items-center gap-1 mt-1">
+              <i class="fas fa-check-circle"></i> Berhasil diunggah!
+            </div>
+            <a href="${secureUrl}" target="_blank" class="inline-flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300 hover:underline font-extrabold mt-1.5">
+              <i class="fas fa-image"></i> Lihat Bukti Transfer
+            </a>
+          `;
+        }
+      } catch (err) {
+        console.error(err);
+        window.notify("Terjadi kesalahan: " + err.message, "error");
+        if (progressContainer) progressContainer.classList.add('hidden');
+        if (progressBar) progressBar.style.width = '0%';
       }
     };
 
@@ -2140,6 +2270,35 @@ try {
         btn.innerHTML = origText;
       }
     };
+
+    // ── Auto-fill dan auto-cek status donasi dari parameter URL ?wa=... ──
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const waParam = urlParams.get('wa');
+      if (waParam) {
+        const cleaned = waParam.startsWith('62') ? waParam.slice(2) : waParam;
+        const statusInput = document.getElementById('cek-status-input');
+        if (statusInput) {
+          statusInput.value = cleaned;
+          if (typeof window.formatWAInputCekStatus === 'function') {
+            window.formatWAInputCekStatus(statusInput);
+          }
+          // Jalankan pengecekan otomatis setelah inisialisasi Firebase selesai
+          setTimeout(() => {
+            if (typeof window.cekStatusPembayaran === 'function') {
+              window.cekStatusPembayaran();
+              // Scroll ke hasil pencarian
+              const targetEl = document.getElementById('cek-status-result');
+              if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }
+          }, 800);
+        }
+      }
+    } catch (e) {
+      console.warn("Gagal auto-cek parameter wa:", e);
+    }
   </script>
   <script src="js/address-extractor.js"></script>
   <script src="js/transitions.js"></script>

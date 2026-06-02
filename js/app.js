@@ -1985,13 +1985,33 @@ window.renderApproveUsers = () => {
 window.approveUserRegistration = async (uid) => {
   window.toggleLoading(true, "Menyetujui Pengguna...");
   try {
+    const userDoc = await db.collection("users").doc(uid).get();
+    if (!userDoc.exists) {
+      throw new Error("Pengguna tidak ditemukan.");
+    }
+    const userData = userDoc.data();
+
     await db.collection("users").doc(uid).update({ role: "user" });
     window.notify("Pendaftaran pengguna berhasil disetujui!", "success");
+
+    // Kirim WhatsApp otomatis jika nomor WhatsApp tersedia
+    if (userData.nowa) {
+      const cleanPhone = window.normalizePhoneNumber ? window.normalizePhoneNumber(userData.nowa) : userData.nowa.replace(/\D/g, '');
+      const msg = `*AKTIVASI AKUN PANITIA REUNI AL-FATAH* 🔓\n\nHalo *${userData.nama}*,\n\nSelamat! Akun panitia Anda telah disetujui oleh Admin Utama.\n\nSekarang Anda dapat login ke Dashboard Portal Panitia menggunakan:\n- Email: *${userData.email}*\n- PIN/Password: *(PIN yang telah Anda daftarkan)*\n\nSilakan masuk melalui tautan berikut:\n👉 https://phajar.github.io/Reuni/login.html\n\nMari kita bersinergi bersama untuk menyukseskan Reuni Akbar Pondok Pesantren AL-FATAH! 🤝\n\n_Pesan ini dikirim otomatis oleh Sistem Reuni Al-Fatah._`;
+
+      if (window.sendWhatsAppInternal) {
+        await window.sendWhatsAppInternal(cleanPhone, msg, null, 'broadcast');
+        console.log(`[WA] Notifikasi aktivasi terkirim ke ${cleanPhone}`);
+      } else {
+        console.warn("[WA] Fungsi sendWhatsAppInternal tidak ditemukan.");
+      }
+    }
+
     if (window.renderApproveUsers) window.renderApproveUsers();
     if (window.renderUsers) window.renderUsers();
   } catch (e) {
     console.error(e);
-    window.notify("Gagal menyetujui pengguna", "error");
+    window.notify("Gagal menyetujui pengguna: " + e.message, "error");
   } finally {
     window.toggleLoading(false);
   }
