@@ -870,6 +870,7 @@
 
       document.getElementById('edit-id').value = r.id;
       document.getElementById('edit-nama').value = r.nama || '';
+      document.getElementById('edit-nowa').value = r.nowa || '';
       document.getElementById('edit-angkatan').value = r.angkatan || '';
       document.getElementById('edit-lembaga').value = r.lembaga || 'MA';
       document.getElementById('edit-alamat').value = r.alamat || '';
@@ -915,6 +916,7 @@
       e.preventDefault();
       const id = document.getElementById('edit-id').value;
       const nama = document.getElementById('edit-nama').value.trim();
+      const nowa = document.getElementById('edit-nowa').value.trim();
       const angkatan = document.getElementById('edit-angkatan').value.trim();
       const lembaga = document.getElementById('edit-lembaga').value;
       const alamat = document.getElementById('edit-alamat').value.trim();
@@ -927,6 +929,12 @@
       if (nama.length < 3) {
         notify('Nama lengkap minimal 3 karakter!', 'error');
         document.getElementById('edit-nama').focus();
+        return;
+      }
+      const finalNowa = normalizeWA(nowa);
+      if (!finalNowa || finalNowa.length < 9) {
+        notify('Nomor WhatsApp tidak valid!', 'error');
+        document.getElementById('edit-nowa').focus();
         return;
       }
       const angkVal = parseInt(angkatan);
@@ -955,6 +963,7 @@
         // Simpan perubahan ke Firestore
         await updateDoc(alumniRef, {
           nama: finalNama,
+          nowa: finalNowa,
           angkatan: finalAngkatan,
           lembaga,
           alamat,
@@ -1056,6 +1065,11 @@
         <div>
           <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Nama Lengkap</label>
           <input type="text" id="edit-nama" class="input-field" required />
+        </div>
+        
+        <div>
+          <label class="block text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1.5">Nomor WhatsApp (Format: 628xxx)</label>
+          <input type="text" id="edit-nowa" class="input-field" required placeholder="Contoh: 628123456789" />
         </div>
         
         <div class="grid grid-cols-2 gap-3">
