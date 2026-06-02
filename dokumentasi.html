@@ -310,11 +310,20 @@
         if (extLink) extLink.href = `https://drive.google.com/drive/folders/${folderId}`;
 
         try {
-          // Menggunakan CORS proxy allorigins publik untuk mengambil data HTML folder tersemat secara aman
-          const corsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://drive.google.com/embeddedfolderview?id=' + folderId + '#grid')}`;
-          const response = await fetch(corsUrl);
-          if (!response.ok) throw new Error("Gagal mengambil data dari Google Drive.");
-          const html = await response.text();
+          // Menggunakan CORS proxy ganda (AllOrigins & CorsProxy.io sebagai cadangan) untuk menjamin pemuatan andal
+          let html = "";
+          try {
+            const corsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://drive.google.com/embeddedfolderview?id=' + folderId + '#grid')}`;
+            const response = await fetch(corsUrl);
+            if (!response.ok) throw new Error("AllOrigins failed");
+            html = await response.text();
+          } catch (firstErr) {
+            console.warn("AllOrigins gagal, mencoba proxy cadangan CorsProxy.io:", firstErr);
+            const backupCorsUrl = `https://corsproxy.io/?${encodeURIComponent('https://drive.google.com/embeddedfolderview?id=' + folderId + '#grid')}`;
+            const response = await fetch(backupCorsUrl);
+            if (!response.ok) throw new Error("Kedua proxy CORS gagal memproses permintaan.");
+            html = await response.text();
+          }
 
           // Ekstrak berkas dari HTML menggunakan pencocokan regex
           const pattern = /class="flip-entry"\s+id="entry-([^"]+)"[\s\S]*?class="flip-entry-title">([^<]+)<\/div>/g;

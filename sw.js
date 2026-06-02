@@ -72,7 +72,9 @@ self.addEventListener('fetch', (event) => {
     event.request.method !== 'GET' ||
     requestUrl.origin.includes('firestore') ||
     requestUrl.origin.includes('cloudinary') ||
-    requestUrl.origin.includes('emsifa')
+    requestUrl.origin.includes('emsifa') ||
+    requestUrl.origin.includes('allorigins') ||
+    requestUrl.origin.includes('corsproxy')
   ) {
     return;
   }
