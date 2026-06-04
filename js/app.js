@@ -4,6 +4,13 @@
 window.APP_START_TIME = Date.now();
 
 // ==========================================
+// DEBUG FLAG — Set true hanya saat development lokal
+// Matikan (false) sebelum deploy ke produksi!
+// ==========================================
+window.APP_DEBUG = false;
+const _dbg = (...args) => { if (window.APP_DEBUG) console.log(...args); };
+
+// ==========================================
 // STATE GLOBAL & FUNGSI UTILITAS
 // ==========================================
 window.STATE = {
@@ -187,6 +194,7 @@ window.populateEventSettingsForm = () => {
   const setEventTimeEl = document.getElementById("set-event-time");
   const setEventGuestEl = document.getElementById("set-event-guest");
   const setEventWaHumasEl = document.getElementById("set-event-wa-humas");
+  const setEventEmailPanitiaEl = document.getElementById("set-event-email-panitia");
   const apiBendaharaEl = document.getElementById("api-access-bendahara");
   const apiSekretarisEl = document.getElementById("api-access-sekretaris");
   const setEventWaDisabledEl = document.getElementById("set-event-wa-disabled");
@@ -200,6 +208,7 @@ window.populateEventSettingsForm = () => {
       if (setEventTimeEl) setEventTimeEl.value = window.STATE.eventTime || "";
       if (setEventGuestEl) setEventGuestEl.value = window.STATE.eventGuest || "";
       if (setEventWaHumasEl) setEventWaHumasEl.value = window.STATE.eventWaHumas || "";
+      if (setEventEmailPanitiaEl) setEventEmailPanitiaEl.value = (window.STATE.eventInfo && window.STATE.eventInfo.email_panitia) || "";
       
       if (setEventWaDisabledEl) {
           setEventWaDisabledEl.checked = window.STATE.eventInfo && window.STATE.eventInfo.wa_disabled === true;
@@ -966,6 +975,17 @@ auth.onAuthStateChanged(async (user) => {
 // ==========================================
 window.processCombinedData = () => {
   try {
+    _dbg("[DEBUG] processCombinedData called, rawFinance count:", window.STATE.rawFinance.length);
+    const financeCounts = {};
+    window.STATE.rawFinance.forEach(f => {
+      if (f) {
+        const key = `${f.id || ''}_${f.nama_pembayar || ''}_${f.nominal || ''}_${f.tanggal || ''}`;
+        financeCounts[key] = (financeCounts[key] || 0) + 1;
+        if (financeCounts[key] > 1) {
+          console.warn("[DEBUG] Duplicate transaction detected in rawFinance:", f);
+        }
+      }
+    });
     window.STATE.pendingFinance = window.STATE.rawFinance.filter(
       (f) => f.status === "pending_payment",
     );
@@ -1004,7 +1024,7 @@ window.processCombinedData = () => {
       .map((a) => {
         const totalD = window.STATE.finance
           .filter((f) => f.ref_alumni_id === a.id && f.status === "pemasukan")
-          .reduce((s, c) => s + (Number(c.nominal) || 0), 0);
+          .reduce((s, c) => s + (Number(c.nominal_original || c.nominal) || 0), 0);
         return { ...a, totalDonasi: totalD };
       });
 
@@ -1047,30 +1067,23 @@ window.processCombinedData = () => {
       window.sortFinance(window.sortConfig.finance.key, true);
     } catch (e) {}
 
-    const selectAlumni = document.getElementById("fin-ref-select");
-    if (selectAlumni) {
-      const currentVal = selectAlumni.value;
-      selectAlumni.innerHTML =
-        '<option value="">-- Pilih Nama Alumni --</option>' +
-        window.STATE.alumni
-          .map(
-            (a) =>
-              `<option value="${window.escapeHtml(a.id)}" data-name="${window.escapeHtml(a.nama)}">${window.escapeHtml(a.nama)} (${window.escapeHtml(a.angkatan)})</option>`,
-          )
-          .join("");
-      selectAlumni.value = currentVal;
+    const listAlumniFin = document.getElementById("fin-ref-list");
+    if (listAlumniFin) {
+      listAlumniFin.innerHTML = window.STATE.alumni
+        .map(
+          (a) =>
+            `<option value="${window.escapeHtml(a.nama)} (${window.escapeHtml(a.angkatan || '-')})" data-id="${window.escapeHtml(a.id)}" data-name="${window.escapeHtml(a.nama)}" data-email="${window.escapeHtml(a.email || '')}"></option>`,
+        )
+        .join("");
     }
-    const selectLogistik = document.getElementById("log-ref-select");
-    if (selectLogistik) {
-      const currentVal = selectLogistik.value;
-      selectLogistik.innerHTML =
-        '<option value="">-- Pilih Nama Alumni --</option>' +
-        window.STATE.alumni
-          .map(
-            (a) => `<option value="${window.escapeHtml(a.id)}">${window.escapeHtml(a.nama)} (${window.escapeHtml(a.angkatan)})</option>`,
-          )
-          .join("");
-      selectLogistik.value = currentVal;
+    const listAlumniLog = document.getElementById("log-ref-list");
+    if (listAlumniLog) {
+      listAlumniLog.innerHTML = window.STATE.alumni
+        .map(
+          (a) =>
+            `<option value="${window.escapeHtml(a.nama)} (${window.escapeHtml(a.angkatan || '-')})" data-id="${window.escapeHtml(a.id)}" data-name="${window.escapeHtml(a.nama)}"></option>`,
+        )
+        .join("");
     }
     try {
       if (typeof window.updateAlumniMetrics === "function") window.updateAlumniMetrics();
@@ -1208,6 +1221,9 @@ window.renderAllTabs = () => {
 };
 
 window.loadDataRealtime = () => {
+  if (window.STATE.listenersRegistered) return;
+  window.STATE.listenersRegistered = true;
+
   db.collection("settings")
     .doc("event_info")
     .onSnapshot((docSnap) => {
@@ -1455,8 +1471,13 @@ window.loadDataRealtime = () => {
   };
 
   // --- CLIENT-SIDE VERSION-BASED CACHING SYNC SYSTEM ---
+  window.STATE.activeAlumniSyncVer = null;
+  window.STATE.activeFinanceSyncVer = null;
+
+  _dbg("[DEBUG] Registering sync_state onSnapshot listener");
   db.collection("settings").doc("sync_state").onSnapshot(async (doc) => {
     const syncData = doc.exists ? doc.data() : { alumni_version: "1", finance_version: "1" };
+    _dbg("[DEBUG] sync_state onSnapshot fired, data:", syncData);
     
     const localAlumniVer = localStorage.getItem('alumni_version');
     const localFinanceVer = localStorage.getItem('finance_version');
@@ -1468,45 +1489,69 @@ window.loadDataRealtime = () => {
         if (stored) cachedAlumni = JSON.parse(stored);
     } catch(e) {}
 
-    if (localAlumniVer !== syncData.alumni_version || cachedAlumni.length === 0) {
-
-        try {
-            const snap = await db.collection("alumni").get();
-            const freshAlumni = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            
-            // Jalankan deteksi notifikasi lokal dengan membandingkan cache lama
-            if (cachedAlumni.length > 0) {
-                const oldIds = new Set(cachedAlumni.map(a => a.id));
-                freshAlumni.forEach(item => {
-                    if (!oldIds.has(item.id) && item.status === "pending") {
-                        const createdAt = item.created_at ? (item.created_at.toDate ? item.created_at.toDate().getTime() : new Date(item.created_at).getTime()) : null;
-                        if (createdAt && createdAt > window.APP_START_TIME) {
-                            window.triggerLocalNotification(
-                              "🔔 Alumni Baru Menunggu Verifikasi",
-                              `${item.nama || "Alumni Baru"} (${item.angkatan || ""}) mendaftar dan menunggu verifikasi.`
-                            );
-                        }
+    const targetAlumniVer = syncData.alumni_version || "1";
+    if (localAlumniVer !== targetAlumniVer || cachedAlumni.length === 0) {
+        if (window.STATE.activeAlumniSyncVer !== targetAlumniVer) {
+            window.STATE.activeAlumniSyncVer = targetAlumniVer;
+            try {
+                const snap = await db.collection("alumni").get();
+                let freshAlumni = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                
+                // Deduplicate freshAlumni before notification check and saving
+                const seenAlumniIds = new Set();
+                const seenAlumniContents = new Set();
+                freshAlumni = freshAlumni.filter(a => {
+                    if (!a) return false;
+                    if (a.id) {
+                        if (seenAlumniIds.has(a.id)) return false;
+                        seenAlumniIds.add(a.id);
                     }
+                    const contentKey = `${a.nama || ''}_${a.angkatan || ''}_${a.nowa || ''}_${a.created_at || ''}`;
+                    if (seenAlumniContents.has(contentKey)) return false;
+                    seenAlumniContents.add(contentKey);
+                    return true;
                 });
-            }
+                
+                // Jalankan deteksi notifikasi lokal dengan membandingkan cache lama
+                if (cachedAlumni.length > 0) {
+                    const oldIds = new Set(cachedAlumni.map(a => a.id));
+                    const oldContents = new Set(cachedAlumni.map(a => 
+                        `${a.nama || ''}_${a.angkatan || ''}_${a.nowa || ''}_${a.created_at || ''}`
+                    ));
+                    freshAlumni.forEach(item => {
+                        const contentKey = `${item.nama || ''}_${item.angkatan || ''}_${item.nowa || ''}_${item.created_at || ''}`;
+                        if (!oldIds.has(item.id) && !oldContents.has(contentKey) && item.status === "pending") {
+                            const createdAt = item.created_at ? (item.created_at.toDate ? item.created_at.toDate().getTime() : new Date(item.created_at).getTime()) : null;
+                            if (createdAt && createdAt > window.APP_START_TIME) {
+                                _dbg("[DEBUG] Triggering notification for alumni item:", item.id, item.nama);
+                                window.triggerLocalNotification(
+                                  "🔔 Alumni Baru Menunggu Verifikasi",
+                                  `${item.nama || "Alumni Baru"} (${item.angkatan || ""}) mendaftar dan menunggu verifikasi.`
+                                );
+                            }
+                        }
+                    });
+                }
 
-            localStorage.setItem('cached_alumni', JSON.stringify(freshAlumni));
-            localStorage.setItem('alumni_version', syncData.alumni_version || "1");
-            window.STATE.rawAlumni = freshAlumni;
-            
-            // Auto trigger Cloudinary uploads
-            if (typeof window.triggerAlumniCloudinaryUpload === 'function') {
-                window.triggerAlumniCloudinaryUpload();
+                localStorage.setItem('cached_alumni', JSON.stringify(freshAlumni));
+                localStorage.setItem('alumni_version', targetAlumniVer);
+                window.STATE.rawAlumni = freshAlumni;
+                
+                // Auto trigger Cloudinary uploads
+                if (typeof window.triggerAlumniCloudinaryUpload === 'function') {
+                    window.triggerAlumniCloudinaryUpload();
+                }
+                if (typeof window.triggerAlumniAllCloudinaryUpload === 'function') {
+                    window.triggerAlumniAllCloudinaryUpload();
+                }
+            } catch (err) {
+                console.error("Gagal sinkronisasi alumni:", err);
+                window.STATE.rawAlumni = cachedAlumni;
             }
-            if (typeof window.triggerAlumniAllCloudinaryUpload === 'function') {
-                window.triggerAlumniAllCloudinaryUpload();
-            }
-        } catch (err) {
-            console.error("Gagal sinkronisasi alumni:", err);
-            window.STATE.rawAlumni = cachedAlumni;
+        } else {
+            window.STATE.rawAlumni = window.STATE.rawAlumni || cachedAlumni;
         }
     } else {
-
         window.STATE.rawAlumni = cachedAlumni;
     }
 
@@ -1517,44 +1562,121 @@ window.loadDataRealtime = () => {
         if (stored) cachedFinance = JSON.parse(stored);
     } catch(e) {}
 
-    if (localFinanceVer !== syncData.finance_version || cachedFinance.length === 0) {
-
-        try {
-            const snap = await db.collection("finance").get();
-            const freshFinance = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            
-            // Jalankan deteksi notifikasi lokal dengan membandingkan cache lama
-            if (cachedFinance.length > 0) {
-                const oldIds = new Set(cachedFinance.map(f => f.id));
-                freshFinance.forEach(item => {
-                    if (!oldIds.has(item.id) && item.status === "pemasukan") {
-                        const createdAt = item.created_at ? (item.created_at.toDate ? item.created_at.toDate().getTime() : new Date(item.created_at).getTime()) : null;
-                        if (createdAt && createdAt > window.APP_START_TIME) {
-                            const nominalFormatted = window.formatRupiah(Number(item.nominal) || 0);
-                            window.triggerLocalNotification(
-                              "💰 Donasi/Pemasukan Baru",
-                              `${item.keterangan || item.nama_pembayar || "Donasi baru"} sebesar ${nominalFormatted} telah diterima.`
-                            );
-                        }
+    const targetFinanceVer = syncData.finance_version || "1";
+    if (localFinanceVer !== targetFinanceVer || cachedFinance.length === 0) {
+        if (window.STATE.activeFinanceSyncVer !== targetFinanceVer) {
+            window.STATE.activeFinanceSyncVer = targetFinanceVer;
+            try {
+                const snap = await db.collection("finance").get();
+                let freshFinance = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                
+                // Deduplicate freshFinance before notification check and saving
+                const seenFinanceIds = new Set();
+                const seenFinanceContents = new Set();
+                freshFinance = freshFinance.filter(f => {
+                    if (!f) return false;
+                    if (f.id) {
+                        if (seenFinanceIds.has(f.id)) return false;
+                        seenFinanceIds.add(f.id);
                     }
+                    const contentKey = `${f.nama_pembayar || ''}_${f.nominal || ''}_${f.tanggal || ''}_${f.created_at || ''}`;
+                    if (seenFinanceContents.has(contentKey)) return false;
+                    seenFinanceContents.add(contentKey);
+                    return true;
                 });
-            }
+                
+                // Jalankan deteksi notifikasi lokal dengan membandingkan cache lama
+                if (cachedFinance.length > 0) {
+                    const oldIds = new Set(cachedFinance.map(f => f.id));
+                    const oldContents = new Set(cachedFinance.map(f => 
+                        `${f.nama_pembayar || ''}_${f.nominal || ''}_${f.tanggal || ''}_${f.created_at || ''}`
+                    ));
+                    freshFinance.forEach(item => {
+                        const contentKey = `${item.nama_pembayar || ''}_${item.nominal || ''}_${item.tanggal || ''}_${item.created_at || ''}`;
+                        if (!oldIds.has(item.id) && !oldContents.has(contentKey) && item.status === "pemasukan") {
+                            const createdAt = item.created_at ? (item.created_at.toDate ? item.created_at.toDate().getTime() : new Date(item.created_at).getTime()) : null;
+                            if (createdAt && createdAt > window.APP_START_TIME) {
+                                const nominalFormatted = window.formatRupiah(Number(item.nominal) || 0);
+                                _dbg("[DEBUG] Triggering notification for finance item:", item.id, item.nama_pembayar, item.nominal);
+                                window.triggerLocalNotification(
+                                  "💰 Donasi/Pemasukan Baru",
+                                  `${item.keterangan || item.nama_pembayar || "Donasi baru"} sebesar ${nominalFormatted} telah diterima.`
+                                );
+                            }
+                        }
+                    });
+                }
 
-            localStorage.setItem('cached_finance', JSON.stringify(freshFinance));
-            localStorage.setItem('finance_version', syncData.finance_version || "1");
-            window.STATE.rawFinance = freshFinance;
+                localStorage.setItem('cached_finance', JSON.stringify(freshFinance));
+                localStorage.setItem('finance_version', targetFinanceVer);
+                window.STATE.rawFinance = freshFinance;
 
-            // Auto trigger Cloudinary upload
-            if (typeof window.triggerFinanceCloudinaryUpload === 'function') {
-                window.triggerFinanceCloudinaryUpload();
+                // Auto trigger Cloudinary upload
+                if (typeof window.triggerFinanceCloudinaryUpload === 'function') {
+                    window.triggerFinanceCloudinaryUpload();
+                }
+            } catch (err) {
+                console.error("Gagal sinkronisasi finance:", err);
+                window.STATE.rawFinance = cachedFinance;
             }
-        } catch (err) {
-            console.error("Gagal sinkronisasi finance:", err);
-            window.STATE.rawFinance = cachedFinance;
+        } else {
+            window.STATE.rawFinance = window.STATE.rawFinance || cachedFinance;
         }
     } else {
-
         window.STATE.rawFinance = cachedFinance;
+    }
+
+    // --- AUTO-CLEANUP CACHE DUPLICATES ---
+    // Sanitasi rawAlumni untuk memastikan tidak ada ID ganda dan tidak ada duplikat konten
+    if (Array.isArray(window.STATE.rawAlumni)) {
+        const seenIds = new Set();
+        const seenContents = new Set();
+        const initialLen = window.STATE.rawAlumni.length;
+        window.STATE.rawAlumni = window.STATE.rawAlumni.filter(a => {
+            if (!a) return false;
+            // 1. Cek ID ganda
+            if (a.id) {
+                if (seenIds.has(a.id)) return false;
+                seenIds.add(a.id);
+            }
+            // 2. Cek duplikat konten (nama, angkatan, nowa, created_at)
+            const contentKey = `${a.nama || ''}_${a.angkatan || ''}_${a.nowa || ''}_${a.created_at || ''}`;
+            if (seenContents.has(contentKey)) {
+                console.warn("[DEBUG] Duplicate alumnus by content fields discarded:", a);
+                return false;
+            }
+            seenContents.add(contentKey);
+            return true;
+        });
+        if (window.STATE.rawAlumni.length !== initialLen) {
+            localStorage.setItem('cached_alumni', JSON.stringify(window.STATE.rawAlumni));
+        }
+    }
+
+    // Sanitasi rawFinance untuk memastikan tidak ada ID ganda dan tidak ada duplikat konten
+    if (Array.isArray(window.STATE.rawFinance)) {
+        const seenIds = new Set();
+        const seenContents = new Set();
+        const initialLen = window.STATE.rawFinance.length;
+        window.STATE.rawFinance = window.STATE.rawFinance.filter(f => {
+            if (!f) return false;
+            // 1. Cek ID ganda
+            if (f.id) {
+                if (seenIds.has(f.id)) return false;
+                seenIds.add(f.id);
+            }
+            // 2. Cek duplikat konten (nama_pembayar, nominal, tanggal, created_at)
+            const contentKey = `${f.nama_pembayar || ''}_${f.nominal || ''}_${f.tanggal || ''}_${f.created_at || ''}`;
+            if (seenContents.has(contentKey)) {
+                console.warn("[DEBUG] Duplicate transaction by content fields discarded:", f);
+                return false;
+            }
+            seenContents.add(contentKey);
+            return true;
+        });
+        if (window.STATE.rawFinance.length !== initialLen) {
+            localStorage.setItem('cached_finance', JSON.stringify(window.STATE.rawFinance));
+        }
     }
 
     window.processCombinedData();
@@ -3330,7 +3452,8 @@ window.executeBulkEditConfirmed = async () => {
       window.processCombinedData();
     }
 
-    await window.incrementSyncVersion('alumni');
+    // Automatically handled by firebase-config.js patch:
+    // await window.incrementSyncVersion('alumni');
     
     let activityDetails = `Mengubah massal ${idsToUpdate.length} data alumni.`;
     if (checkedAny) activityDetails += ` Bidang diubah: ${Object.keys(updates).join(", ")}.`;
@@ -3627,7 +3750,11 @@ window.renderFinanceTable = () => {
           ? f.tanggal.split(",")[0]
           : f.tanggal.toDate().toLocaleDateString("id-ID")
         : "-";
-      return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-500">${dStr}</td><td class="p-5"><div class="font-bold">${f.nama_pembayar}</div><div class="text-[8px] text-indigo-500 font-bold uppercase tracking-wider">${f.kategori}</div></td><td class="p-5 font-black ${f.status === "pengeluaran" ? "text-red-400" : "text-emerald-400"}">${f.status === "pengeluaran" ? "-" : "+"}${window.formatRupiah(f.nominal)}</td><td class="p-5 text-center"><div class="flex justify-center">${act}</div></td></tr>`;
+      let nominalHTML = `${f.status === "pengeluaran" ? "-" : "+"}${window.formatRupiah(f.nominal)}`;
+      if (f.nominal_original && Number(f.nominal_original) !== Number(f.nominal)) {
+        nominalHTML += `<div class="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">MDR: -${window.formatRupiah(Number(f.nominal_original) - Number(f.nominal))} (${window.formatRupiah(f.nominal_original)})</div>`;
+      }
+      return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-500">${dStr}</td><td class="p-5"><div class="font-bold">${f.nama_pembayar}</div><div class="text-[8px] text-indigo-500 font-bold uppercase tracking-wider">${f.kategori}</div></td><td class="p-5 font-black ${f.status === "pengeluaran" ? "text-red-400" : "text-emerald-400"}">${nominalHTML}</td><td class="p-5 text-center"><div class="flex justify-center">${act}</div></td></tr>`;
     })
     .join("");
 };
@@ -3649,13 +3776,14 @@ window.renderRequestTable = () => {
         
         let remindBtn = "";
         if (nowa) {
-            remindBtn = `<button onclick="window.sendPaymentReminder('${nowa}', '${req.nama_pembayar.replace(/'/g, "\\'")}', ${req.nominal}, '${angkatan}')" class="bg-amber-600 hover:bg-amber-500 px-3 py-2 rounded-lg text-[10px] font-bold text-white shadow-lg mr-1" title="Kirim Pengingat WA"><i class="fab fa-whatsapp"></i> Ingatkan</button>`;
+            const remindNominal = req.nominal_original || req.nominal;
+            remindBtn = `<button onclick="window.sendPaymentReminder('${nowa}', '${req.nama_pembayar.replace(/'/g, "\\'")}', '${remindNominal}', '${angkatan}')" class="bg-amber-600 hover:bg-amber-500 px-3 py-2 rounded-lg text-[10px] font-bold text-white shadow-lg mr-1" title="Kirim Pengingat WA"><i class="fab fa-whatsapp"></i> Ingatkan</button>`;
         }
 
         let act = canManageFinance
           ? `${remindBtn}<button onclick="window.openFinanceVerificationModal('${req.id}')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg text-[10px] font-bold text-white shadow-lg"><i class="fas fa-shield-alt"></i> Verifikasi</button>`
           : `<span class="text-amber-500 text-[9px]"><i class="fas fa-lock"></i> Hak Bendahara</span>`;
-        return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-400 whitespace-nowrap">${req.tanggal}</td><td class="p-5 font-bold text-emerald-400">${req.nama_pembayar}</td><td class="p-5 text-right font-black text-white whitespace-nowrap">${window.formatRupiah(req.nominal)}</td><td class="p-5 text-center"><button onclick="window.openFinanceVerificationModal('${req.id}')" class="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 text-[10px] font-bold bg-indigo-500/10 px-3 py-2 rounded-lg whitespace-nowrap"><i class="fas fa-shield-alt"></i> Tinjau Struk</button></td><td class="p-5 text-center whitespace-nowrap">${act}</td></tr>`;
+        return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-400 whitespace-nowrap">${req.tanggal}</td><td class="p-5 font-bold text-emerald-400">${req.nama_pembayar}</td><td class="p-5 text-right font-black text-white whitespace-nowrap">${window.formatRupiah(req.nominal_original || req.nominal)}</td><td class="p-5 text-center"><button onclick="window.openFinanceVerificationModal('${req.id}')" class="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 text-[10px] font-bold bg-indigo-500/10 px-3 py-2 rounded-lg whitespace-nowrap"><i class="fas fa-shield-alt"></i> Tinjau Struk</button></td><td class="p-5 text-center whitespace-nowrap">${act}</td></tr>`;
       })
       .join("");
 
@@ -3886,7 +4014,8 @@ document.getElementById("form-alumni").onsubmit = async (e) => {
       // ================================================
       await db.collection("alumni").doc(id).update(d);
       await window.logActivity("alumni_edit", `Mengubah data alumni ${d.nama} (${d.angkatan})`);
-      await window.incrementSyncVersion('alumni');
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('alumni');
       
       // Update local state instantly
       if (Array.isArray(window.STATE.rawAlumni)) {
@@ -3898,14 +4027,10 @@ document.getElementById("form-alumni").onsubmit = async (e) => {
       d.created_at = new Date().toISOString();
       const res = await db.collection("alumni").add(d);
       await window.logActivity("alumni_add", `Menambahkan alumni baru ${d.nama} (${d.angkatan})`);
-      await window.incrementSyncVersion('alumni');
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('alumni');
       
-      // Update local state instantly
-      if (Array.isArray(window.STATE.rawAlumni)) {
-        window.STATE.rawAlumni.push({ id: res.id, ...d });
-        localStorage.setItem('cached_alumni', JSON.stringify(window.STATE.rawAlumni));
-        window.processCombinedData();
-      }
+      // Local state will be updated via sync version listener
     }
     window.closeModal("modal-alumni");
     window.notify("Tersimpan");
@@ -3936,7 +4061,18 @@ document.getElementById("form-finance").onsubmit = async (e) => {
 
   window.toggleLoading(true, "Menyimpan Transaksi...");
   d.nama_pembayar = keterangan;
-  d.nominal = nominal;
+  
+  const originalNominal = nominal;
+  if (d.payment_method === "QRIS") {
+    const fee = originalNominal * 0.007;
+    d.nominal = originalNominal - fee;
+    d.nominal_original = originalNominal;
+    d.mdr_fee = fee;
+  } else {
+    d.nominal = originalNominal;
+    d.nominal_original = originalNominal;
+    d.mdr_fee = 0;
+  }
   const id = d.id;
   delete d.id;
   const fileInput = document.getElementById("fin-file");
@@ -3963,7 +4099,8 @@ document.getElementById("form-finance").onsubmit = async (e) => {
      if (id) {
       await db.collection("finance").doc(id).update(d);
       await window.logActivity("finance_edit", `Mengubah transaksi keuangan "${d.nama_pembayar}" sebesar ${window.formatRupiah(d.nominal)}`);
-      await window.incrementSyncVersion('finance');
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('finance');
       
       // Update local state instantly
       if (Array.isArray(window.STATE.rawFinance)) {
@@ -3975,14 +4112,10 @@ document.getElementById("form-finance").onsubmit = async (e) => {
       d.created_at = new Date().toISOString();
       const res = await db.collection("finance").add(d);
       await window.logActivity("finance_add", `Menambahkan transaksi keuangan baru "${d.nama_pembayar}" sebesar ${window.formatRupiah(d.nominal)}`);
-      await window.incrementSyncVersion('finance');
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('finance');
       
-      // Update local state instantly
-      if (Array.isArray(window.STATE.rawFinance)) {
-        window.STATE.rawFinance.push({ id: res.id, ...d });
-        localStorage.setItem('cached_finance', JSON.stringify(window.STATE.rawFinance));
-        window.processCombinedData();
-      }
+      // Local state will be updated via sync version listener
       
       if (window.sendReceiptNotification) {
         window.sendReceiptNotification({ id: res.id, ...d });
@@ -4029,7 +4162,8 @@ document.getElementById("form-rab").onsubmit = async (e) => {
     if (id) {
       await db.collection("finance").doc(id).update(d);
       await window.logActivity("rab_edit", `Mengubah RAB "${d.nama_pembayar}" menjadi ${window.formatRupiah(d.nominal)}`);
-      await window.incrementSyncVersion('finance');
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('finance');
       
       // Update local state instantly
       if (Array.isArray(window.STATE.rawFinance)) {
@@ -4040,14 +4174,10 @@ document.getElementById("form-rab").onsubmit = async (e) => {
     } else {
       const res = await db.collection("finance").add(d);
       await window.logActivity("rab_add", `Menambahkan RAB baru "${d.nama_pembayar}" sebesar ${window.formatRupiah(d.nominal)}`);
-      await window.incrementSyncVersion('finance');
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('finance');
       
-      // Update local state instantly
-      if (Array.isArray(window.STATE.rawFinance)) {
-        window.STATE.rawFinance.push({ id: res.id, ...d });
-        localStorage.setItem('cached_finance', JSON.stringify(window.STATE.rawFinance));
-        window.processCombinedData();
-      }
+      // Local state will be updated via sync version listener
     }
     window.closeModal("modal-rab");
     window.notify("Tersimpan");
@@ -4069,7 +4199,8 @@ window.toggleRABStatus = async (id, isPaid) => {
     if (!isPaid) d.tanggal = new Date().toLocaleString("id-ID");
     await db.collection("finance").doc(id).update(d);
     await window.logActivity("rab_toggle", `${isPaid ? 'Membatalkan pembayaran' : 'Membayar'} RAB ID ${id}`);
-    await window.incrementSyncVersion('finance');
+    // Automatically handled by firebase-config.js patch:
+    // await window.incrementSyncVersion('finance');
     
     // Update local state instantly
     if (Array.isArray(window.STATE.rawFinance)) {
@@ -4087,6 +4218,26 @@ window.toggleRABStatus = async (id, isPaid) => {
 };
 
 window.handleDelete = (type, id, label) => {
+  if (type === "alumni") {
+    // === PROTEKSI WILAYAH: VALIDASI SEBELUM MENGHAPUS ===
+    if (window.STATE.user) {
+      const delAlum = window.STATE.rawAlumni.find(a => a.id === id);
+      if (delAlum) {
+        if (!window.canUserManageAlumnus(window.STATE.user, delAlum)) {
+          window.notify("Anda tidak memiliki akses untuk menghapus data alumni ini!", "error");
+          return;
+        }
+      }
+    }
+
+    const finances = window.STATE.rawFinance.filter(f => f.ref_alumni_id === id);
+    if (finances.length > 0) {
+      const delAlum = window.STATE.rawAlumni.find(a => a.id === id);
+      window.openTransferDonationsModal(id, delAlum, finances);
+      return;
+    }
+  }
+
   window.openModal("modal-delete");
 
   // Untuk Finance/RAB: tampilkan info transaksi di konfirmasi
@@ -4155,6 +4306,23 @@ window.handleDelete = (type, id, label) => {
           if (type === "alumni") {
             if (docData.photoURL) await window.deleteCloudinaryFileByUrl(docData.photoURL);
             if (docData.bukti_url) await window.deleteCloudinaryFileByUrl(docData.bukti_url);
+            
+            // Putuskan hubungan (unlink) semua transaksi keuangan yang terkait agar tidak menggantung
+            const batch = db.batch();
+            const finances = window.STATE.rawFinance.filter(f => f.ref_alumni_id === id);
+            finances.forEach((fin) => {
+              batch.update(db.collection("finance").doc(fin.id), {
+                ref_alumni_id: "",
+              });
+            });
+            await batch.commit();
+
+            if (Array.isArray(window.STATE.rawFinance)) {
+              window.STATE.rawFinance = window.STATE.rawFinance.map(f =>
+                f.ref_alumni_id === id ? { ...f, ref_alumni_id: "" } : f
+              );
+              localStorage.setItem("cached_finance", JSON.stringify(window.STATE.rawFinance));
+            }
           } else if (type === "finance") {
             if (docData.bukti_url) await window.deleteCloudinaryFileByUrl(docData.bukti_url);
           }
@@ -4165,7 +4333,8 @@ window.handleDelete = (type, id, label) => {
 
       await db.collection(type).doc(id).delete();
       await window.logActivity(`${type}_delete`, `Menghapus data ${type} ID ${id} ${label ? `(${label})` : ''}`);
-      await window.incrementSyncVersion(type);
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion(type);
       
       // Update local state instantly
       if (type === "alumni" && Array.isArray(window.STATE.rawAlumni)) {
@@ -4179,6 +4348,12 @@ window.handleDelete = (type, id, label) => {
         window.STATE.rawFinance = window.STATE.rawFinance.filter(f => f.id !== id);
         localStorage.setItem('cached_finance', JSON.stringify(window.STATE.rawFinance));
         window.processCombinedData();
+        if (
+          document.getElementById("modal-history") &&
+          !document.getElementById("modal-history").classList.contains("hidden")
+        ) {
+          window.closeModal("modal-history");
+        }
       }
 
       window.notify("Terhapus");
@@ -4213,7 +4388,8 @@ window.handleRequest = async (id, action) => {
     if (action === "approverequest") {
       // 1. Update status pendaftaran menjadi disetujui di Firebase
       await db.collection("alumni").doc(id).update({ status: "approved" });
-      await window.incrementSyncVersion('alumni');
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('alumni');
       
       // LOG AKTIVITAS
       if (alumniData) {
@@ -4224,10 +4400,43 @@ window.handleRequest = async (id, action) => {
       if (alumniData && alumniData.nowa) {
         let nomor = String(alumniData.nowa).replace(/\D/g, "");
         if (nomor.startsWith("0")) nomor = "62" + nomor.substring(1);
+
+        let paymentListStr = "";
+        try {
+          const payAccountsSnap = await db.collection("payment_accounts").get();
+          const accounts = payAccountsSnap.docs.map(doc => doc.data());
+          if (accounts.length > 0) {
+            paymentListStr = "\n*Berikut daftar rekening resmi panitia untuk penyaluran donasi/kontribusi:*\n";
+            accounts.forEach(acc => {
+              const bankName = acc.bank || "Bank";
+              const accountNum = acc.norek || "-";
+              const ownerName = acc.nama || acc.nama_rek || "-";
+              if (bankName.toUpperCase() === "QRIS") {
+                paymentListStr += `- *QRIS Nasional* (a.n. ${ownerName})\n`;
+              } else {
+                paymentListStr += `- *${bankName}*: ${accountNum} (a.n. ${ownerName})\n`;
+              }
+            });
+          }
+        } catch (payErr) {
+          console.error("Gagal mengambil rekening pembayaran:", payErr);
+        }
+
+        if (!paymentListStr) {
+          paymentListStr = "\n*Berikut rekening resmi panitia untuk penyaluran donasi/kontribusi:*\n- *Bank BJB*: 0139190333100 (a.n. REUNI AKBAR AL FATAH)\n";
+        }
+
         const pesanTeks =
-          "Assalamu'alaikum wr. wb.\n\nHalo *" +
-          alumniData.nama +
-          "*,\nSelamat, data pendaftaran Anda untuk acara Reuni Akbar AL-FATAH telah *BERHASIL DIVERIFIKASI* oleh panitia.\n\nTerima kasih atas partisipasinya!";
+          "Assalamu'alaikum wr. wb.\n\n" +
+          "Halo *" + alumniData.nama + "*,\n\n" +
+          "Selamat, data pendaftaran Anda untuk acara Reuni Akbar AL-FATAH telah *BERHASIL DIVERIFIKASI* oleh panitia. Akun Anda kini aktif!\n\n" +
+          "Untuk menyukseskan acara reuni ini, Kakak dapat menyalurkan donasi/kontribusi sukarela.\n" +
+          paymentListStr + "\n" +
+          "Setelah melakukan transfer, silakan konfirmasi pembayaran Kakak dengan mengunggah bukti transfer melalui link berikut:\n" +
+          "👉 https://phajar.github.io/Reuni/pembayaran.html?wa=" + nomor + "\n\n" +
+          "Terima kasih atas partisipasi dan kontribusi Kakak. Sampai jumpa di reuni akbar! 🤝\n\n" +
+          "_Pesan ini dikirim otomatis oleh Sistem Reuni Al-Fatah._";
+
         try {
           await window.sendWhatsAppAPI(nomor, pesanTeks, null, null, "Pendaftaran", null);
         } catch (errWA) {
@@ -4258,7 +4467,8 @@ window.handleRequest = async (id, action) => {
       }
       await db.collection("alumni").doc(id).delete();
       await window.logActivity("alumni_reject", `Menolak & menghapus pendaftaran alumni ID ${id}`);
-      await window.incrementSyncVersion('alumni');
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('alumni');
       
       // Update local state instantly
       if (Array.isArray(window.STATE.rawAlumni)) {
@@ -4309,19 +4519,40 @@ window.handleFinanceRequest = async (id, action) => {
     }
 
     if (action === "approve") {
-      await db.collection("finance").doc(id).update({ status: "pemasukan" });
-      await window.incrementSyncVersion('finance');
+      const verifyPayMethodSelect = document.getElementById("verify-payment-method");
+      const selectedPayMethod = verifyPayMethodSelect ? verifyPayMethodSelect.value : (finData.payment_method || "Transfer Bank");
+
+      const updatePayload = {
+        status: "pemasukan",
+        payment_method: selectedPayMethod
+      };
+
+      const originalNominal = finData.nominal_original || finData.nominal;
+      if (selectedPayMethod === "QRIS") {
+        const fee = originalNominal * 0.007;
+        updatePayload.nominal = originalNominal - fee;
+        updatePayload.nominal_original = originalNominal;
+        updatePayload.mdr_fee = fee;
+      } else {
+        updatePayload.nominal = originalNominal;
+        updatePayload.nominal_original = originalNominal;
+        updatePayload.mdr_fee = 0;
+      }
+
+      await db.collection("finance").doc(id).update(updatePayload);
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('finance');
 
       // === SISTEM KIRIM WA TANDA TERIMA DONASI MODULAR ===
       if (finData) {
-        await window.sendReceiptNotification({ id, ...finData, status: "pemasukan" });
-        await window.logActivity("finance_approve", `Menyetujui pembayaran donasi ID ${id} sebesar ${window.formatRupiah(finData.nominal)} dari ${finData.nama_pembayar}`);
+        await window.sendReceiptNotification({ id, ...finData, ...updatePayload });
+        await window.logActivity("finance_approve", `Menyetujui pembayaran donasi ID ${id} sebesar ${window.formatRupiah(updatePayload.nominal)} dari ${finData.nama_pembayar} (${selectedPayMethod})`);
       }
       // ============================================
 
       // Update local state instantly
       if (Array.isArray(window.STATE.rawFinance)) {
-        window.STATE.rawFinance = window.STATE.rawFinance.map(f => f.id === id ? { ...f, status: "pemasukan" } : f);
+        window.STATE.rawFinance = window.STATE.rawFinance.map(f => f.id === id ? { ...f, ...updatePayload } : f);
         localStorage.setItem('cached_finance', JSON.stringify(window.STATE.rawFinance));
         window.processCombinedData();
       }
@@ -4336,7 +4567,8 @@ window.handleFinanceRequest = async (id, action) => {
       }
       await db.collection("finance").doc(id).delete();
       await window.logActivity("finance_reject", `Menolak & menghapus laporan pembayaran donasi kas ID ${id}`);
-      await window.incrementSyncVersion('finance');
+      // Automatically handled by firebase-config.js patch:
+      // await window.incrementSyncVersion('finance');
       
       // Update local state instantly
       if (Array.isArray(window.STATE.rawFinance)) {
@@ -4494,6 +4726,7 @@ window.handleUpdateEventInfo = async (e) => {
   
   const waHumasVal = document.getElementById("set-event-wa-humas").value.trim().replace(/\D/g, "");
   const waDisabledVal = document.getElementById("set-event-wa-disabled").checked;
+  const emailPanitiaVal = document.getElementById("set-event-email-panitia").value.trim();
   
   try {
     await db
@@ -4506,6 +4739,7 @@ window.handleUpdateEventInfo = async (e) => {
           event_guest: document.getElementById("set-event-guest").value,
           wa_humas: waHumasVal,
           wa_disabled: waDisabledVal,
+          email_panitia: emailPanitiaVal,
           api_access_roles: apiAccess,
         },
         { merge: true },
@@ -5061,12 +5295,12 @@ window.openSettings = () => {
     const stCont = document.getElementById("fin-status-container");
     const nomCont = document.getElementById("fin-nominal-container");
     const selectContainer = document.getElementById("fin-ref-container");
-    const selectAlumni = document.getElementById("fin-ref-select");
+    const refInput = document.getElementById("fin-ref-input");
     if (almDataStr) {
       const a = JSON.parse(decodeURIComponent(almDataStr));
       document.getElementById("hidden-fin-ref-id").value = a.id;
       selectContainer.classList.add("hidden");
-      document.getElementById("fin-nama").value = "Donasi dari: " + a.nama;
+      document.getElementById("fin-nama").value = a.nama;
       document.getElementById("fin-nama").readOnly = true;
       document
         .getElementById("fin-nama")
@@ -5075,10 +5309,12 @@ window.openSettings = () => {
       document.getElementById("fin-kategori").value = "Donasi";
       stCont.classList.add("hidden");
       nomCont.classList.replace("col-span-1", "col-span-2");
+      const emailField = document.getElementById("fin-email");
+      if (emailField) emailField.value = a.email || "";
     } else {
       document.getElementById("hidden-fin-ref-id").value = "";
       selectContainer.classList.remove("hidden");
-      selectAlumni.value = "";
+      if (refInput) refInput.value = "";
       document.getElementById("fin-nama").value = "";
       document.getElementById("fin-nama").readOnly = false;
       document
@@ -5087,7 +5323,12 @@ window.openSettings = () => {
       document.getElementById("fin-status").value = "pemasukan";
       stCont.classList.remove("hidden");
       nomCont.classList.replace("col-span-2", "col-span-1");
+      const emailField = document.getElementById("fin-email");
+      if (emailField) emailField.value = "";
     }
+    const payMethodDropdown = document.getElementById("fin-payment-method");
+    if (payMethodDropdown) payMethodDropdown.value = "Transfer Bank";
+    if (window.updateFinanceMdrPreview) window.updateFinanceMdrPreview();
     window.openModal("modal-finance");
   };
 
@@ -5103,9 +5344,13 @@ window.openSettings = () => {
     document.getElementById("fin-id").value = f.id;
     document.getElementById("hidden-fin-ref-id").value = f.ref_alumni_id || "";
     const selectContainer = document.getElementById("fin-ref-container");
-    const selectAlumni = document.getElementById("fin-ref-select");
-    selectAlumni.value = f.ref_alumni_id || "";
-    if (f.ref_alumni_id) {
+    const refInput = document.getElementById("fin-ref-input");
+    if (refInput) {
+      const a = window.STATE.alumni.find(x => x.id === f.ref_alumni_id);
+      refInput.value = a ? `${a.nama} (${a.angkatan || '-'})` : "";
+    }
+    const alumnusExists = f.ref_alumni_id ? window.STATE.alumni.some(a => a.id === f.ref_alumni_id) : false;
+    if (f.ref_alumni_id && alumnusExists) {
       selectContainer.classList.add("hidden");
       document.getElementById("fin-nama").readOnly = true;
       document
@@ -5119,7 +5364,10 @@ window.openSettings = () => {
         .classList.remove("opacity-70", "cursor-not-allowed");
     }
     document.getElementById("fin-nama").value = f.nama_pembayar || "";
-    document.getElementById("fin-nominal").value = f.nominal || "";
+    document.getElementById("fin-nominal").value = f.nominal_original || f.nominal || "";
+    const payMethodDropdown = document.getElementById("fin-payment-method");
+    if (payMethodDropdown) payMethodDropdown.value = f.payment_method || "Transfer Bank";
+    if (window.updateFinanceMdrPreview) window.updateFinanceMdrPreview();
     document.getElementById("fin-status").value = f.status || "pemasukan";
     document.getElementById("fin-kategori").value = f.kategori || "Donasi";
     document.getElementById("fin-file-help").classList.remove("hidden");
@@ -5151,7 +5399,9 @@ window.openSettings = () => {
         .map(
           (h) => {
             const hasBukti = h.bukti_url ? `<button onclick="window.openImageModal('${h.bukti_url}')" class="w-7 h-7 bg-emerald-500/10 text-emerald-500 rounded hover:bg-emerald-500 hover:text-white mr-1" title="Lihat Bukti Transfer"><i class="fas fa-image text-[10px]"></i></button>` : '';
-            const actionBtns = canFin ? `<button onclick="printReceipt('${encodeURIComponent(JSON.stringify(h)).replace(/'/g, "%27")}')" class="w-7 h-7 bg-indigo-500/10 text-indigo-500 rounded hover:bg-indigo-500 hover:text-white mr-1" title="Cetak Kuitansi"><i class="fas fa-receipt text-[10px]"></i></button><button onclick="openModalFinanceEdit('${encodeURIComponent(JSON.stringify(h)).replace(/'/g, "%27")}')" class="w-7 h-7 bg-amber-500/10 text-amber-500 rounded hover:bg-amber-500 hover:text-white" title="Ubah Transaksi"><i class="fas fa-edit text-[10px]"></i></button>` : '';
+            const labelStr = `${h.nama_pembayar || 'Donasi'} (${window.formatRupiah(h.nominal)})`;
+            const safeLabel = encodeURIComponent(labelStr).replace(/'/g, "%27");
+            const actionBtns = canFin ? `<button onclick="printReceipt('${encodeURIComponent(JSON.stringify(h)).replace(/'/g, "%27")}')" class="w-7 h-7 bg-indigo-500/10 text-indigo-500 rounded hover:bg-indigo-500 hover:text-white mr-1" title="Cetak Kuitansi"><i class="fas fa-receipt text-[10px]"></i></button><button onclick="openModalFinanceEdit('${encodeURIComponent(JSON.stringify(h)).replace(/'/g, "%27")}')" class="w-7 h-7 bg-amber-500/10 text-amber-500 rounded hover:bg-amber-500 hover:text-white mr-1" title="Ubah Transaksi"><i class="fas fa-edit text-[10px]"></i></button><button onclick="window.handleDelete('finance', '${h.id}', decodeURIComponent('${safeLabel}'))" class="w-7 h-7 bg-red-500/10 text-red-500 rounded hover:bg-red-500 hover:text-white" title="Hapus Transaksi"><i class="fas fa-trash-alt text-[10px]"></i></button>` : '';
             const finalAction = hasBukti || actionBtns ? `${hasBukti}${actionBtns}` : '-';
             return `<tr class="hover:bg-black/5"><td class="p-4">${String(h.tanggal || "-").split(",")[0]}</td><td class="p-4 font-bold text-indigo-500">${h.kategori}</td><td class="p-4 text-right font-black text-emerald-500">${window.formatRupiah(h.nominal)}</td><td class="p-4 text-center">${finalAction}</td></tr>`;
           }
@@ -5179,14 +5429,34 @@ window.openSettings = () => {
     window.openModal("modal-ai-message");
   };
 
-  window.syncFinanceName = (select) => {
-    if (select.value) {
-      const name =
-        select.options[select.selectedIndex].getAttribute("data-name");
-      document.getElementById("fin-nama").value = "Donasi dari: " + name;
-      document.getElementById("hidden-fin-ref-id").value = select.value;
+  window.syncFinanceNameSearch = (input) => {
+    const val = (input.value || "").trim();
+    const list = document.getElementById("fin-ref-list");
+    if (!list) return;
+    
+    const opt = Array.from(list.options).find(o => o.value.toLowerCase() === val.toLowerCase());
+    if (opt) {
+      const id = opt.getAttribute("data-id");
+      const name = opt.getAttribute("data-name");
+      const email = opt.getAttribute("data-email") || "";
+      document.getElementById("fin-nama").value = name;
+      document.getElementById("hidden-fin-ref-id").value = id;
+      const emailField = document.getElementById("fin-email");
+      if (emailField) emailField.value = email;
     } else {
       document.getElementById("hidden-fin-ref-id").value = "";
+    }
+  };
+
+  window.syncLogistikNameSearch = (input) => {
+    const val = (input.value || "").trim();
+    const list = document.getElementById("log-ref-list");
+    if (!list) return;
+    
+    const opt = Array.from(list.options).find(o => o.value.toLowerCase() === val.toLowerCase());
+    if (opt) {
+      const name = opt.getAttribute("data-name");
+      document.getElementById("log-nama").value = name;
     }
   };
   window.checkCustomJabatan = (el) => {
@@ -5473,6 +5743,52 @@ window.openSettings = () => {
     hint.className = "rupiah-hint text-[10px] text-indigo-400 font-bold mt-1 ml-1";
     if (el.parentElement) el.parentElement.appendChild(hint);
   });
+
+  // Live Preview MDR di Modal Transaksi Baru/Edit
+  window.updateFinanceMdrPreview = () => {
+    const method = document.getElementById("fin-payment-method").value;
+    const nominalVal = Number(document.getElementById("fin-nominal").value) || 0;
+    const previewEl = document.getElementById("fin-mdr-preview");
+    if (!previewEl) return;
+    
+    if (method === "QRIS" && nominalVal > 0) {
+      const fee = nominalVal * 0.007;
+      const net = nominalVal - fee;
+      previewEl.innerHTML = `MDR QRIS (0.7%): -${window.formatRupiah(fee)}<br>Tercatat Bersih: <span class="text-emerald-400 font-black">${window.formatRupiah(net)}</span>`;
+      previewEl.classList.remove("hidden");
+    } else {
+      previewEl.classList.add("hidden");
+      previewEl.innerHTML = "";
+    }
+  };
+  
+  // Daftarkan listener pada input nominal untuk trigger updateFinanceMdrPreview
+  const finNominalInput = document.getElementById("fin-nominal");
+  if (finNominalInput) {
+    finNominalInput.addEventListener("input", window.updateFinanceMdrPreview);
+  }
+
+  // Live Preview MDR di Modal Verifikasi Struk Pending
+  window.updateVerifyMdrPreview = () => {
+    const method = document.getElementById("verify-payment-method").value;
+    const sysAmount = window.currentVerifyOriginalNominal || 0;
+    const mdrRow = document.getElementById("verify-mdr-row");
+    const netRow = document.getElementById("verify-net-row");
+    
+    if (!mdrRow || !netRow) return;
+    
+    if (method === "QRIS" && sysAmount > 0) {
+      const fee = sysAmount * 0.007;
+      const net = sysAmount - fee;
+      document.getElementById("verify-mdr-amount").textContent = `- ${window.formatRupiah(fee)}`;
+      document.getElementById("verify-net-amount").textContent = window.formatRupiah(net);
+      mdrRow.classList.remove("hidden");
+      netRow.classList.remove("hidden");
+    } else {
+      mdrRow.classList.add("hidden");
+      netRow.classList.add("hidden");
+    }
+  };
 
   // ==========================================
   // INDIKATOR KONEKSI OFFLINE
@@ -6202,7 +6518,11 @@ window.openSettings = () => {
 
         // Push ke state lokal instan
         if (Array.isArray(window.STATE.rawAlumni)) {
-          window.STATE.rawAlumni.push(...chunk);
+          chunk.forEach((item) => {
+            if (!window.STATE.rawAlumni.some(a => a.id === item.id)) {
+              window.STATE.rawAlumni.push(item);
+            }
+          });
         }
       }
 
@@ -7212,6 +7532,8 @@ window.openSettings = () => {
   window.openModalLogistik = (dataStr) => {
     const form = document.getElementById("form-logistik");
     form.reset();
+    const refInput = document.getElementById("log-ref-input");
+    if (refInput) refInput.value = "";
     if (dataStr) {
       const data = JSON.parse(decodeURIComponent(dataStr));
       document.getElementById("log-id").value = data.id || "";
@@ -10972,8 +11294,18 @@ window.openFinanceVerificationModal = async (reqId) => {
   document.getElementById("verify-receipt-img").src = req.bukti_url || "";
   document.getElementById("verify-download-btn").href = req.bukti_url || "#";
   document.getElementById("verify-donor-name").textContent = req.nama_pembayar || "—";
-  document.getElementById("verify-system-amount").textContent = window.formatRupiah(req.nominal);
+  document.getElementById("verify-system-amount").textContent = window.formatRupiah(req.nominal_original || req.nominal);
   document.getElementById("verify-input-date").textContent = req.tanggal || "—";
+
+  // Set current original nominal in window context for live MDR calculations
+  window.currentVerifyOriginalNominal = req.nominal_original || req.nominal;
+  const verifyPayMethod = document.getElementById("verify-payment-method");
+  if (verifyPayMethod) {
+    verifyPayMethod.value = req.payment_method || "Transfer Bank";
+  }
+  if (window.updateVerifyMdrPreview) {
+    window.updateVerifyMdrPreview();
+  }
 
   // Setup action buttons
   const approveBtn = document.getElementById("verify-btn-approve");
@@ -11180,6 +11512,230 @@ Jika nominal tidak bisa terdeteksi sama sekali, kembalikan nilai null. Jangan ke
     ocrLoading.classList.add("hidden");
     ocrStatus.textContent = "Gagal Pindai";
     ocrStatus.className = "text-[9px] font-black text-red-400";
+  }
+};
+
+// ============================================================
+// TRANSFER DONATION MODAL (PERPINDAHAN KAS KARENA DATA GANDA)
+// ============================================================
+
+window.getTransferCandidates = (query, deletedId, deletedName) => {
+  const searchStr = (query || "").trim();
+  if (!searchStr) {
+    // Cari kandidat yang memiliki kesamaan kata nama dengan data yang akan dihapus
+    const tokens = (deletedName || "").toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(t => t.length > 1);
+    if (tokens.length === 0) {
+      return window.STATE.rawAlumni
+        .filter(a => a.id !== deletedId)
+        .slice(0, 10);
+    }
+
+    return window.STATE.rawAlumni
+      .filter(a => a.id !== deletedId)
+      .map(a => {
+        const nameLower = (a.nama || "").toLowerCase();
+        let score = 0;
+        tokens.forEach(token => {
+          if (nameLower.includes(token)) {
+            score += 10;
+            const regex = new RegExp(`\\b${token}\\b`);
+            if (regex.test(nameLower)) {
+              score += 10;
+            }
+          }
+        });
+        return { alumni: a, score: score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score || (b.alumni.nama || "").localeCompare(a.alumni.nama || ""))
+      .map(item => item.alumni)
+      .slice(0, 10);
+  } else {
+    // Cari berdasarkan query ketikan user
+    const lowerQuery = searchStr.toLowerCase();
+    return window.STATE.rawAlumni
+      .filter(a => a.id !== deletedId && (a.nama || "").toLowerCase().includes(lowerQuery))
+      .slice(0, 10);
+  }
+};
+
+window.openTransferDonationsModal = (deletedId, delAlum, finances) => {
+  const existing = document.getElementById("modal-transfer-donations");
+  if (existing) existing.remove();
+
+  const totalNominal = finances.reduce((sum, f) => sum + (Number(f.nominal) || 0), 0);
+  const formattedTotal = window.formatRupiah ? window.formatRupiah(totalNominal) : `Rp ${totalNominal.toLocaleString('id-ID')}`;
+
+  const modalHtml = `
+    <div id="modal-transfer-donations" class="fixed inset-0 z-[650] flex items-center justify-center p-4 animate-fade-in">
+        <div onclick="document.getElementById('modal-transfer-donations').remove()" class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
+        <div class="glass relative w-full max-w-md rounded-[2.5rem] p-6 md:p-8 shadow-2xl border border-white/10 modal-enter text-center max-h-[90vh] flex flex-col">
+            <div class="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg border border-amber-500/20">
+                <i class="fas fa-exchange-alt"></i>
+            </div>
+            <h3 class="text-base font-black uppercase mb-3 text-white">Alihkan Riwayat Donasi</h3>
+            
+            <div class="text-[11px] text-slate-300 mb-4 leading-relaxed bg-black/40 p-4 rounded-2xl border border-white/5 text-left">
+                Data alumni <b>${window.escapeHtml ? window.escapeHtml(delAlum.nama) : delAlum.nama} (${delAlum.angkatan || '-'})</b> memiliki <b>${finances.length} transaksi donasi/kas</b> dengan total nominal <b>${formattedTotal}</b>.
+                <br><br>
+                <span class="text-amber-400 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Karena profil alumni ini akan dihapus, ke mana data donasi/kas ini akan dialihkan?</span>
+            </div>
+
+            <div class="flex-1 flex flex-col min-h-0">
+                <div class="relative mb-3">
+                    <input type="text" id="transfer-search-input" class="input-field text-xs py-2.5 px-3 bg-black/40 border border-white/10 text-white rounded-xl w-full pr-8" placeholder="Cari nama alumni tujuan..." />
+                    <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                </div>
+
+                <!-- Daftar rekomendasi nama relevan -->
+                <div id="transfer-candidates-list" class="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1 mb-4 text-left min-h-[120px]">
+                    <!-- Renders dynamically -->
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2 pt-2 border-t border-white/10">
+                <button onclick="window.confirmUnlinkAndDelete('${deletedId}', \`${(delAlum.nama || '').replace(/'/g, "\\'")}\`)" class="btn-md3 btn-md3-outlined w-full py-3.5 text-[10px] font-black uppercase tracking-wider text-rose-400 hover:text-white hover:bg-rose-600 border-rose-500/20">
+                    <i class="fas fa-trash-alt mr-2"></i> Hapus Saja (Jangan Alihkan)
+                </button>
+                <button onclick="document.getElementById('modal-transfer-donations').remove()" class="btn-md3 btn-md3-text w-full py-2.5 text-[10px] text-slate-400 hover:text-white uppercase font-bold tracking-wider">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+  const searchInput = document.getElementById("transfer-search-input");
+  
+  const renderList = () => {
+    const query = searchInput.value;
+    const candidates = window.getTransferCandidates(query, deletedId, delAlum.nama);
+    const container = document.getElementById("transfer-candidates-list");
+    
+    if (candidates.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-6 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+            Tidak ada alumni relevan ditemukan
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = candidates.map(c => `
+      <div class="p-3 bg-white/5 hover:bg-indigo-500/10 border border-white/10 rounded-xl flex items-center justify-between transition-colors">
+          <div class="min-w-0 pr-2">
+              <div class="text-xs font-bold text-white truncate">${window.escapeHtml ? window.escapeHtml(c.nama) : c.nama}</div>
+              <div class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">${c.angkatan || '-'} | ${window.escapeHtml ? window.escapeHtml(c.lembaga || '-') : (c.lembaga || '-')} | ${window.escapeHtml ? window.escapeHtml(c.kabupaten || '-') : (c.kabupaten || '-')}</div>
+          </div>
+          <button onclick="window.confirmTransferAndExecute('${deletedId}', '${c.id}', \`${(c.nama || '').replace(/'/g, "\\'")}\`)" class="btn-md3 btn-md3-emerald !py-1.5 px-3 text-[9px] uppercase tracking-wider font-black flex items-center gap-1 shadow-lg shadow-emerald-500/20 flex-shrink-0">
+              <i class="fas fa-check"></i> Alihkan
+          </button>
+      </div>
+    `).join('');
+  };
+
+  searchInput.oninput = renderList;
+  renderList();
+};
+
+window.confirmTransferAndExecute = async (deletedId, targetKeepId, targetName) => {
+  const ok = await window.showConfirm({
+    title: "Alihkan Donasi?",
+    message: `Apakah Anda yakin ingin mengalihkan seluruh data donasi ke <strong>${targetName}</strong> dan menghapus data alumni lama?`,
+    confirmText: "Ya, Alihkan",
+    danger: false
+  });
+  if (ok) {
+    const modal = document.getElementById("modal-transfer-donations");
+    if (modal) modal.remove();
+    await window.executeAlumniDeletion(deletedId, targetKeepId);
+  }
+};
+
+window.confirmUnlinkAndDelete = async (deletedId, deletedName) => {
+  const ok = await window.showConfirm({
+    title: "Hapus Tanpa Alihkan?",
+    message: `Apakah Anda yakin ingin menghapus alumni <strong>${deletedName}</strong> secara permanen? Semua riwayat donasi terkait akan diputuskan hubungannya (menjadi tidak terikat ke alumni mana pun).`,
+    confirmText: "Ya, Hapus Saja",
+    danger: true
+  });
+  if (ok) {
+    const modal = document.getElementById("modal-transfer-donations");
+    if (modal) modal.remove();
+    await window.executeAlumniDeletion(deletedId, "");
+  }
+};
+
+window.executeAlumniDeletion = async (deletedId, targetKeepId = "") => {
+  window.toggleLoading(true, "Memproses penghapusan...");
+  try {
+    const type = "alumni";
+    const docSnap = await db.collection(type).doc(deletedId).get();
+    if (!docSnap.exists) {
+      window.notify("Data alumni tidak ditemukan!", "error");
+      window.toggleLoading(false);
+      return;
+    }
+
+    const docData = docSnap.data();
+    const label = docData.nama || "";
+
+    // 1. Batch update transaksi keuangan
+    const batch = db.batch();
+    const finances = window.STATE.rawFinance.filter(f => f.ref_alumni_id === deletedId);
+    finances.forEach((fin) => {
+      batch.update(db.collection("finance").doc(fin.id), {
+        ref_alumni_id: targetKeepId,
+      });
+    });
+    await batch.commit();
+
+    // 2. Hapus alumni dari Firestore
+    await db.collection(type).doc(deletedId).delete();
+
+    // 3. Hapus foto/bukti dari Cloudinary jika ada (setelah database sukses diperbarui)
+    try {
+      if (docData.photoURL) await window.deleteCloudinaryFileByUrl(docData.photoURL);
+      if (docData.bukti_url) await window.deleteCloudinaryFileByUrl(docData.bukti_url);
+    } catch (errCloud) {
+      console.error("Gagal menghapus file Cloudinary saat menghapus data:", errCloud);
+    }
+    
+    // Log aktivitas
+    const targetAlum = targetKeepId ? window.STATE.rawAlumni.find(x => x.id === targetKeepId) : null;
+    const logMsg = targetKeepId && targetAlum
+      ? `Menghapus data alumni ${label} (ID: ${deletedId}) dan mengalihkan donasi ke ${targetAlum.nama} (ID: ${targetKeepId})`
+      : `Menghapus data alumni ${label} (ID: ${deletedId})`;
+    await window.logActivity(`${type}_delete`, logMsg);
+
+    // Update state local alumni
+    if (Array.isArray(window.STATE.rawAlumni)) {
+      window.STATE.rawAlumni = window.STATE.rawAlumni.filter(a => a.id !== deletedId);
+      localStorage.setItem('cached_alumni', JSON.stringify(window.STATE.rawAlumni));
+    }
+
+    // Update state local finance
+    if (Array.isArray(window.STATE.rawFinance)) {
+      window.STATE.rawFinance = window.STATE.rawFinance.map(f =>
+        f.ref_alumni_id === deletedId ? { ...f, ref_alumni_id: targetKeepId } : f
+      );
+      localStorage.setItem("cached_finance", JSON.stringify(window.STATE.rawFinance));
+    }
+
+    window.processCombinedData();
+    if (typeof window.applyAlumniFilters === "function") {
+      window.applyAlumniFilters(true);
+    }
+
+    window.notify("Alumni berhasil dihapus!" + (targetKeepId ? " Riwayat donasi berhasil dialihkan." : ""), "success");
+
+  } catch (e) {
+    console.error("Gagal menghapus alumni:", e);
+    window.notify("Gagal menghapus alumni.", "error");
+  } finally {
+    window.toggleLoading(false);
   }
 };
 

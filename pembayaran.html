@@ -137,17 +137,17 @@
       </div>
   </div>
 
-  <nav class="w-full p-5 relative z-10 flex justify-between items-center max-w-4xl mx-auto">
-      <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white shadow-lg shadow-emerald-600/20">
+  <nav class="w-full p-4 md:p-5 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
+      <a href="countdown.html" class="flex items-center gap-3 group">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-all duration-300">
               <i class="fas fa-mosque"></i>
           </div>
           <div>
-              <h1 class="font-black text-xs text-white tracking-widest uppercase">Reuni Akbar</h1>
-              <p class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Sistem Komuniti</p>
+              <h1 class="font-black text-xs text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">Reuni Akbar</h1>
+              <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">AL-FATAH</p>
           </div>
-      </div>
-      <a href="index.html" class="w-10 h-10 flex items-center justify-center glass hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all border border-white/10" title="Halaman Admin">
+      </a>
+      <a href="index.html" class="w-10 h-10 flex items-center justify-center glass hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all border border-white/10 hover:scale-105" title="Halaman Admin">
           <i class="fas fa-user-shield text-xs"></i>
       </a>
   </nav>
@@ -337,6 +337,12 @@
                               <img id="struk-preview" src="" class="max-h-36 rounded-xl object-contain" alt="Preview Struk" />
                               <button type="button" onclick="window.removePreview()" class="absolute -top-3 -right-3 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow-lg hover:bg-red-600 transition-all"><i class="fas fa-times"></i></button>
                           </div>
+                      </div>
+
+                      <div>
+                          <label class="text-sm font-black text-emerald-400 uppercase ml-1 mb-2 block tracking-wider">Alamat Email (Untuk Tanda Terima PDF)</label>
+                          <input type="email" id="email-pembayar" class="input-field text-sm" placeholder="Contoh: alumni@email.com" required />
+                          <p class="text-xs text-slate-500 mt-1.5 ml-1">Kuitansi resmi PDF akan dikirimkan otomatis ke email ini setelah disetujui.</p>
                       </div>
 
                       <div>
@@ -1106,6 +1112,9 @@ try {
             document.getElementById('select-alumni').value = a.id;
             document.getElementById('alumni-search-results').classList.add('hidden');
             window.selectedAlumnus = a;
+            if (a.email && document.getElementById('email-pembayar')) {
+                document.getElementById('email-pembayar').value = a.email;
+            }
         }
     };
 
@@ -1503,6 +1512,7 @@ try {
                         angkatan: Number(document.getElementById('baru-angkatan').value),
                         lembaga: document.getElementById('baru-lembaga').value,
                         nowa: checkWA,
+                        email: document.getElementById('email-pembayar').value.trim(),
                         provinsi: window.normalizeWilayahName(document.getElementById('baru-prov').value),
                         kabupaten: window.normalizeWilayahName(document.getElementById('baru-kab').value),
                         kecamatan: window.normalizeWilayahName(document.getElementById('baru-kec').value),
@@ -1526,6 +1536,7 @@ try {
                         nominal: Number(rawNominal),
                         nama_pembayar: nama_pembayar,
                         nowa: nowa,
+                        email_pembayar: document.getElementById('email-pembayar').value.trim(),
                         ref_alumni_id: ref_alumni_id,
                         angkatan_pembayar: angkatan_pembayar,
                         lembaga_pembayar: lembaga_pembayar,
@@ -1645,6 +1656,7 @@ try {
                     angkatan: Number(document.getElementById('baru-angkatan').value),
                     lembaga: document.getElementById('baru-lembaga').value,
                     nowa: window.normalizeWA(document.getElementById('baru-nowa').value),
+                    email: document.getElementById('email-pembayar').value.trim(),
                     provinsi: window.normalizeWilayahName(document.getElementById('baru-prov').value),
                     kabupaten: window.normalizeWilayahName(document.getElementById('baru-kab').value),
                     kecamatan: window.normalizeWilayahName(document.getElementById('baru-kec').value),
@@ -1661,12 +1673,16 @@ try {
 
             await addDoc(collection(db, "finance"), {
                 ref_alumni_id: ref_alumni_id,
-                nama_pembayar: "Donasi: " + nama_pembayar,
+                nama_pembayar: nama_pembayar,
                 angkatan_pembayar: angkatan_pembayar,
                 lembaga_pembayar: lembaga_pembayar,
-                nominal: Number(rawNominal), 
+                nominal: Number(rawNominal),
+                nominal_original: Number(rawNominal), // Simpan nominal asli untuk referensi kuitansi
+                mdr_fee: 0,                           // Default 0 sebelum diverifikasi admin
+                email_pembayar: document.getElementById('email-pembayar').value.trim(),
                 status: "pending_payment", 
                 kategori: "Donasi",
+                payment_method: "Transfer Bank",
                 bukti_url: bukti_url, 
                 bukti_hash: bukti_hash,
                 tanggal: new Date().toLocaleString('id-ID'),
@@ -1783,33 +1799,10 @@ try {
       try {
         let matchingAlumni = [];
         let payments = [];
-        let loadedFromCloudinary = false;
+        let loadedFromFirestore = false;
 
-        // Coba memuat dari Cloudinary raw JSON (Sangat cepat, hemat kuota reads & gratis!)
+        // Coba memuat langsung dari Firestore (Real-time & Akurat!)
         try {
-          const resAlumni = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni_all.json?t=" + Date.now());
-          if (resAlumni.ok) {
-            const allAlumni = await resAlumni.json();
-            matchingAlumni = allAlumni.filter(a => window.normalizeWA(a.nowa) === normalizedWA);
-
-            if (matchingAlumni.length > 0) {
-              const resFinance = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/finance.json?t=" + Date.now());
-              if (resFinance.ok) {
-                const allFinance = await resFinance.json();
-                const alumniIds = matchingAlumni.map(a => a.id);
-                payments = allFinance.filter(p => alumniIds.includes(p.ref_alumni_id));
-                loadedFromCloudinary = true;
-                console.log("[Cloudinary Cek Status] Berhasil memuat data dari Cloudinary JSON!");
-              }
-            }
-          }
-        } catch (cloudinaryErr) {
-          console.warn("[Cloudinary Cek Status] Gagal memuat JSON Cloudinary, menggunakan fallback Firestore:", cloudinaryErr);
-        }
-
-        // Fallback jika gagal memuat JSON atau data tidak ditemukan di JSON (misal pendaftar baru)
-        if (!loadedFromCloudinary || matchingAlumni.length === 0) {
-          console.log("[Firestore Cek Status] Menggunakan fallback kueri Firestore...");
           const db = _db || getFirestore(getApps()[0]);
           const alumniSnap = await getDocs(query(collection(db, 'alumni'), where('nowa', '==', normalizedWA)));
           matchingAlumni = alumniSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1818,6 +1811,33 @@ try {
           if (alumniIds.length > 0) {
             const paySnap = await getDocs(query(collection(db, 'finance'), where('ref_alumni_id', 'in', alumniIds)));
             payments = paySnap.docs.map(pd => ({ id: pd.id, ...pd.data() }));
+          }
+          loadedFromFirestore = true;
+          console.log("[Firestore Cek Status] Berhasil memuat data real-time dari Firestore!");
+        } catch (firestoreErr) {
+          console.warn("[Firestore Cek Status] Gagal memuat dari Firestore, menggunakan fallback Cloudinary:", firestoreErr);
+        }
+
+        // Fallback jika gagal memuat Firestore (misal kuota habis atau offline)
+        if (!loadedFromFirestore) {
+          try {
+            const resAlumni = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni_all.json?t=" + Date.now());
+            if (resAlumni.ok) {
+              const allAlumni = await resAlumni.json();
+              matchingAlumni = allAlumni.filter(a => window.normalizeWA(a.nowa) === normalizedWA);
+
+              if (matchingAlumni.length > 0) {
+                const resFinance = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/finance.json?t=" + Date.now());
+                if (resFinance.ok) {
+                  const allFinance = await resFinance.json();
+                  const alumniIds = matchingAlumni.map(a => a.id);
+                  payments = allFinance.filter(p => alumniIds.includes(p.ref_alumni_id));
+                  console.log("[Cloudinary Cek Status] Berhasil memuat data cadangan dari Cloudinary JSON!");
+                }
+              }
+            }
+          } catch (cloudinaryErr) {
+            console.error("[Cloudinary Cek Status] Gagal memuat dari Cloudinary juga:", cloudinaryErr);
           }
         }
 
@@ -1856,7 +1876,8 @@ try {
               };
               const s = statusMap[p.status] || { text: p.status, badge: 'bg-slate-500/10 text-slate-300 border-white/10', icon: 'fa-info-circle' };
               const pDate = p.tanggal || (p.created_at ? new Date(p.created_at).toLocaleString('id-ID') : '-');
-              const pNominal = p.nominal ? 'Rp ' + Number(p.nominal).toLocaleString('id-ID').replace(/,/g, '.') : 'Rp 0';
+              const displayNominal = p.nominal_original || p.nominal; // Tampilkan nominal asli (sebelum potongan MDR)
+              const pNominal = displayNominal ? 'Rp ' + Number(displayNominal).toLocaleString('id-ID').replace(/,/g, '.') : 'Rp 0';
               
               // Tautan Bukti Transfer jika ada
               let proofHtml = '';
@@ -2058,8 +2079,20 @@ try {
       }
     };
 
-    window.downloadKuitansiDigital = function(txId, alumniId, nama, angkatan, nominal, tanggal, kategori) {
+    window.downloadKuitansiDigital = async function(txId, alumniId, nama, angkatan, nominal, tanggal, kategori) {
       try {
+        // Cari data bendahara dari Firestore
+        let bendahara = null;
+        try {
+          const db = _db || getFirestore(getApps()[0]);
+          const q = query(collection(db, 'panitia'));
+          const snap = await getDocs(q);
+          const panitiaList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          bendahara = panitiaList.find(p => (p.jabatan || "").toLowerCase().includes("bendahara"));
+        } catch (dbErr) {
+          console.warn("Gagal mengambil data bendahara dari Firestore:", dbErr);
+        }
+
         // Create canvas
         const canvas = document.createElement('canvas');
         canvas.width = 800;
@@ -2238,10 +2271,30 @@ try {
 
         ctx.restore();
 
+        // Draw Signature Image if available
+        if (bendahara && bendahara.tanda_tangan) {
+          try {
+            await new Promise((resolve) => {
+              const img = new Image();
+              img.onload = () => {
+                ctx.drawImage(img, 530, 810, 140, 65);
+                resolve();
+              };
+              img.onerror = () => {
+                resolve();
+              };
+              img.src = bendahara.tanda_tangan;
+            });
+          } catch (sigErr) {
+            console.error("Gagal menggambar tanda tangan:", sigErr);
+          }
+        }
+
         // Sign Name
         ctx.fillStyle = '#0f172a';
         ctx.font = '900 16px system-ui, -apple-system, sans-serif';
-        ctx.fillText('Bendahara Reuni', 700, 900);
+        const namaBendahara = bendahara && bendahara.nama ? bendahara.nama : 'Bendahara Reuni';
+        ctx.fillText(namaBendahara, 700, 900);
         ctx.strokeStyle = '#64748b';
         ctx.lineWidth = 1;
         ctx.beginPath();

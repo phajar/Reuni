@@ -19,7 +19,7 @@
 
     .input-field { width:100%; padding:14px 16px; border-radius:14px; background:#1e2548; border:1px solid #2d3663; color:white; outline:none; transition:all 0.3s; font-size:14px; }
     .input-field:focus { border-color:#6366f1; box-shadow:0 0 0 4px rgba(99,102,241,0.1); }
-    .input-field::placeholder { color: #64748b; }
+    .input-field::placeholder { color: #94a3b8; }
 
     .input-field.error { border-color: #ef4444; box-shadow:0 0 0 4px rgba(239,68,68,0.1); }
     .input-field.valid { border-color: #10b981; box-shadow:0 0 0 4px rgba(16,185,129,0.07); }
@@ -46,7 +46,7 @@
     .step-dot.active { background:#6366f1; color:white; box-shadow:0 0 0 4px rgba(99,102,241,0.2); }
     .step-dot.done { background:#10b981; color:white; }
     .step-dot.pending { background:rgba(255,255,255,0.05); color:#64748b; border:1px solid rgba(255,255,255,0.1); }
-    .step-line { flex:1; height:2px; background:rgba(255,255,255,0.08); transition:all 0.3s; }
+    .step-line { flex:1; flex-shrink: 1; min-width: 10px; height:2px; background:rgba(255,255,255,0.08); transition:all 0.3s; }
     .step-line.done { background:#10b981; }
 
     .toggle-password { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:#64748b; cursor:pointer; transition:color 0.2s; background:none; border:none; padding:4px; }
@@ -214,11 +214,29 @@
     const c = document.getElementById('reg-canvas');
     const ctx = c.getContext('2d');
     let pts = [];
-    function resize(){ c.width=window.innerWidth; c.height=window.innerHeight; }
-    window.addEventListener('resize', resize); resize();
+    function resize(){ 
+      c.width=window.innerWidth; 
+      c.height=window.innerHeight; 
+      if (window.innerWidth < 768) {
+        pts = [];
+      } else if (pts.length === 0) {
+        initParticles();
+      }
+    }
+    window.addEventListener('resize', resize);
     function rnd(a,b){ return Math.random()*(b-a)+a; }
-    for(let i=0;i<40;i++) pts.push({x:rnd(0,c.width),y:rnd(0,c.height),r:rnd(0.5,1.5),dx:rnd(-0.15,0.15),dy:rnd(-0.3,-0.05),a:rnd(0.1,0.4),col:Math.random()>0.5?'99,102,241':'16,185,129'});
+    function initParticles(){
+      pts = [];
+      for(let i=0;i<40;i++) pts.push({x:rnd(0,c.width),y:rnd(0,c.height),r:rnd(0.5,1.5),dx:rnd(-0.15,0.15),dy:rnd(-0.3,-0.05),a:rnd(0.1,0.4),col:Math.random()>0.5?'99,102,241':'16,185,129'});
+    }
+    initParticles();
+    resize();
     (function loop(){
+      if (window.innerWidth < 768) {
+        ctx.clearRect(0,0,c.width,c.height);
+        requestAnimationFrame(loop);
+        return;
+      }
       ctx.clearRect(0,0,c.width,c.height);
       pts.forEach((p,i)=>{
         ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);

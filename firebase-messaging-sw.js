@@ -2,8 +2,8 @@
 // File ini WAJIB berada di root /www/ agar bisa intercept semua URL di domain ini
 // Ini memungkinkan push notification saat app tertutup sekalipun
 
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging-compat.js');
 
 // Konfigurasi Firebase (sama dengan firebase-config.js)
 firebase.initializeApp({

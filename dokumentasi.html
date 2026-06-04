@@ -41,9 +41,28 @@
         border-radius: 44px; /* adjusted border-radius for scale */
       }
     }
+
+    /* Horizontal swipe tabs on mobile */
+    #gallery-tabs-container {
+      display: flex !important;
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+    #gallery-tabs-container::-webkit-scrollbar {
+      display: none !important; /* Sembunyikan scrollbar agar rapi */
+    }
+    @media (min-width: 768px) {
+      #gallery-tabs-container {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+      }
+    }
   </style>
 </head>
-<body class="relative min-h-screen pb-32">
+<body class="relative min-h-screen pb-36">
 
   <!-- Toast Container -->
   <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
@@ -53,7 +72,23 @@
   <div class="neon-blur w-[400px] h-[400px] bg-pink-500/10 top-[20%] right-[-150px]"></div>
   <div class="neon-blur w-[350px] h-[350px] bg-emerald-500/5 bottom-[10%] left-[-100px]"></div>
 
-  <div class="max-w-6xl mx-auto px-4 pt-12 relative z-10">
+  <!-- NAV -->
+  <nav class="w-full p-4 md:p-5 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
+    <a href="countdown.html" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-all duration-300">
+        <i class="fas fa-mosque"></i>
+      </div>
+      <div>
+        <h1 class="font-black text-xs text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">Reuni Akbar</h1>
+        <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">AL-FATAH</p>
+      </div>
+    </a>
+    <a href="index.html" class="w-10 h-10 flex items-center justify-center glass hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all border border-white/10 hover:scale-105" title="Halaman Admin">
+      <i class="fas fa-user-shield text-xs"></i>
+    </a>
+  </nav>
+
+  <div class="max-w-6xl mx-auto px-4 pt-4 relative z-10">
     
     <!-- HEADER -->
     <header class="text-center mb-10 reveal">

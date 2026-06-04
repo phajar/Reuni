@@ -179,6 +179,13 @@
       #kop-area {
         margin-bottom: 16px !important;
       }
+      @media (max-width: 400px) {
+        #kop-area {
+          transform: scale(0.85);
+          transform-origin: top center;
+          margin-bottom: 4px !important;
+        }
+      }
       #kop-area h3 {
         font-size: 11px !important;
       }
@@ -245,7 +252,7 @@
     /* Print styles */
     @media print {
       body { background: white !important; }
-      #no-print { display: none !important; }
+      #no-print, #editor-column { display: none !important; }
       #surat-preview {
         box-shadow: none;
         border: none;
@@ -345,11 +352,21 @@
       </div>
     </div>
 
+    <!-- Mobile Tabs Navigation (only visible on mobile) -->
+    <div class="flex lg:hidden bg-black/20 border border-white/5 p-1 rounded-2xl mb-4 gap-1" id="mobile-tabs-container">
+      <button onclick="window.switchMobileTab('form')" id="m-tab-form" class="flex-1 py-3 text-[10px] font-black uppercase tracking-wider text-center rounded-xl transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-500/20">
+        <i class="fas fa-edit mr-1"></i> Editor Form
+      </button>
+      <button onclick="window.switchMobileTab('preview')" id="m-tab-preview" class="flex-1 py-3 text-[10px] font-black uppercase tracking-wider text-center rounded-xl transition-all text-slate-400 hover:text-white">
+        <i class="fas fa-eye mr-1"></i> Pratinjau Surat
+      </button>
+    </div>
+
     <!-- Two Column Layout on Desktop -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
       <!-- LEFT: Form -->
-      <div id="no-print">
+      <div id="editor-column">
         <!-- Template Cepat -->
         <div class="section-card">
           <div class="flex items-center gap-2 mb-3">
@@ -493,7 +510,7 @@
       </div>
 
       <!-- RIGHT: Preview -->
-      <div>
+      <div id="preview-column" class="lg:block">
         <div class="glass rounded-2xl p-4 sticky top-20">
           <!-- Preview header -->
           <div class="flex items-center justify-between mb-4">
@@ -1075,6 +1092,7 @@
     notify('Surat undangan berhasil dibuat! ✨', 'success');
 
     if (window.innerWidth < 1024) {
+      window.switchMobileTab('preview');
       document.getElementById('surat-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
@@ -1601,14 +1619,55 @@
     }
   }
 
+  // JavaScript Tab Switching for Mobile
+  window.switchMobileTab = function(tab) {
+    if (window.innerWidth >= 1024) return;
+    
+    const tabForm = document.getElementById('m-tab-form');
+    const tabPreview = document.getElementById('m-tab-preview');
+    const colForm = document.getElementById('editor-column');
+    const colPreview = document.getElementById('preview-column');
+    
+    if (!tabForm || !tabPreview || !colForm || !colPreview) return;
+    
+    if (tab === 'form') {
+      tabForm.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-wider text-center rounded-xl transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-500/20";
+      tabPreview.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-wider text-center rounded-xl transition-all text-slate-400 hover:text-white";
+      colForm.classList.remove('hidden');
+      colPreview.classList.add('hidden');
+    } else {
+      tabForm.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-wider text-center rounded-xl transition-all text-slate-400 hover:text-white";
+      tabPreview.className = "flex-1 py-3 text-[10px] font-black uppercase tracking-wider text-center rounded-xl transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-500/20";
+      colForm.classList.add('hidden');
+      colPreview.classList.remove('hidden');
+    }
+  };
+
+  window.initMobileTabs = function() {
+    const colForm = document.getElementById('editor-column');
+    const colPreview = document.getElementById('preview-column');
+    if (!colForm || !colPreview) return;
+    
+    if (window.innerWidth < 1024) {
+      window.switchMobileTab('form');
+    } else {
+      colForm.classList.remove('hidden');
+      colPreview.classList.remove('hidden');
+    }
+  };
+
+  window.addEventListener('resize', window.initMobileTabs);
+
   // Jalankan inisialisasi koneksi database saat halaman dimuat
   // Firebase SDK sudah dimuat di atas sebelum script block ini
   window.addEventListener('DOMContentLoaded', () => {
     initFirebaseConnection();
+    window.initMobileTabs();
   });
   // Fallback: jika DOMContentLoaded sudah terlewat
   if (document.readyState !== 'loading') {
     initFirebaseConnection();
+    window.initMobileTabs();
   }
   </script>
 

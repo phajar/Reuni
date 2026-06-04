@@ -1053,6 +1053,10 @@
             <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp</label>
             <input type="text" name="nowa" id="alm-nowa" class="input-field" placeholder="Nomor WA (tanpa +62)" />
           </div>
+          <div class="md:col-span-2">
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Email</label>
+            <input type="email" name="email" id="alm-email" class="input-field" placeholder="alamat@email.com" />
+          </div>
           <div class="md:col-span-2 pt-2">
             <button type="button" onclick="window.switchAlmTab('domisili')" class="btn-md3 btn-md3-tonal w-full">
               <i class="fas fa-map-marker-alt mr-2"></i> Lanjut Isi Domisili &rarr;
@@ -1299,7 +1303,7 @@
       <form id="form-finance" class="space-y-4">
         <input type="hidden" name="id" id="fin-id" /><input type="hidden" name="ref_alumni_id" id="hidden-fin-ref-id" />
         
-        <div id="fin-ref-container"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Pilih Alumni</label><select id="fin-ref-select" class="input-field mb-2" onchange="syncFinanceName(this)"><option value="">-- Pilih Nama Alumni --</option></select></div>
+        <div id="fin-ref-container"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Pilih Alumni (Cari Nama / Angkatan)</label><input type="text" id="fin-ref-input" list="fin-ref-list" class="input-field mb-2" placeholder="Ketik untuk mencari alumni..." oninput="window.syncFinanceNameSearch(this)" autocomplete="off" /><datalist id="fin-ref-list"></datalist></div>
         
         <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Keterangan Transaksi</label><div class="flex gap-2 mt-1"><input type="text" name="nama_pembayar" id="fin-nama" class="input-field flex-1" required /><button type="button" onclick="startVoiceInput()" id="btn-voice" class="w-12 h-12 bg-indigo-600 rounded-xl text-white flex items-center justify-center shadow-lg hover:bg-indigo-500 transition-colors"><i class="fas fa-microphone"></i></button></div><p id="voice-status" class="text-[9px] text-indigo-400 mt-2 hidden font-bold">Mendengarkan ucapan...</p></div>
         
@@ -1309,6 +1313,24 @@
         </div>
         
         <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kategori</label><select name="kategori" id="fin-kategori" class="input-field"><option value="Donasi">Donasi</option><option value="Iuran Bulanan">Iuran Bulanan</option><option value="Operasional">Operasional</option><option value="Lainnya">Lainnya</option></select></div>
+        
+        <div>
+          <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Email Penerima Kuitansi (Opsional)</label>
+          <input type="email" name="email_pembayar" id="fin-email" class="input-field mt-1" placeholder="Contoh: alumni@email.com" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="col-span-1">
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Metode Pembayaran</label>
+            <select name="payment_method" id="fin-payment-method" class="input-field" onchange="window.updateFinanceMdrPreview()">
+              <option value="Transfer Bank">Transfer Bank</option>
+              <option value="Tunai">Tunai / Cash</option>
+              <option value="QRIS">QRIS</option>
+            </select>
+          </div>
+          <div class="col-span-1 flex flex-col justify-end pb-1.5">
+            <div id="fin-mdr-preview" class="text-[9.5px] text-slate-400 font-bold hidden leading-normal"></div>
+          </div>
+        </div>
         <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Bukti Gambar / Struk</label><div class="flex gap-2 mt-1"><input type="file" id="fin-file" accept="image/*" class="input-field flex-1" /><button type="button" onclick="scanReceiptTesseract()" id="btn-scan-struk" class="btn-md3 btn-md3-primary px-4 py-2"><i class="fas fa-magic mr-2"></i> Scan AI</button></div><p id="fin-file-help" class="text-[9px] text-slate-500 mt-1 hidden">Biarkan kosong jika tidak diubah.</p></div>
         
         <button type="submit" class="btn-md3 btn-md3-emerald w-full mt-4">Simpan</button>
@@ -1326,10 +1348,9 @@
         <input type="hidden" name="id" id="log-id">
         
         <div>
-            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Pilih Alumni (Otomatis)</label>
-            <select id="log-ref-select" class="input-field mb-2" onchange="document.getElementById('log-nama').value = this.options[this.selectedIndex].text !== '-- Pilih Nama Alumni --' ? this.options[this.selectedIndex].text : '';">
-                <option value="">-- Pilih Nama Alumni --</option>
-            </select>
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Pilih Alumni (Cari Nama / Angkatan)</label>
+            <input type="text" id="log-ref-input" list="log-ref-list" class="input-field mb-2" placeholder="Ketik untuk mencari alumni..." oninput="window.syncLogistikNameSearch(this)" autocomplete="off" />
+            <datalist id="log-ref-list"></datalist>
         </div>
         
         <div>
@@ -1518,7 +1539,7 @@
       </div>
     </aside>
 
-    <main class="flex-1 p-4 pb-28 lg:p-8 xl:p-12 overflow-y-auto max-h-screen custom-scrollbar relative">
+    <main class="flex-1 p-4 pb-44 lg:p-8 xl:p-12 overflow-y-auto max-h-screen custom-scrollbar relative">
         
         <button onclick="window.toggleSidebar()" class="hidden fixed top-4 left-4 z-[120] w-12 h-12 glass hover:bg-white/10 rounded-2xl flex items-center justify-center text-indigo-400 shadow-2xl border border-white/10 bg-[#060813]/90 backdrop-blur-xl transition-all">
             <i class="fas fa-bars text-xl"></i>
@@ -1676,7 +1697,7 @@
 
       <div id="tab-alumni" class="tab-content hidden space-y-4">
         <!-- Dashboard Metrics (Opsi 3) -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="premium-card p-6 flex items-center justify-between">
                 <div>
                     <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Alumni</h4>
@@ -2756,6 +2777,10 @@
                   <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp Humas / Bantuan (Format: 628xxx)</label>
                   <input type="text" id="set-event-wa-humas" class="input-field mt-1" placeholder="Format: 628xxxxxxxx (Tanpa +, 0, atau spasi)" />
                 </div>
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Email Panitia / Hubungan Alumni</label>
+                  <input type="email" id="set-event-email-panitia" class="input-field mt-1" placeholder="Contoh: alumni@alfatah.id" />
+                </div>
                 <div class="pt-3 border-t border-white/10 mt-3">
                   <label class="text-[10px] font-bold text-amber-500 uppercase ml-1 flex items-center gap-1.5">
                     <i class="fas fa-toggle-on"></i> Mode Testing (Nonaktifkan WA)
@@ -3088,7 +3113,7 @@
           </div>
           <div class="flex gap-2">
               <button type="button" id="btn-pause-broadcast" onclick="window.togglePauseBroadcast()" class="btn-md3 btn-md3-amber flex-1 py-2 text-[9px]"><i class="fas fa-pause mr-1"></i> Jeda</button>
-              <button type="button" id="btn-cancel-broadcast" onclick="window.cancelBroadcast()" class="btn-md3 btn-md3-danger flex-1 py-2 text-[9px]"><i class="fas fa-stop mr-1"></i> Hentikan</button>
+              <button type="button" id="btn-cancel-broadcast-progress" onclick="window.cancelBroadcast()" class="btn-md3 btn-md3-danger flex-1 py-2 text-[9px]"><i class="fas fa-stop mr-1"></i> Hentikan</button>
           </div>
       </div>
 
@@ -3257,6 +3282,8 @@
     </div>
   </div>
 
+      <!-- Spacer to prevent floating buttons on mobile from overlapping with pagination/content -->
+      <div class="h-48 md:hidden"></div>
     </main>
   </div>
 
@@ -3279,7 +3306,7 @@
   <script src="js/lib/xlsx.full.min.js"></script>
   <script src="capacitor.js"></script>
   <script src="js/services/pdf-service.js?v=1"></script> <!-- Modular PDF Service -->
-  <script src="js/app.js?v=35"></script>
+  <script src="js/app.js?v=36"></script>
   <script src="js/app-improvements.js?v=11"></script> <!-- Perbaikan & Fitur Baru -->
 
   <script>
@@ -3675,7 +3702,7 @@
   </div>
 
   <!-- Floating Action Button (FAB) Tanya AI (Global) -->
-  <button id="btn-floating-tanya-ai" onclick="openTanyaAI()" class="hidden fixed bottom-24 right-4 md:bottom-6 md:right-6 z-[250] w-14 h-14 bg-gradient-to-tr from-fuchsia-600 to-pink-500 hover:from-fuchsia-500 hover:to-pink-400 text-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.4)] hover:shadow-[0_0_30px_rgba(217,70,239,0.6)] border border-white/20 transition-all hover:scale-110 active:scale-95 duration-300">
+  <button id="btn-floating-tanya-ai" onclick="openTanyaAI()" class="hidden fixed bottom-40 right-6 md:bottom-6 md:right-6 z-[250] w-14 h-14 bg-gradient-to-tr from-fuchsia-600 to-pink-500 hover:from-fuchsia-500 hover:to-pink-400 text-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.4)] hover:shadow-[0_0_30px_rgba(217,70,239,0.6)] border border-white/20 transition-all hover:scale-110 active:scale-95 duration-300">
     <i class="fas fa-comment-dots text-xl animate-pulse"></i>
   </button>
 
@@ -3724,8 +3751,7 @@
   <div id="fcm-toast-container" class="fixed top-5 right-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end max-w-sm w-full"></div>
 
   <!-- Firebase Messaging SDK (Compat Mode — sesuai dengan firebase-config.js) -->
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-messaging-compat.js"></script>
 
   <!-- FCM Notification Module -->
   <script src="js/fcm-notifications.js" defer></script>
@@ -3881,6 +3907,26 @@
                 <span class="text-slate-400">Tanggal Input:</span>
                 <span id="verify-input-date" class="text-slate-300"></span>
               </div>
+              <div class="flex justify-between text-xs items-center">
+                <span class="text-slate-400">Metode Pembayaran:</span>
+                <select id="verify-payment-method" class="bg-[#0f132a] border border-white/10 rounded-lg text-white text-xs px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500" onchange="window.updateVerifyMdrPreview()">
+                  <option value="Transfer Bank">Transfer Bank</option>
+                  <option value="Tunai">Tunai / Cash</option>
+                  <option value="QRIS">QRIS</option>
+                </select>
+              </div>
+              <div class="flex flex-col gap-1 text-xs pt-1">
+                <span class="text-slate-400">Email Penerima Kuitansi:</span>
+                <input type="email" id="verify-email" class="bg-[#0f132a] border border-white/10 rounded-lg text-white text-xs px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full" placeholder="email@contoh.com" />
+              </div>
+              <div id="verify-mdr-row" class="flex justify-between text-xs hidden">
+                <span class="text-slate-400">Biaya MDR (0.7%):</span>
+                <span id="verify-mdr-amount" class="font-bold text-red-400"></span>
+              </div>
+              <div id="verify-net-row" class="flex justify-between text-xs hidden">
+                <span class="text-slate-400">Tercatat Bersih:</span>
+                <span id="verify-net-amount" class="font-black text-emerald-400"></span>
+              </div>
             </div>
 
             <!-- Deteksi Duplikat/Fraud -->
@@ -3981,6 +4027,102 @@
       </div>
     </div>
   </div>
+
+  <!-- Floating Action Button (FAB) Mobile -->
+  <button id="mobile-fab" onclick="window.handleFabClick()" class="hidden fixed bottom-24 right-6 w-14 h-14 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-600/30 z-[100] md:hidden transition-transform active:scale-95">
+    <i class="fas fa-plus text-lg"></i>
+  </button>
+
+  <script>
+    // Context-aware Mobile FAB Logic
+    window.handleFabClick = function() {
+      const activeEl = document.querySelector(".tab-content:not(.hidden)");
+      if (!activeEl) return;
+      const tabId = activeEl.id.replace("tab-", "");
+      
+      switch (tabId) {
+        case "alumni":
+          if (typeof openAlumniModal === "function") openAlumniModal();
+          else if (typeof openModalAlumni === "function") openModalAlumni();
+          break;
+        case "finance":
+          if (typeof openModalFinance === "function") openModalFinance();
+          break;
+        case "rundown":
+          if (typeof openModalRundown === "function") openModalRundown();
+          break;
+        case "rab":
+          if (typeof openModalRAB === "function") openModalRAB();
+          break;
+        case "tugas":
+          if (typeof window.openModalTugas === "function") window.openModalTugas();
+          break;
+        case "logistik":
+          if (typeof window.openModalLogistik === "function") window.openModalLogistik();
+          break;
+        case "panitia":
+          if (typeof openModalAddPanitia === "function") openModalAddPanitia();
+          break;
+      }
+    };
+
+    window.updateFABState = function() {
+      const fab = document.getElementById("mobile-fab");
+      if (!fab) return;
+      
+      const activeEl = document.querySelector(".tab-content:not(.hidden)");
+      if (!activeEl) {
+        fab.classList.add("hidden");
+        return;
+      }
+      const tabId = activeEl.id.replace("tab-", "");
+      const supportedTabs = ["alumni", "finance", "rundown", "rab", "tugas", "logistik", "panitia"];
+      
+      if (supportedTabs.includes(tabId)) {
+        fab.classList.remove("hidden");
+        const icon = fab.querySelector("i");
+        if (icon) {
+          if (tabId === "finance") {
+            fab.className = "fixed bottom-24 right-6 w-14 h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-600/30 z-[100] md:hidden transition-transform active:scale-95";
+            icon.className = "fas fa-plus text-lg";
+          } else if (tabId === "rab") {
+            fab.className = "fixed bottom-24 right-6 w-14 h-14 bg-amber-600 hover:bg-amber-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-amber-600/30 z-[100] md:hidden transition-transform active:scale-95";
+            icon.className = "fas fa-plus text-lg";
+          } else {
+            fab.className = "fixed bottom-24 right-6 w-14 h-14 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-600/30 z-[100] md:hidden transition-transform active:scale-95";
+            icon.className = "fas fa-plus text-lg";
+          }
+        }
+      } else {
+        fab.classList.add("hidden");
+      }
+    };
+
+    // Hook into showTab and switchMobileTab
+    window.addEventListener('DOMContentLoaded', () => {
+      // Delay slightly to ensure app.js has initialized its functions
+      setTimeout(() => {
+        if (window.showTab) {
+          const originalShowTab = window.showTab;
+          window.showTab = function(tabId) {
+            originalShowTab(tabId);
+            window.updateFABState();
+          };
+        }
+        
+        // Also hook switchMobileTab
+        if (window.switchMobileTab) {
+          const originalSwitchMobileTab = window.switchMobileTab;
+          window.switchMobileTab = function(tabId) {
+            originalSwitchMobileTab(tabId);
+            window.updateFABState();
+          };
+        }
+        
+        window.updateFABState();
+      }, 600);
+    });
+  </script>
 
   <!-- PWA Service Worker Registration -->
   <script>

@@ -299,7 +299,7 @@
     doc.setTextColor(16, 185, 129);
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text(`${window.formatRupiah(data.nominal)}`, 52.5, 95, {
+    doc.text(`${window.formatRupiah(data.nominal_original || data.nominal)}`, 52.5, 95, {
       align: "center",
     });
     doc.setTextColor(30, 41, 59);

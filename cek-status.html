@@ -48,6 +48,28 @@
       animation: progress-shimmer 1.5s infinite;
     }
 
+    /* Hologram E-Card Styles */
+    .hologram-card {
+      position: relative;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+        inset 0 10px 20px rgba(255, 255, 255, 0.05);
+      transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .hologram-card:hover {
+      box-shadow: 
+        0 30px 60px -10px rgba(99, 102, 241, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        inset 0 10px 30px rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-5px);
+    }
+
 
     /* ── SKELETON LOADING ── */
     @keyframes skeleton-shimmer {
@@ -106,13 +128,26 @@
 
   <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
 
-  <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10 w-full max-w-2xl mx-auto my-8">
+  <!-- NAV -->
+  <nav class="w-full p-4 md:p-5 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
+    <a href="countdown.html" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-all duration-300">
+        <i class="fas fa-mosque"></i>
+      </div>
+      <div>
+        <h1 class="font-black text-xs text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">Reuni Akbar</h1>
+        <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">AL-FATAH</p>
+      </div>
+    </a>
+    <a href="index.html" class="w-10 h-10 flex items-center justify-center glass hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all border border-white/10 hover:scale-105" title="Halaman Admin">
+      <i class="fas fa-user-shield text-xs"></i>
+    </a>
+  </nav>
+
+  <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10 w-full max-w-2xl mx-auto my-2 pb-36">
 
     <!-- HEADER -->
     <div class="text-center mb-10 w-full reveal">
-      <a href="countdown.html" class="inline-flex items-center gap-2 mb-8 text-slate-400 hover:text-indigo-400 transition-colors text-sm font-bold">
-        <i class="fas fa-arrow-left"></i> Kembali ke Beranda
-      </a>
       <div class="w-20 h-20 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl flex items-center justify-center mx-auto mb-5">
         <i class="fas fa-search-location text-3xl text-indigo-400"></i>
       </div>
@@ -473,7 +508,7 @@
         // Ini menyelesaikan masalah 'Missing or insufficient permissions' pada update alumni
         await addDoc(collection(db, "finance"), {
           ref_alumni_id: alumniId,
-          nama_pembayar: "Donasi: " + nama,
+          nama_pembayar: nama,
           nominal: 0, // Nominal 0 karena hanya menyusulkan bukti transfer dari cek status
           status: "pending_payment",
           kategori: "Donasi",
@@ -585,8 +620,21 @@
       }
     };
 
-    window.downloadKuitansiDigital = function(txId, alumniId, nama, angkatan, nominal, tanggal, kategori) {
+
+
+    window.downloadKuitansiDigital = async function(txId, alumniId, nama, angkatan, nominal, tanggal, kategori) {
       try {
+        // Cari data bendahara dari Firestore
+        let bendahara = null;
+        try {
+          const q = query(collection(db, 'panitia'));
+          const snap = await getDocs(q);
+          const panitiaList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          bendahara = panitiaList.find(p => (p.jabatan || "").toLowerCase().includes("bendahara"));
+        } catch (dbErr) {
+          console.warn("Gagal mengambil data bendahara dari Firestore:", dbErr);
+        }
+
         // Create canvas
         const canvas = document.createElement('canvas');
         canvas.width = 800;
@@ -765,10 +813,30 @@
 
         ctx.restore();
 
+        // Draw Signature Image if available
+        if (bendahara && bendahara.tanda_tangan) {
+          try {
+            await new Promise((resolve) => {
+              const img = new Image();
+              img.onload = () => {
+                ctx.drawImage(img, 530, 810, 140, 65);
+                resolve();
+              };
+              img.onerror = () => {
+                resolve();
+              };
+              img.src = bendahara.tanda_tangan;
+            });
+          } catch (sigErr) {
+            console.error("Gagal menggambar tanda tangan:", sigErr);
+          }
+        }
+
         // Sign Name
         ctx.fillStyle = '#0f172a';
         ctx.font = '900 16px system-ui, -apple-system, sans-serif';
-        ctx.fillText('Bendahara Reuni', 700, 900);
+        const namaBendahara = bendahara && bendahara.nama ? bendahara.nama : 'Bendahara Reuni';
+        ctx.fillText(namaBendahara, 700, 900);
         ctx.strokeStyle = '#64748b';
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -828,7 +896,8 @@
           };
           const s = statusMap[p.status] || { text: p.status, badge: 'bg-slate-500/10 text-slate-300 border-white/10', icon: 'fa-info-circle' };
           const pDate = p.tanggal || (p.created_at ? new Date(p.created_at).toLocaleString('id-ID') : '-');
-          const pNominal = p.nominal ? 'Rp ' + p.nominal.toLocaleString('id-ID').replace(/,/g, '.') : 'Rp 0';
+          const displayNominal = p.nominal_original || p.nominal; // Tampilkan nominal asli (sebelum potongan MDR)
+          const pNominal = displayNominal ? 'Rp ' + Number(displayNominal).toLocaleString('id-ID').replace(/,/g, '.') : 'Rp 0';
           
           // Tautan Bukti Transfer jika ada
           let proofHtml = '';
@@ -975,6 +1044,51 @@
         </div>
       ` : '';
 
+      if (alumni.status === 'approved') {
+        return `
+          <div class="glass rounded-[2.5rem] p-6 border ${cfg.cardClass} text-left reveal visible max-w-xl mx-auto">
+            <div>
+              <div class="flex items-start gap-4 mb-4">
+                <div class="w-12 h-12 ${cfg.iconBg} rounded-2xl flex items-center justify-center flex-shrink-0 ${cfg.pulse}">
+                  <i class="${cfg.icon} text-xl ${cfg.iconColor}"></i>
+                </div>
+                <div>
+                  <div class="flex items-center flex-wrap gap-2 mb-1">
+                    <h3 class="font-black text-white text-base">${alumni.nama || '-'}${lembagaBadge}${angkatanBadge}</h3>
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${cfg.badge}">${cfg.badgeText}</span>
+                  </div>
+                  <p class="text-xs text-slate-400"><i class="fas fa-calendar mr-1 text-amber-400"></i>Tanggal Daftar: <b>${tgl}</b></p>
+                </div>
+              </div>
+
+              <!-- Detail Alamat -->
+              <div class="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2 text-left mb-4">
+                <div class="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5 mb-1.5 border-b border-white/5 pb-1.5">
+                  <i class="fas fa-map-marked-alt"></i> Alamat Lengkap Domisili
+                </div>
+                <div class="text-xs text-slate-300 space-y-1.5">
+                  <div class="flex"><span class="text-slate-500 font-bold w-24 flex-shrink-0">Jalan/RT/RW:</span><span class="text-slate-200 font-extrabold">${alumni.alamat || '-'}</span></div>
+                  <div class="flex"><span class="text-slate-500 font-bold w-24 flex-shrink-0">Desa/Kel:</span><span class="text-slate-200 font-extrabold">${alumni.desa || '-'}</span></div>
+                  <div class="flex"><span class="text-slate-500 font-bold w-24 flex-shrink-0">Kecamatan:</span><span class="text-slate-200 font-extrabold">${alumni.kecamatan || '-'}</span></div>
+                  <div class="flex"><span class="text-slate-500 font-bold w-24 flex-shrink-0">Kab/Kota:</span><span class="text-slate-200 font-extrabold">${alumni.kabupaten || '-'}</span></div>
+                  <div class="flex"><span class="text-slate-500 font-bold w-24 flex-shrink-0">Provinsi:</span><span class="text-slate-200 font-extrabold">${alumni.provinsi || '-'}</span></div>
+                </div>
+                <button onclick="window.openEditAddressModal('${alumni.id}')" class="mt-3 w-full py-2 bg-indigo-500/10 hover:bg-indigo-500 hover:text-white border border-indigo-500/20 hover:border-transparent text-indigo-400 rounded-xl text-center text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5">
+                  <i class="fas fa-edit"></i> Perbarui Alamat
+                </button>
+              </div>
+
+              <!-- Riwayat Donasi -->
+              ${paymentsHtml}
+
+              <p class="text-slate-400 text-xs leading-relaxed mt-4">${cfg.desc}</p>
+            </div>
+
+            ${approvedActions}
+          </div>
+        `;
+      }
+
       return `
         <div class="glass rounded-2xl p-6 border ${cfg.cardClass} transition-all">
           <div class="flex items-start gap-4">
@@ -1042,33 +1156,10 @@
     async function getStatusData(normalizedWA) {
       let matchingAlumni = [];
       let payments = [];
-      let loadedFromCloudinary = false;
+      let loadedFromFirestore = false;
 
-      // Coba memuat dari Cloudinary raw JSON (Sangat cepat, hemat kuota reads & gratis!)
+      // Coba memuat langsung dari Firestore (Real-time & Akurat!)
       try {
-        const resAlumni = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni_all.json?t=" + Date.now());
-        if (resAlumni.ok) {
-          const allAlumni = await resAlumni.json();
-          matchingAlumni = allAlumni.filter(a => window.normalizeWA(a.nowa) === normalizedWA);
-
-          if (matchingAlumni.length > 0) {
-            const resFinance = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/finance.json?t=" + Date.now());
-            if (resFinance.ok) {
-              const allFinance = await resFinance.json();
-              const alumniIds = matchingAlumni.map(a => a.id);
-              payments = allFinance.filter(p => alumniIds.includes(p.ref_alumni_id));
-              loadedFromCloudinary = true;
-              console.log("[Cloudinary Cek Status] Berhasil memuat data dari Cloudinary JSON!");
-            }
-          }
-        }
-      } catch (cloudinaryErr) {
-        console.warn("[Cloudinary Cek Status] Gagal memuat JSON Cloudinary, menggunakan fallback Firestore:", cloudinaryErr);
-      }
-
-      // Fallback jika gagal memuat JSON atau data tidak ditemukan di JSON (misal pendaftar baru)
-      if (!loadedFromCloudinary || matchingAlumni.length === 0) {
-        console.log("[Firestore Cek Status] Menggunakan fallback kueri Firestore...");
         const q = query(collection(db, 'alumni'), where('nowa', '==', normalizedWA));
         const snap = await getDocs(q);
         matchingAlumni = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1078,6 +1169,33 @@
           const qFinance = query(collection(db, 'finance'), where('ref_alumni_id', 'in', alumniIds));
           const snapFinance = await getDocs(qFinance);
           payments = snapFinance.docs.map(pd => ({ id: pd.id, ...pd.data() }));
+        }
+        loadedFromFirestore = true;
+        console.log("[Firestore Cek Status] Berhasil memuat data real-time dari Firestore!");
+      } catch (firestoreErr) {
+        console.warn("[Firestore Cek Status] Gagal memuat dari Firestore, menggunakan fallback Cloudinary:", firestoreErr);
+      }
+
+      // Fallback jika gagal memuat Firestore (misal kuota habis atau offline)
+      if (!loadedFromFirestore) {
+        try {
+          const resAlumni = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni_all.json?t=" + Date.now());
+          if (resAlumni.ok) {
+            const allAlumni = await resAlumni.json();
+            matchingAlumni = allAlumni.filter(a => window.normalizeWA(a.nowa) === normalizedWA);
+
+            if (matchingAlumni.length > 0) {
+              const resFinance = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/finance.json?t=" + Date.now());
+              if (resFinance.ok) {
+                const allFinance = await resFinance.json();
+                const alumniIds = matchingAlumni.map(a => a.id);
+                payments = allFinance.filter(p => alumniIds.includes(p.ref_alumni_id));
+                console.log("[Cloudinary Cek Status] Berhasil memuat data cadangan dari Cloudinary JSON!");
+              }
+            }
+          }
+        } catch (cloudinaryErr) {
+          console.error("[Cloudinary Cek Status] Gagal memuat dari Cloudinary juga:", cloudinaryErr);
         }
       }
 
@@ -1475,6 +1593,7 @@
   <!-- Shared Floating Nav -->
   <script src="js/transitions.js"></script>
   <script src="js/nav-component.js"></script>
+
   <!-- PWA Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {

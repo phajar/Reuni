@@ -44,21 +44,19 @@
   <div class="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/10 blur-[120px] rounded-full pointer-events-none z-0"></div>
 
   <!-- NAV -->
-  <nav class="w-full p-4 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
+  <nav class="w-full p-4 md:p-5 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
     <a href="countdown.html" class="flex items-center gap-3 group">
-      <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-all duration-300">
         <i class="fas fa-mosque"></i>
       </div>
       <div>
-        <h1 class="font-black text-sm text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">Reuni Akbar</h1>
-        <p class="text-sm text-indigo-400 font-bold">AL-FATAH</p>
+        <h1 class="font-black text-xs text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">Reuni Akbar</h1>
+        <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">AL-FATAH</p>
       </div>
     </a>
-    <div class="flex items-center gap-2">
-      <a href="countdown.html" class="hidden sm:flex items-center px-4 py-2 hover:bg-white/5 rounded-full text-xs font-bold text-slate-300 hover:text-white transition-all uppercase tracking-wider"><i class="fas fa-home mr-2"></i>Beranda</a>
-      <a href="pendaftaran.html" class="px-4 py-2 glass bg-indigo-600/20 hover:bg-indigo-600 rounded-full text-xs font-bold text-white transition-all uppercase border border-indigo-500/30"><i class="fas fa-ticket-alt mr-1"></i>Daftar</a>
-      <a href="login.html" class="w-10 h-10 flex items-center justify-center glass hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-all border border-white/10"><i class="fas fa-user-shield text-xs"></i></a>
-    </div>
+    <a href="index.html" class="w-10 h-10 flex items-center justify-center glass hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all border border-white/10 hover:scale-105" title="Halaman Admin">
+      <i class="fas fa-user-shield text-xs"></i>
+    </a>
   </nav>
 
   <main class="flex-1 flex flex-col items-center p-4 md:p-8 relative z-10 w-full max-w-3xl mx-auto pb-36">
@@ -86,6 +84,9 @@
         <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Memuat Jadwal Acara...</p>
       </div>
+
+      <!-- Tabs Filter Hari -->
+      <div id="filter-tabs-container" class="hidden mb-8 flex flex-wrap gap-2.5 border-b border-white/5 pb-5 justify-center md:justify-start"></div>
 
       <!-- Timeline -->
       <div id="timeline-container" class="hidden relative border-l-2 border-white/10 ml-3 md:ml-6 space-y-8 py-4"></div>
@@ -214,6 +215,78 @@
       } catch(e) { /* silent */ }
     }
 
+    let allRundownData = [];
+    let activeTab = 'all';
+
+    function detectDay(item) {
+      const text = (item.waktu + ' ' + (item.keterangan || '') + ' ' + item.kegiatan).toLowerCase();
+      if (text.includes('hari 1') || text.includes('hari ke-1') || text.includes('day 1') || text.includes('jumat') || text.includes('fri')) {
+        return 'Hari ke-1 (Jumat)';
+      }
+      if (text.includes('hari 2') || text.includes('hari ke-2') || text.includes('day 2') || text.includes('sabtu') || text.includes('sat')) {
+        return 'Hari ke-2 (Sabtu)';
+      }
+      if (text.includes('hari 3') || text.includes('hari ke-3') || text.includes('day 3') || text.includes('ahad') || text.includes('minggu') || text.includes('sun')) {
+        return 'Hari ke-3 (Ahad)';
+      }
+      return 'Hari ke-1 (Utama)';
+    }
+
+    function setupFilterTabs(data) {
+      const tabsContainer = document.getElementById('filter-tabs-container');
+      if (!tabsContainer) return;
+
+      const daysSet = new Set();
+      data.forEach(item => {
+        daysSet.add(detectDay(item));
+      });
+      const uniqueDays = Array.from(daysSet).sort();
+
+      if (uniqueDays.length <= 1) {
+        tabsContainer.classList.add('hidden');
+        return;
+      }
+
+      tabsContainer.classList.remove('hidden');
+      tabsContainer.classList.add('flex');
+
+      let tabsHtml = `
+        <button onclick="window.switchRundownTab('all')" id="tab-all" class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${activeTab === 'all' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white'}">
+          Semua Acara
+        </button>
+      `;
+
+      uniqueDays.forEach((day, index) => {
+        const id = 'day-' + index;
+        tabsHtml += `
+          <button onclick="window.switchRundownTab('${day}', '${id}')" id="tab-${id}" class="px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${activeTab === day ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white'}">
+            ${day}
+          </button>
+        `;
+      });
+
+      tabsContainer.innerHTML = tabsHtml;
+    }
+
+    window.switchRundownTab = function(day, id = 'all') {
+      activeTab = day;
+      const buttons = document.querySelectorAll('#filter-tabs-container button');
+      buttons.forEach(btn => {
+        btn.className = "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white";
+      });
+      const activeBtn = document.getElementById('tab-' + id);
+      if (activeBtn) {
+        activeBtn.className = "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all border bg-indigo-600 text-white border-indigo-600";
+      }
+
+      if (day === 'all') {
+        renderTimeline(allRundownData);
+      } else {
+        const filtered = allRundownData.filter(item => detectDay(item) === day);
+        renderTimeline(filtered);
+      }
+    };
+
     async function fetchRundown() {
       try {
         // Tunggu loadEventInfo selesai agar tanggal valid terisi
@@ -230,6 +303,8 @@
         document.getElementById('loading-state').classList.add('hidden');
 
         if (data.length > 0) {
+          allRundownData = data;
+          setupFilterTabs(data);
           renderTimeline(data);
           document.getElementById('timeline-container').classList.remove('hidden');
         } else {
@@ -269,11 +344,13 @@
           const googleUrl = getGoogleCalendarUrl(item.kegiatan, item.keterangan || '', startTime, endTime);
           calendarButtons = `
             <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/5 justify-end">
-              <a href="${googleUrl}" target="_blank" class="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500 hover:text-white text-indigo-400 text-[10px] font-black uppercase transition-all flex items-center gap-1.5">
-                <i class="fab fa-google"></i> Google Calendar
+              <!-- Google Calendar -->
+              <a href="${googleUrl}" target="_blank" class="w-8 h-8 rounded-full md:w-auto md:h-auto md:px-3 md:py-1.5 md:rounded-lg bg-indigo-500/10 hover:bg-indigo-500 hover:text-white text-indigo-400 text-xs md:text-[10px] font-black uppercase transition-all flex items-center justify-center md:gap-1.5" title="Google Calendar">
+                <i class="fab fa-google"></i> <span class="hidden md:inline">Google Calendar</span>
               </a>
-              <button onclick="window.downloadICS('${item.kegiatan.replace(/'/g, "\\'")}', '${(item.keterangan || '').replace(/'/g, "\\'")}', '${startTime.toISOString()}', '${endTime.toISOString()}')" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-400 text-[10px] font-black uppercase transition-all flex items-center gap-1.5">
-                <i class="far fa-calendar-alt"></i> Simpan iCal (.ics)
+              <!-- Simpan iCal -->
+              <button onclick="window.downloadICS('${item.kegiatan.replace(/'/g, "\\'")}', '${(item.keterangan || '').replace(/'/g, "\\'")}', '${startTime.toISOString()}', '${endTime.toISOString()}')" class="w-8 h-8 rounded-full md:w-auto md:h-auto md:px-3 md:py-1.5 md:rounded-lg bg-emerald-500/10 hover:bg-emerald-500 hover:text-white text-emerald-400 text-xs md:text-[10px] font-black uppercase transition-all flex items-center justify-center md:gap-1.5" title="Simpan iCal (.ics)">
+                <i class="far fa-calendar-alt"></i> <span class="hidden md:inline">Simpan iCal (.ics)</span>
               </button>
             </div>`;
         }
