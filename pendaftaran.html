@@ -36,7 +36,7 @@
     .step-dot.active { background:linear-gradient(135deg,#6366f1,#4f46e5); box-shadow:0 0 20px rgba(99,102,241,0.5); color:white; }
     .step-dot.done { background:rgba(16,185,129,0.2); border:2px solid rgba(16,185,129,0.5); color:#10b981; }
     .step-dot.inactive { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#64748b; }
-    .step-line { flex:1; height:2px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+    .step-line { flex:1; height:2px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top: -16px; }
     .step-line-fill { height:100%; width:0%; background:linear-gradient(90deg,#6366f1,#10b981); transition:width 0.5s ease; }
     /* Floating label effect */
     select.input-field option { background:#0e1225; color:white; }
@@ -92,115 +92,191 @@
         <p class="text-xs md:text-sm text-slate-400 mt-2">Isi data diri Anda di bawah ini untuk pendataan kepanitiaan.</p>
       </div>
       <!-- Step Progress Indicator -->
-      <div id="form-steps" class="flex items-center gap-2 mb-8 relative z-10">
-        <div class="flex flex-col items-center gap-1">
+      <div id="form-steps" class="flex items-center justify-between gap-2 mb-8 relative z-10 w-full max-w-md mx-auto">
+        <div class="flex flex-col items-center gap-1.5 flex-1">
           <div id="step-dot-1" class="step-dot active"><i class="fas fa-user text-xs"></i></div>
-          <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest">Data Diri</span>
+          <span class="text-[9px] font-black text-indigo-400 uppercase tracking-wider text-center">Data Diri</span>
         </div>
         <div class="step-line"><div id="step-line-1" class="step-line-fill"></div></div>
-        <div class="flex flex-col items-center gap-1">
+        <div class="flex flex-col items-center gap-1.5 flex-1">
           <div id="step-dot-2" class="step-dot inactive"><i class="fas fa-map-marker-alt text-xs"></i></div>
-          <span id="step-label-2" class="text-xs font-bold text-slate-600 uppercase tracking-widest">Alamat</span>
+          <span id="step-label-2" class="text-[9px] font-black text-slate-600 uppercase tracking-wider text-center">Alamat</span>
+        </div>
+        <div class="step-line"><div id="step-line-2" class="step-line-fill"></div></div>
+        <div class="flex flex-col items-center gap-1.5 flex-1">
+          <div id="step-dot-3" class="step-dot inactive"><i class="fas fa-file-signature text-xs"></i></div>
+          <span id="step-label-3" class="text-[9px] font-black text-slate-600 uppercase tracking-wider text-center">Konfirmasi</span>
         </div>
       </div>
 
-      <form id="form-register" class="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
+      <form id="form-register" novalidate class="relative z-10 w-full">
 
-        <!-- Nama -->
-        <div class="md:col-span-2">
-          <label class="block text-sm font-black text-indigo-400 uppercase tracking-widest ml-2 mb-2">Nama Lengkap <span class="text-red-400">*</span></label>
-          <input type="text" name="nama" id="inp-nama" class="input-field" required placeholder="Sesuai ijazah / KTP" autocomplete="name" />
-          <p id="hint-nama" class="field-hint text-slate-600 hidden"></p>
-        </div>
-
-        <!-- Angkatan -->
-        <div>
-          <label class="block text-sm font-black text-indigo-400 uppercase tracking-widest ml-2 mb-2">Tahun Lulus <span class="text-red-400">*</span></label>
-          <input type="number" name="angkatan" id="inp-angkatan" class="input-field" required
-            placeholder="Cth: 2015" min="1970" max="2030" autocomplete="off" />
-          <p id="hint-angkatan" class="field-hint text-slate-600 hidden"></p>
-        </div>
-
-        <!-- Lembaga -->
-        <div>
-          <label class="block text-sm font-black text-indigo-400 uppercase tracking-widest ml-2 mb-2">Lembaga <span class="text-red-400">*</span></label>
-          <select name="lembaga" id="inp-lembaga" class="input-field" required>
-            <option value="" class="bg-[#0e1225] text-slate-400">-- Pilih Lembaga --</option>
-            <option value="MA" class="bg-[#0e1225] text-white">MA</option>
-            <option value="MTs" class="bg-[#0e1225] text-white">MTs</option>
-          </select>
-          <p id="hint-lembaga" class="field-hint text-slate-600 hidden"></p>
-        </div>
-
-
-        <!-- WhatsApp -->
-        <div>
-          <label class="block text-sm font-black text-indigo-400 uppercase tracking-widest ml-2 mb-2">Nomor WhatsApp <span class="text-red-400">*</span></label>
-          <div class="relative">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold pointer-events-none">+62</span>
-            <input type="text" name="nowa" id="inp-nowa" class="input-field pl-12 pr-10" required
-              placeholder="81234567890" inputmode="numeric" autocomplete="tel"
-              oninput="formatWAInput(this)" />
-            <span id="wa-check" class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 hidden"><i class="fas fa-check-circle"></i></span>
+        <!-- STEP 1: DATA DIRI -->
+        <div id="step-container-1" class="grid grid-cols-1 md:grid-cols-2 gap-5 transition-all duration-300">
+          <!-- Nama -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-black text-indigo-400 uppercase tracking-widest ml-2 mb-2">Nama Lengkap <span class="text-red-400">*</span></label>
+            <input type="text" name="nama" id="inp-nama" class="input-field" required placeholder="Sesuai ijazah / KTP" autocomplete="name" />
+            <p id="hint-nama" class="field-hint text-slate-600 hidden"></p>
           </div>
-          <p id="hint-nowa" class="field-hint text-slate-600 hidden"></p>
-          <p id="wa-preview" class="text-xs text-slate-500 mt-1.5 ml-1 hidden"><i class="fab fa-whatsapp text-emerald-400 mr-1"></i><span id="wa-preview-text"></span></p>
-        </div>
 
-        <!-- Alamat section -->
-        <div class="md:col-span-2 mt-4 border-t border-white/10 pt-6">
-          <h3 class="text-sm font-bold text-white mb-1"><i class="fas fa-map-marker-alt mr-2 text-indigo-400"></i>Alamat Domisili</h3>
-          <p class="text-sm text-slate-500 mb-4">Digunakan untuk pemetaan wilayah koordinator.</p>
-        </div>
-
-        <!-- Baris 1: Provinsi & Kabupaten -->
-        <div class="md:col-span-2 grid grid-cols-2 gap-3.5">
+          <!-- Angkatan -->
           <div>
-            <label class="block text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest ml-2 mb-2">Provinsi <span class="text-red-400">*</span></label>
-            <input type="text" name="provinsi" id="inp-prov" list="list-prov" class="input-field" placeholder="Cari Provinsi..." required autocomplete="off" />
-            <datalist id="list-prov"></datalist>
+            <label class="block text-sm font-black text-indigo-400 uppercase tracking-widest ml-2 mb-2">Tahun Lulus <span class="text-red-400">*</span></label>
+            <input type="number" name="angkatan" id="inp-angkatan" class="input-field" required
+              placeholder="Cth: 2015" min="1970" max="2030" autocomplete="off" />
+            <p id="hint-angkatan" class="field-hint text-slate-600 hidden"></p>
           </div>
-          <div>
-            <label class="block text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest ml-2 mb-2">Kabupaten / Kota <span class="text-red-400">*</span></label>
-            <input type="text" name="kabupaten" id="inp-kab" list="list-kab" class="input-field" placeholder="Pilih Provinsi..." required disabled autocomplete="off" />
-            <datalist id="list-kab"></datalist>
-          </div>
-        </div>
 
-        <!-- Baris 2: Kecamatan & Desa -->
-        <div class="md:col-span-2 grid grid-cols-2 gap-3.5">
+          <!-- Lembaga -->
           <div>
-            <label class="block text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest ml-2 mb-2">Kecamatan <span class="text-red-400">*</span></label>
-            <input type="text" name="kecamatan" id="inp-kec" list="list-kec" class="input-field" placeholder="Pilih Kabupaten..." required disabled autocomplete="off" />
-            <datalist id="list-kec"></datalist>
+            <label class="block text-sm font-black text-indigo-400 uppercase tracking-widest ml-2 mb-2">Lembaga <span class="text-red-400">*</span></label>
+            <select name="lembaga" id="inp-lembaga" class="input-field" required>
+              <option value="" class="bg-[#0e1225] text-slate-400">-- Pilih Lembaga --</option>
+              <option value="MA" class="bg-[#0e1225] text-white">MA</option>
+              <option value="MTs" class="bg-[#0e1225] text-white">MTs</option>
+            </select>
+            <p id="hint-lembaga" class="field-hint text-slate-600 hidden"></p>
           </div>
-          <div>
-            <label class="block text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest ml-2 mb-2">Desa / Kelurahan <span class="text-red-400">*</span></label>
-            <input type="text" name="desa" id="inp-desa" list="list-desa" class="input-field" placeholder="Pilih Kecamatan..." required disabled autocomplete="off" />
-            <datalist id="list-desa"></datalist>
+
+          <!-- WhatsApp -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-black text-indigo-400 uppercase tracking-widest ml-2 mb-2">Nomor WhatsApp <span class="text-red-400">*</span></label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold pointer-events-none">+62</span>
+              <input type="text" name="nowa" id="inp-nowa" class="input-field pl-12 pr-10" required
+                placeholder="81234567890" inputmode="numeric" autocomplete="tel"
+                oninput="formatWAInput(this)" />
+              <span id="wa-check" class="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-400 hidden"><i class="fas fa-check-circle"></i></span>
+            </div>
+            <p id="hint-nowa" class="field-hint text-slate-600 hidden"></p>
+            <p id="wa-preview" class="text-xs text-slate-500 mt-1.5 ml-1 hidden"><i class="fab fa-whatsapp text-emerald-400 mr-1"></i><span id="wa-preview-text"></span></p>
           </div>
-        </div>
-        <div class="md:col-span-2">
-          <div class="flex items-center justify-between mb-2">
-            <label class="block text-sm font-black text-slate-500 uppercase tracking-widest ml-2">Alamat Lengkap <span class="text-red-400">*</span></label>
-            <button type="button" id="btn-ekstrak-domisili" onclick="window.runEkstrakDomisili()" class="text-[10px] font-black text-indigo-400 hover:text-white uppercase tracking-widest flex items-center gap-1 transition-colors mr-2">
-              <i class="fas fa-magic"></i> Ekstrak Wilayah
+
+          <!-- Button Lanjut Step 1 -->
+          <div class="md:col-span-2 mt-6">
+            <button type="button" onclick="window.nextStep(2)" class="w-full bg-gradient-animate text-white hover:shadow-[0_0_40px_rgba(99,102,241,0.5)] py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]">
+              Lanjut ke Alamat <i class="fas fa-arrow-right ml-2"></i>
             </button>
           </div>
-          <textarea name="alamat" id="inp-alamat" class="input-field min-h-[100px] resize-y" required placeholder="RT, RW, Jalan, Nomor Rumah..."></textarea>
         </div>
 
-        <!-- Duplicate warning -->
-        <div id="duplicate-warning" class="md:col-span-2 hidden bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4">
-          <p class="text-[11px] text-amber-400 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i><span id="duplicate-msg"></span></p>
+        <!-- STEP 2: ALAMAT DOMISILI -->
+        <div id="step-container-2" class="grid grid-cols-1 md:grid-cols-2 gap-5 transition-all duration-300 hidden">
+          <div class="md:col-span-2 border-b border-white/10 pb-3 mb-2">
+            <h3 class="text-sm font-bold text-white mb-1"><i class="fas fa-map-marker-alt mr-2 text-indigo-400"></i>Alamat Domisili</h3>
+            <p class="text-xs text-slate-500">Digunakan untuk pemetaan wilayah koordinator.</p>
+          </div>
+
+          <!-- Baris 1: Provinsi & Kabupaten -->
+          <div class="md:col-span-2 grid grid-cols-2 gap-3.5">
+            <div>
+              <label class="block text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest ml-2 mb-2">Provinsi <span class="text-red-400">*</span></label>
+              <input type="text" name="provinsi" id="inp-prov" list="list-prov" class="input-field" placeholder="Cari Provinsi..." required autocomplete="off" />
+              <datalist id="list-prov"></datalist>
+            </div>
+            <div>
+              <label class="block text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest ml-2 mb-2">Kabupaten / Kota <span class="text-red-400">*</span></label>
+              <input type="text" name="kabupaten" id="inp-kab" list="list-kab" class="input-field" placeholder="Pilih Provinsi..." required disabled autocomplete="off" />
+              <datalist id="list-kab"></datalist>
+            </div>
+          </div>
+
+          <!-- Baris 2: Kecamatan & Desa -->
+          <div class="md:col-span-2 grid grid-cols-2 gap-3.5">
+            <div>
+              <label class="block text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest ml-2 mb-2">Kecamatan <span class="text-red-400">*</span></label>
+              <input type="text" name="kecamatan" id="inp-kec" list="list-kec" class="input-field" placeholder="Pilih Kabupaten..." required disabled autocomplete="off" />
+              <datalist id="list-kec"></datalist>
+            </div>
+            <div>
+              <label class="block text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest ml-2 mb-2">Desa / Kelurahan <span class="text-red-400">*</span></label>
+              <input type="text" name="desa" id="inp-desa" list="list-desa" class="input-field" placeholder="Pilih Kecamatan..." required disabled autocomplete="off" />
+              <datalist id="list-desa"></datalist>
+            </div>
+          </div>
+          <div class="md:col-span-2">
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-black text-slate-500 uppercase tracking-widest ml-2">Alamat Lengkap <span class="text-red-400">*</span></label>
+              <button type="button" id="btn-ekstrak-domisili" onclick="window.runEkstrakDomisili()" class="text-[10px] font-black text-indigo-400 hover:text-white uppercase tracking-widest flex items-center gap-1 transition-colors mr-2">
+                <i class="fas fa-magic"></i> Ekstrak Wilayah
+              </button>
+            </div>
+            <textarea name="alamat" id="inp-alamat" class="input-field min-h-[100px] resize-y" required placeholder="RT, RW, Jalan, Nomor Rumah..."></textarea>
+          </div>
+
+          <!-- Buttons Step 2 -->
+          <div class="md:col-span-2 flex gap-4 mt-6">
+            <button type="button" onclick="window.prevStep(1)" class="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
+              <i class="fas fa-arrow-left mr-2"></i> Kembali
+            </button>
+            <button type="button" onclick="window.nextStep(3)" class="flex-1 bg-gradient-animate text-white hover:shadow-[0_0_40px_rgba(99,102,241,0.5)] py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
+              Tinjau Data <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+          </div>
         </div>
 
-        <!-- Submit -->
-        <div class="md:col-span-2 mt-8">
-          <button type="submit" id="btn-submit" class="w-full bg-gradient-animate text-white hover:shadow-[0_0_40px_rgba(99,102,241,0.5)] py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]">
-            <span id="btn-text"><i class="fas fa-paper-plane mr-2"></i>Kirim Formulir Pendaftaran</span>
-            <span id="btn-loading" class="hidden"><i class="fas fa-spinner fa-spin mr-2"></i>Sedang Memproses...</span>
-          </button>
+        <!-- STEP 3: KONFIRMASI -->
+        <div id="step-container-3" class="space-y-6 transition-all duration-300 hidden">
+          <div class="border-b border-white/10 pb-3 mb-2">
+            <h3 class="text-sm font-bold text-white mb-1"><i class="fas fa-check-circle mr-2 text-emerald-400"></i>Konfirmasi Data</h3>
+            <p class="text-xs text-slate-500 text-left">Periksa kembali data Anda sebelum mengirimkan pendaftaran.</p>
+          </div>
+
+          <div class="glass p-6 rounded-3xl border border-white/5 space-y-4 text-left">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span class="text-slate-500 font-bold block uppercase text-[10px] tracking-wider">Nama Lengkap</span>
+                <span id="preview-nama" class="text-white font-black">-</span>
+              </div>
+              <div>
+                <span class="text-slate-500 font-bold block uppercase text-[10px] tracking-wider">Nomor WhatsApp</span>
+                <span id="preview-nowa" class="text-emerald-400 font-black">-</span>
+              </div>
+              <div>
+                <span class="text-slate-500 font-bold block uppercase text-[10px] tracking-wider">Lembaga &amp; Angkatan</span>
+                <span id="preview-lembaga-angkatan" class="text-white font-black">-</span>
+              </div>
+              <div>
+                <span class="text-slate-500 font-bold block uppercase text-[10px] tracking-wider">Alamat Lengkap</span>
+                <span id="preview-alamat" class="text-slate-300 font-medium">-</span>
+              </div>
+              <div class="md:col-span-2 border-t border-white/5 pt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <span class="text-slate-500 font-bold block uppercase text-[9px] tracking-wider">Desa/Kelurahan</span>
+                  <span id="preview-desa" class="text-slate-300 font-medium">-</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 font-bold block uppercase text-[9px] tracking-wider">Kecamatan</span>
+                  <span id="preview-kecamatan" class="text-slate-300 font-medium">-</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 font-bold block uppercase text-[9px] tracking-wider">Kabupaten/Kota</span>
+                  <span id="preview-kabupaten" class="text-slate-300 font-medium">-</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 font-bold block uppercase text-[9px] tracking-wider">Provinsi</span>
+                  <span id="preview-provinsi" class="text-slate-300 font-medium">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Duplicate warning -->
+          <div id="duplicate-warning" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4">
+            <p class="text-[11px] text-amber-400 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i><span id="duplicate-msg"></span></p>
+          </div>
+
+          <!-- Buttons Step 3 -->
+          <div class="flex gap-4 mt-6">
+            <button type="button" onclick="window.prevStep(2)" class="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
+              <i class="fas fa-arrow-left mr-2"></i> Edit Data
+            </button>
+            <button type="submit" id="btn-submit" class="flex-1 bg-gradient-animate text-white hover:shadow-[0_0_40px_rgba(99,102,241,0.5)] py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98]">
+              <span id="btn-text"><i class="fas fa-paper-plane mr-2"></i>Kirim Pendaftaran</span>
+              <span id="btn-loading" class="hidden"><i class="fas fa-spinner fa-spin mr-2"></i>Sedang Memproses...</span>
+            </button>
+          </div>
         </div>
       </form>
 
@@ -901,17 +977,155 @@
 
     initRegionDropdowns();
 
-    // ── Step Progress Indicator ───────────────────────────────────────
-    // Activate step 2 (Alamat) when user scrolls to the address section
-    const provInputEl = document.getElementById('inp-prov');
-    if (provInputEl) {
-      provInputEl.addEventListener('focus', function() {
+    // ── Step Progress Indicator & Navigation ───────────────────────────────────────
+    window.currentStep = 1;
+
+    window.nextStep = function(step) {
+      if (step === 2) {
+        // Validasi Step 1
+        const nama = document.getElementById('inp-nama').value.trim();
+        const angkatan = parseInt(document.getElementById('inp-angkatan').value);
+        const lembaga = document.getElementById('inp-lembaga').value;
+        const nowa = document.getElementById('inp-nowa').value;
+
+        if (nama.length < 3) {
+          notify('Nama lengkap minimal 3 karakter!', 'error');
+          document.getElementById('inp-nama').focus();
+          return;
+        }
+        if (isNaN(angkatan) || angkatan < 1970 || angkatan > 2030) {
+          notify('Tahun lulus tidak valid (1970–2030)!', 'error');
+          document.getElementById('inp-angkatan').focus();
+          return;
+        }
+        if (!lembaga) {
+          notify('Silakan pilih lembaga!', 'error');
+          document.getElementById('inp-lembaga').focus();
+          return;
+        }
+        if (!validateWA(nowa)) {
+          notify('Format nomor WhatsApp tidak valid!', 'error');
+          document.getElementById('inp-nowa').focus();
+          return;
+        }
+
+        // update visual dots
         document.getElementById('step-dot-1').className = 'step-dot done';
         document.getElementById('step-dot-1').innerHTML = '<i class="fas fa-check text-xs"></i>';
         document.getElementById('step-line-1').style.width = '100%';
         document.getElementById('step-dot-2').className = 'step-dot active';
-      }, { once: true });
-    }
+        document.getElementById('step-label-2').className = 'text-[9px] font-black text-indigo-400 uppercase tracking-wider text-center';
+
+        // update display
+        document.getElementById('step-container-1').classList.add('hidden');
+        document.getElementById('step-container-2').classList.remove('hidden');
+        window.currentStep = 2;
+        
+        // Scroll to form header
+        document.getElementById('form-steps').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      else if (step === 3) {
+        // Validasi Step 2
+        const prov = document.getElementById('inp-prov').value.trim();
+        const kab = document.getElementById('inp-kab').value.trim();
+        const kec = document.getElementById('inp-kec').value.trim();
+        const desa = document.getElementById('inp-desa').value.trim();
+        const alamat = document.getElementById('inp-alamat').value.trim();
+
+        if (!prov) {
+          notify('Provinsi wajib diisi!', 'error');
+          document.getElementById('inp-prov').focus();
+          return;
+        }
+        if (!kab) {
+          notify('Kabupaten wajib diisi!', 'error');
+          document.getElementById('inp-kab').focus();
+          return;
+        }
+        if (!kec) {
+          notify('Kecamatan wajib diisi!', 'error');
+          document.getElementById('inp-kec').focus();
+          return;
+        }
+        if (!desa) {
+          notify('Desa/Kelurahan wajib diisi!', 'error');
+          document.getElementById('inp-desa').focus();
+          return;
+        }
+        if (!alamat) {
+          notify('Alamat lengkap wajib diisi!', 'error');
+          document.getElementById('inp-alamat').focus();
+          return;
+        }
+
+        // Datalist validation
+        if (!validateInputWithDatalist(document.getElementById('inp-prov'), 'list-prov', 'Provinsi')) return;
+        if (!validateInputWithDatalist(document.getElementById('inp-kab'), 'list-kab', 'Kabupaten/Kota')) return;
+        if (!validateInputWithDatalist(document.getElementById('inp-kec'), 'list-kec', 'Kecamatan')) return;
+        if (!validateInputWithDatalist(document.getElementById('inp-desa'), 'list-desa', 'Desa/Kelurahan')) return;
+
+        // Isi data pratinjau (Step 3)
+        const nama = document.getElementById('inp-nama').value.trim();
+        const nowa = document.getElementById('inp-nowa').value;
+        const lembaga = document.getElementById('inp-lembaga').value;
+        const angkatan = document.getElementById('inp-angkatan').value;
+
+        document.getElementById('preview-nama').textContent = capitalizeName(nama);
+        document.getElementById('preview-nowa').textContent = '+62 ' + normalizeWA(nowa);
+        document.getElementById('preview-lembaga-angkatan').textContent = `${lembaga} - Lulusan ${angkatan}`;
+        document.getElementById('preview-alamat').textContent = alamat;
+        document.getElementById('preview-desa').textContent = normalizeWilayahName(desa);
+        document.getElementById('preview-kecamatan').textContent = normalizeWilayahName(kec);
+        document.getElementById('preview-kabupaten').textContent = normalizeWilayahName(kab);
+        document.getElementById('preview-provinsi').textContent = normalizeWilayahName(prov);
+
+        // update visual dots
+        document.getElementById('step-dot-2').className = 'step-dot done';
+        document.getElementById('step-dot-2').innerHTML = '<i class="fas fa-check text-xs"></i>';
+        document.getElementById('step-line-2').style.width = '100%';
+        document.getElementById('step-dot-3').className = 'step-dot active';
+        document.getElementById('step-label-3').className = 'text-[9px] font-black text-indigo-400 uppercase tracking-wider text-center';
+
+        // update display
+        document.getElementById('step-container-2').classList.add('hidden');
+        document.getElementById('step-container-3').classList.remove('hidden');
+        window.currentStep = 3;
+        
+        // Scroll to form header
+        document.getElementById('form-steps').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+
+    window.prevStep = function(step) {
+      if (step === 1) {
+        document.getElementById('step-dot-1').className = 'step-dot active';
+        document.getElementById('step-dot-1').innerHTML = '<i class="fas fa-user text-xs"></i>';
+        document.getElementById('step-line-1').style.width = '0%';
+        document.getElementById('step-dot-2').className = 'step-dot inactive';
+        document.getElementById('step-label-2').className = 'text-[9px] font-black text-slate-600 uppercase tracking-wider text-center';
+
+        document.getElementById('step-container-2').classList.add('hidden');
+        document.getElementById('step-container-1').classList.remove('hidden');
+        window.currentStep = 1;
+        
+        // Scroll to form header
+        document.getElementById('form-steps').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      else if (step === 2) {
+        document.getElementById('step-dot-2').className = 'step-dot active';
+        document.getElementById('step-dot-2').innerHTML = '<i class="fas fa-map-marker-alt text-xs"></i>';
+        document.getElementById('step-line-2').style.width = '0%';
+        document.getElementById('step-dot-3').className = 'step-dot inactive';
+        document.getElementById('step-label-3').className = 'text-[9px] font-black text-slate-600 uppercase tracking-wider text-center';
+
+        document.getElementById('step-container-3').classList.add('hidden');
+        document.getElementById('step-container-2').classList.remove('hidden');
+        window.currentStep = 2;
+        
+        // Scroll to form header
+        document.getElementById('form-steps').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
 
     window.selectRegionSequentially = async function(provName, kabName, kecName, desaName) {
       const provInput = document.getElementById("inp-prov");

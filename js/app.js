@@ -2210,6 +2210,119 @@ window.renderHome = () => {
   } catch (e) {
     console.error("Gagal menggambar grafik donasi per angkatan:", e);
   }
+
+  // 4. DISTRIBUSI ALUMNI PER KABUPATEN
+  try {
+    const kabAlumniContainer = document.getElementById("chartAlumniKabupaten");
+    if (
+      kabAlumniContainer &&
+      kabAlumniContainer.offsetParent !== null &&
+      typeof Chart !== "undefined"
+    ) {
+      let kabCount = {};
+      window.STATE.alumni.forEach((a) => {
+        if (a.kabupaten) {
+          const cleanKab = a.kabupaten.trim().toUpperCase();
+          kabCount[cleanKab] = (kabCount[cleanKab] || 0) + 1;
+        }
+      });
+
+      // Ambil top 7 kabupaten terbanyak
+      const sortedKabs = Object.keys(kabCount).sort((a, b) => kabCount[b] - kabCount[a]).slice(0, 7);
+      const kabData = sortedKabs.map(k => kabCount[k]);
+
+      if (window.alumniKabChartInstance) window.alumniKabChartInstance.destroy();
+      const ctxKab = kabAlumniContainer.getContext("2d");
+      window.alumniKabChartInstance = new Chart(ctxKab, {
+        type: "bar",
+        data: {
+          labels: sortedKabs.map(k => k.toLowerCase().replace(/(?:^|\s|-)\S/g, c => c.toUpperCase())),
+          datasets: [
+            {
+              label: "Jumlah Alumni",
+              data: kabData,
+              backgroundColor: "rgba(236, 72, 153, 0.7)", // pink
+              borderColor: "#ec4899",
+              borderWidth: 1,
+              borderRadius: 6,
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y', // horizontal bar chart
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { color: "rgba(255,255,255,0.05)" },
+              ticks: { color: "#94a3b8", font: { size: 9 }, stepSize: 1 }
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: "#94a3b8", font: { size: 9 } }
+            }
+          }
+        }
+      });
+    }
+  } catch (e) {
+    console.error("Gagal menggambar grafik alumni kabupaten:", e);
+  }
+
+  // 5. STATUS VERIFIKASI PENDAFTARAN
+  try {
+    const statusContainer = document.getElementById("chartStatusVerifikasi");
+    if (
+      statusContainer &&
+      statusContainer.offsetParent !== null &&
+      typeof Chart !== "undefined"
+    ) {
+      let statusCount = { approved: 0, pending: 0, rejected: 0 };
+      window.STATE.alumni.forEach((a) => {
+        const s = a.status || "pending";
+        if (statusCount.hasOwnProperty(s)) {
+          statusCount[s]++;
+        } else {
+          statusCount[s] = (statusCount[s] || 0) + 1;
+        }
+      });
+
+      if (window.statusChartInstance) window.statusChartInstance.destroy();
+      const ctxStatus = statusContainer.getContext("2d");
+      window.statusChartInstance = new Chart(ctxStatus, {
+        type: "doughnut",
+        data: {
+          labels: ["Disetujui", "Menunggu", "Ditolak"],
+          datasets: [
+            {
+              data: [statusCount.approved, statusCount.pending, statusCount.rejected],
+              backgroundColor: [
+                "#10b981", // approved - green
+                "#f59e0b", // pending - amber
+                "#ef4444"  // rejected - red
+              ],
+              borderWidth: 0,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: "#94a3b8", font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+  } catch (e) {
+    console.error("Gagal menggambar grafik status verifikasi:", e);
+  }
 };
 window.renderApproveUsers = () => {
   const tbody = document.getElementById("approve-users-list");

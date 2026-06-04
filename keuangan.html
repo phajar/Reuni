@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="theme-color" content="#060813" />
+  <meta name="description" content="Laporan Keuangan Real-time dan Progress Fundraising Donasi Reuni Akbar AL-FATAH." />
+  <title>Laporan Keuangan &amp; Donasi – Reuni Akbar AL-FATAH</title>
+  <script src="js/lib/tailwindcss.js"></script>
+  <link rel="stylesheet" href="css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800;900&display=swap');
+    :root { --bg: #060813; }
+    body { background-color: var(--bg); color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+    .glass { background: rgba(14,18,37,0.70); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+    .premium-card { background: rgba(14,18,37,0.40); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.03); border-radius: 2rem; transition: all 0.3s ease; }
+    .premium-card:hover { border-color: rgba(99,102,241,0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .input-field { width:100%; padding:12px 18px; border-radius:14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); color:white; outline:none; transition:all 0.3s; font-size:13px; }
+    .input-field:focus { border-color:#6366f1; background:rgba(99,102,241,0.05); }
+    .bg-gradient-animate { background:linear-gradient(-45deg,#4f46e5,#0ea5e9,#3b82f6,#6366f1); background-size:400% 400%; animation:gradientBG 15s ease infinite; }
+    @keyframes gradientBG { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+    .reveal { opacity:0; transform:translateY(24px); transition:opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.3); }
+
+    /* Custom Ticker / Marquee */
+    @keyframes marquee {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+    .animate-marquee {
+      display: inline-block;
+      animation: marquee 25s linear infinite;
+    }
+    .animate-marquee:hover {
+      animation-play-state: paused;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+</head>
+<body class="min-h-screen flex flex-col relative text-slate-300">
+
+  <!-- Ambient Gradients -->
+  <div class="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-emerald-600/10 blur-[120px] rounded-full pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/15 blur-[120px] rounded-full pointer-events-none z-0"></div>
+
+  <!-- NAV -->
+  <nav class="w-full p-4 md:p-5 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
+    <a href="countdown.html" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-all duration-300">
+        <i class="fas fa-mosque"></i>
+      </div>
+      <div>
+        <h1 class="font-black text-xs text-white tracking-widest uppercase group-hover:text-indigo-300 transition-colors">Reuni Akbar</h1>
+        <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">AL-FATAH</p>
+      </div>
+    </a>
+    <a href="index.html" class="w-10 h-10 flex items-center justify-center glass hover:bg-white/10 rounded-2xl text-slate-400 hover:text-white transition-all border border-white/10 hover:scale-105" title="Halaman Admin">
+      <i class="fas fa-user-shield text-xs"></i>
+    </a>
+  </nav>
+
+  <main class="flex-1 flex flex-col items-center justify-center p-4 md:p-8 relative z-10 w-full max-w-5xl mx-auto my-2 pb-36">
+
+    <!-- HERO -->
+    <div class="text-center mb-8 w-full mt-4 reveal">
+      <div class="inline-block p-4 rounded-3xl glass shadow-2xl border border-indigo-500/30 mb-6 bg-gradient-animate hover:scale-105 transition-transform duration-300">
+        <i class="fas fa-wallet text-4xl text-white"></i>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-black text-white mb-3 tracking-tight uppercase">Transparansi <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">Keuangan</span></h1>
+      <p class="text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">Laporan arus kas masuk, pengeluaran, dan progress donasi pendaftaran Reuni Akbar secara real-time demi mewujudkan pengelolaan yang amanah.</p>
+    </div>
+
+    <!-- 1. PROGRESS BAR FUNDRAISING -->
+    <div class="w-full mb-6 reveal">
+      <div class="glass p-6 md:p-8 rounded-[2.5rem] border border-emerald-500/20 shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-emerald-500/10 blur-[40px] pointer-events-none"></div>
+        
+        <div class="flex flex-col sm:flex-row justify-between sm:items-end mb-4 gap-2">
+          <div>
+            <span class="text-[10px] font-black uppercase text-emerald-400 tracking-widest block mb-1">Fundraising Campaign</span>
+            <h3 class="text-lg font-black uppercase text-white tracking-wide"><i class="fas fa-bullseye mr-2 text-emerald-400"></i>Progress Pendanaan Acara</h3>
+          </div>
+          <div class="text-right">
+            <span class="text-2xl font-black text-emerald-400" id="target-percentage">0%</span>
+            <span class="text-slate-500 text-xs block font-bold" id="target-donor-count">0 Donatur</span>
+          </div>
+        </div>
+
+        <div class="w-full bg-slate-800 rounded-full h-4 mb-3 overflow-hidden border border-white/5 shadow-inner">
+          <div id="target-progress" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(16,185,129,0.5)]" style="width: 0%"></div>
+        </div>
+
+        <div class="flex justify-between text-[11px] font-bold">
+          <span class="text-emerald-400" id="target-current">Terkumpul: Rp 0</span>
+          <span class="text-slate-500" id="target-max">Target Minimal: Rp 50.000.000</span>
+        </div>
+
+        <!-- Marquee Ticker Donatur -->
+        <div class="mt-6 pt-4 border-t border-white/5 relative overflow-hidden h-6 flex items-center bg-black/20 rounded-xl px-4">
+          <div class="absolute left-3 text-[10px] font-black text-emerald-400 uppercase tracking-widest z-10 bg-[#0e1225] pr-2 flex items-center gap-1">
+            <i class="fas fa-heart text-pink-500 animate-pulse"></i> Donasi Terbaru:
+          </div>
+          <div class="w-full overflow-hidden relative h-full flex items-center pl-28">
+            <div id="tracker-ticker-content" class="absolute flex gap-8 items-center whitespace-nowrap animate-marquee text-[11px] text-slate-300">
+              <span class="italic text-slate-500">Memuat riwayat donatur terbaru...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. KAS SUMMARY CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 w-full mb-8 reveal">
+      <div class="premium-card p-6 flex items-center gap-4 border border-emerald-500/10 bg-emerald-500/5">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg flex-shrink-0">
+          <i class="fas fa-arrow-down"></i>
+        </div>
+        <div>
+          <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider block">Total Pemasukan</span>
+          <span id="stat-in" class="text-lg font-black text-white">Rp 0</span>
+        </div>
+      </div>
+
+      <div class="premium-card p-6 flex items-center gap-4 border border-red-500/10 bg-red-500/5">
+        <div class="w-12 h-12 rounded-2xl bg-red-500/20 border border-red-500/30 flex items-center justify-center text-red-400 text-lg flex-shrink-0">
+          <i class="fas fa-arrow-up"></i>
+        </div>
+        <div>
+          <span class="text-[9px] font-black text-slate-500 uppercase tracking-wider block">Total Pengeluaran</span>
+          <span id="stat-out" class="text-lg font-black text-white">Rp 0</span>
+        </div>
+      </div>
+
+      <div class="premium-card p-6 flex items-center gap-4 border border-indigo-500/20 bg-indigo-500/5 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-50"></div>
+        <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-lg flex-shrink-0 relative z-10">
+          <i class="fas fa-vault"></i>
+        </div>
+        <div class="relative z-10">
+          <span class="text-[9px] font-black text-indigo-400 uppercase tracking-wider block">Saldo Kas Bersih</span>
+          <span id="stat-balance" class="text-xl font-black text-white font-mono tracking-wide">Rp 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. VISUAL CHARTS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full mb-8 reveal">
+      <div class="premium-card p-6">
+        <h3 class="text-sm font-black uppercase text-pink-500 mb-1"><i class="fas fa-chart-pie mr-2"></i> Komposisi Penggunaan Dana</h3>
+        <p class="text-[9px] text-slate-500 mb-4">Rincian alokasi pengeluaran kas yang digunakan panitia.</p>
+        <div class="relative h-64 w-full flex justify-center items-center">
+          <canvas id="pieChart"></canvas>
+          <div id="no-pie-data" class="hidden text-slate-500 text-xs italic">Belum ada data pengeluaran terdaftar.</div>
+        </div>
+      </div>
+
+      <div class="premium-card p-6">
+        <h3 class="text-sm font-black uppercase text-indigo-500 mb-1"><i class="fas fa-chart-bar mr-2"></i> Donasi per Tahun Lulus</h3>
+        <p class="text-[9px] text-slate-500 mb-4">Total dana donasi/iuran terkumpul berdasarkan tahun kelulusan.</p>
+        <div class="relative h-64 w-full flex justify-center items-center">
+          <canvas id="chartDonasiAngkatan"></canvas>
+          <div id="no-donasi-data" class="hidden text-slate-500 text-xs italic">Belum ada donasi masuk terverifikasi.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. TABLE TRANSKASI TIMELINE & PAPAN DONATUR -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full reveal">
+      
+      <!-- TIMELINE KAS (2 Columns) -->
+      <div class="lg:col-span-2 glass p-6 md:p-8 rounded-[2.5rem] border border-white/5 shadow-2xl flex flex-col h-[550px]">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-5 shrink-0">
+          <div>
+            <h2 class="text-lg font-black uppercase text-white tracking-wide"><i class="fas fa-history mr-2 text-indigo-400"></i>Aliran Dana Kas</h2>
+            <p class="text-xs text-slate-500">Mutasi transaksi pemasukan dan pengeluaran panitia.</p>
+          </div>
+          <div class="flex gap-2 w-full sm:w-auto">
+            <input type="text" id="kas-search" oninput="window.filterKasTable()" class="input-field py-2 px-3 text-xs w-full sm:w-40" placeholder="Cari keterangan..." />
+            <select id="kas-filter-cat" onchange="window.filterKasTable()" class="input-field py-2 px-3 text-xs w-full sm:w-28 bg-[#0a0d1d]">
+              <option value="">Semua</option>
+              <option value="pemasukan">Masuk (+)</option>
+              <option value="pengeluaran">Keluar (-)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto custom-scrollbar pr-2">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-white/10 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                <th class="pb-3 pl-2">Tanggal</th>
+                <th class="pb-3">Kategori &amp; Keterangan</th>
+                <th class="pb-3 text-right pr-2">Nominal</th>
+              </tr>
+            </thead>
+            <tbody id="kas-timeline-list" class="divide-y divide-white/5">
+              <tr>
+                <td colspan="3" class="p-8 text-center text-slate-500 italic">Memuat mutasi kas...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DONOR LEADERBOARD (1 Column) -->
+      <div class="glass p-6 md:p-8 rounded-[2.5rem] border border-emerald-500/20 shadow-2xl flex flex-col h-[550px]">
+        <div class="text-center mb-5 shrink-0">
+          <h2 class="text-base font-black uppercase text-emerald-400 mb-1"><i class="fas fa-trophy mr-1.5 text-amber-400"></i>Peringkat Angkatan</h2>
+          <p class="text-[10px] text-slate-500">Total donasi terbesar berdasarkan tahun lulus.</p>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-3" id="leaderboard-public-list">
+          <div class="text-center text-slate-500 text-xs italic py-8">Memuat data donasi angkatan...</div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-white/5 shrink-0 text-center">
+          <a href="pembayaran.html" class="w-full inline-block bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black py-3 rounded-xl transition-all uppercase text-xs tracking-widest shadow-lg hover:scale-105 active:scale-95">
+            <i class="fas fa-hand-holding-heart mr-1.5"></i>Ikut Donasi Sekarang
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="text-center py-6 text-xs font-bold text-slate-600 uppercase tracking-widest relative z-10">
+    &copy; Panitia Reuni Akbar Pondok Pesantren Al-Fatah
+  </footer>
+
+  <!-- ── Firebase & Chart.js Integration ── -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, initializeFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
+      authDomain: "reuniakbar.firebaseapp.com",
+      projectId: "reuniakbar",
+      storageBucket: "reuniakbar.firebasestorage.app",
+      messagingSenderId: "542951643652",
+      appId: "1:542951643652:web:1b4b7dac6c676a5d6c3351"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    let db;
+    try {
+      db = initializeFirestore(app, { experimentalForceLongPolling: true });
+    } catch(e) {
+      db = getFirestore(app);
+    }
+
+    // Cache local state
+    let state = {
+      alumni: [],
+      finance: []
+    };
+
+    // Auto capitalize name
+    function capitalizeName(name) {
+      if (!name) return "";
+      return name.trim().toLowerCase().replace(/(?:^|\s|-)\S/g, c => c.toUpperCase());
+    }
+
+    function formatRupiah(num) {
+      return "Rp " + (Number(num) || 0).toLocaleString('id-ID').replace(/,/g, '.');
+    }
+
+    function formatShortDate(isoString) {
+      if (!isoString) return "-";
+      try {
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return String(isoString);
+        return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "2-digit" });
+      } catch(e) {
+        return String(isoString);
+      }
+    }
+
+    // Real-time listener for Alumni
+    onSnapshot(collection(db, "alumni"), (snap) => {
+      state.alumni = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      updateAllKeuangan();
+    });
+
+    // Real-time listener for Finance
+    onSnapshot(collection(db, "finance"), (snap) => {
+      state.finance = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      updateAllKeuangan();
+    });
+
+    // Global charts instances
+    let pieChartInstance = null;
+    let donasiChartInstance = null;
+
+    function updateAllKeuangan() {
+      const financeList = state.finance;
+      const approvedAlumni = state.alumni.filter(a => a.status === 'approved');
+
+      // 1. Hitung total Pemasukan, Pengeluaran, Saldo
+      let totalIn = 0;
+      let totalOut = 0;
+      let approvedDonations = [];
+      let catExpenses = {};
+
+      financeList.forEach(f => {
+        // Skip kategori target / RAB
+        if (f.kategori === 'RAB') return;
+
+        const nom = Number(f.nominal) || 0;
+        if (f.status === 'pemasukan' || f.status === 'approved') {
+          totalIn += nom;
+          if (f.kategori === 'Donasi') {
+            approvedDonations.push(f);
+          }
+        } else if (f.status === 'pengeluaran') {
+          totalOut += nom;
+          catExpenses[f.kategori] = (catExpenses[f.kategori] || 0) + nom;
+        }
+      });
+
+      const balance = totalIn - totalOut;
+
+      // Update counters
+      document.getElementById('stat-in').innerText = formatRupiah(totalIn);
+      document.getElementById('stat-out').innerText = formatRupiah(totalOut);
+      document.getElementById('stat-balance').innerText = formatRupiah(balance);
+
+      // 2. Hitung target progress (fundraising)
+      // Dapatkan total RAB sebagai target donasi
+      const rabDocs = financeList.filter(f => f.kategori === 'RAB');
+      const totalRAB = rabDocs.reduce((sum, f) => sum + (Number(f.nominal) || 0), 0);
+      const targetDonasi = totalRAB > 0 ? totalRAB : 50000000;
+      
+      // Hitung total nominal donasi terkumpul
+      const totalDonasiTerkumpul = approvedDonations.reduce((sum, f) => sum + (Number(f.nominal) || 0), 0);
+      const percentage = targetDonasi > 0 ? Math.min(Math.round((totalDonasiTerkumpul / targetDonasi) * 100), 100) : 0;
+
+      document.getElementById('target-percentage').innerText = `${percentage}%`;
+      document.getElementById('target-donor-count').innerText = `${approvedDonations.length} Donatur`;
+      document.getElementById('target-progress').style.width = `${percentage}%`;
+      document.getElementById('target-current').innerText = `Terkumpul: ${formatRupiah(totalDonasiTerkumpul)}`;
+      document.getElementById('target-max').innerText = `Target RAB: ${formatRupiah(targetDonasi)}`;
+
+      // 3. Render ticker donatur
+      const tickerContainer = document.getElementById('tracker-ticker-content');
+      if (tickerContainer) {
+        if (approvedDonations.length === 0) {
+          tickerContainer.innerHTML = '<span class="italic text-slate-500">Belum ada donasi terverifikasi. Jadilah yang pertama!</span>';
+        } else {
+          // Sort donasi terbaru
+          const recentDonations = [...approvedDonations].sort((a,b) => {
+            const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+            const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+            return dateB - dateA;
+          });
+
+          const tickerHtml = recentDonations.slice(0, 10).map(f => {
+            const cleanName = (f.nama_pembayar || 'Alumni').replace(/^Donasi:\s*/i, '');
+            const alumnus = state.alumni.find(x => x.id === f.ref_alumni_id);
+            const angkatan = f.angkatan_pembayar || (alumnus ? alumnus.angkatan : null);
+            const lembaga = f.lembaga_pembayar || (alumnus ? alumnus.lembaga : null);
+            const infoAngkatan = (lembaga && angkatan) ? ` (${lembaga} '${String(angkatan).slice(-2)})` : '';
+            return `<span class="font-bold text-white">${cleanName}${infoAngkatan}</span> berdonasi <span class="text-emerald-400 font-bold">${formatRupiah(f.nominal)}</span>`;
+          }).join(' <span class="text-slate-600 px-2">•</span> ');
+          tickerContainer.innerHTML = tickerHtml;
+        }
+      }
+
+      // 4. Render Doughnut Chart (Expenses)
+      const pieCanvas = document.getElementById('pieChart');
+      if (pieCanvas && typeof Chart !== 'undefined' && pieCanvas.offsetParent !== null) {
+        const catLabels = Object.keys(catExpenses);
+        const catValues = Object.values(catExpenses);
+
+        if (catLabels.length === 0) {
+          document.getElementById('no-pie-data').classList.remove('hidden');
+          pieCanvas.classList.add('hidden');
+        } else {
+          document.getElementById('no-pie-data').classList.add('hidden');
+          pieCanvas.classList.remove('hidden');
+
+          if (pieChartInstance) pieChartInstance.destroy();
+          pieChartInstance = new Chart(pieCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: catLabels,
+              datasets: [{
+                data: catValues,
+                backgroundColor: ['#ec4899', '#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#a78bfa'],
+                borderWidth: 0
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: { color: '#94a3b8', font: { size: 9 } }
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // 5. Render Bar Chart (Donasi per Angkatan)
+      const donasiCanvas = document.getElementById('chartDonasiAngkatan');
+      if (donasiCanvas && typeof Chart !== 'undefined' && donasiCanvas.offsetParent !== null) {
+        let donasiAngkMap = {};
+        
+        // Sum donasi
+        financeList.forEach(f => {
+          if ((f.status === 'pemasukan' || f.status === 'approved') && f.kategori === 'Donasi') {
+            const alumnus = state.alumni.find(x => x.id === f.ref_alumni_id);
+            const angkatan = f.angkatan_pembayar || (alumnus ? alumnus.angkatan : null);
+            if (angkatan && /^\d{4}$/.test(String(angkatan).trim())) {
+              const cleanAng = String(angkatan).trim();
+              donasiAngkMap[cleanAng] = (donasiAngkMap[cleanAng] || 0) + (Number(f.nominal) || 0);
+            }
+          }
+        });
+
+        const sortedKeys = Object.keys(donasiAngkMap).sort();
+        const donasiValues = sortedKeys.map(k => donasiAngkMap[k]);
+
+        if (sortedKeys.length === 0) {
+          document.getElementById('no-donasi-data').classList.remove('hidden');
+          donasiCanvas.classList.add('hidden');
+        } else {
+          document.getElementById('no-donasi-data').classList.add('hidden');
+          donasiCanvas.classList.remove('hidden');
+
+          const barColors = sortedKeys.map((_, i) => {
+            const hue = 140 + (i / Math.max(sortedKeys.length - 1, 1)) * 80;
+            return `hsla(${hue}, 70%, 55%, 0.75)`;
+          });
+
+          if (donasiChartInstance) donasiChartInstance.destroy();
+          donasiChartInstance = new Chart(donasiCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: sortedKeys.map(a => `'${String(a).slice(-2)}`),
+              datasets: [{
+                label: 'Total Donasi',
+                data: donasiValues,
+                backgroundColor: barColors,
+                borderColor: barColors.map(c => c.replace('0.75', '1')),
+                borderWidth: 1,
+                borderRadius: 6
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx) => ' ' + formatRupiah(ctx.parsed.y)
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  grid: { display: false },
+                  ticks: { color: '#94a3b8', font: { size: 9 } }
+                },
+                y: {
+                  grid: { color: 'rgba(255,255,255,0.05)' },
+                  ticks: {
+                    color: '#94a3b8',
+                    font: { size: 9 },
+                    callback: (v) => {
+                      if (v >= 1000000) return (v / 1000000).toFixed(0) + 'jt';
+                      if (v >= 1000) return (v / 1000).toFixed(0) + 'rb';
+                      return v;
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // 6. Render Leaderboard Angkatan
+      let donasiAngkMap = {};
+      financeList.forEach(f => {
+        if ((f.status === 'pemasukan' || f.status === 'approved') && f.kategori === 'Donasi') {
+          const alumnus = state.alumni.find(x => x.id === f.ref_alumni_id);
+          const angkatan = f.angkatan_pembayar || (alumnus ? alumnus.angkatan : null);
+          if (angkatan && /^\d{4}$/.test(String(angkatan).trim())) {
+            const cleanAng = String(angkatan).trim();
+            donasiAngkMap[cleanAng] = (donasiAngkMap[cleanAng] || 0) + (Number(f.nominal) || 0);
+          }
+        }
+      });
+
+      const leaderData = Object.keys(donasiAngkMap)
+        .map(ang => ({ angkatan: ang, total: donasiAngkMap[ang] }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+
+      const leadContainer = document.getElementById('leaderboard-public-list');
+      if (leadContainer) {
+        if (leaderData.length === 0) {
+          leadContainer.innerHTML = '<div class="text-center text-slate-500 italic py-8 text-xs">Belum ada donasi angkatan.</div>';
+        } else {
+          const meds = ["text-yellow-400", "text-slate-300", "text-amber-600", "text-indigo-400", "text-slate-500"];
+          leadContainer.innerHTML = leaderData.map((d, i) => `
+            <div class="flex items-center justify-between p-3.5 bg-black/20 rounded-2xl border border-white/5 shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black ${meds[i] || 'text-slate-600'}">
+                  ${i < 3 ? '<i class="fas fa-medal"></i>' : (i + 1)}
+                </div>
+                <div>
+                  <div class="text-[8px] text-slate-500 uppercase font-bold">Angkatan Lulus</div>
+                  <div class="text-xs font-black text-white">Tahun ${d.angkatan}</div>
+                </div>
+              </div>
+              <div class="text-xs font-black text-emerald-400 font-mono">${formatRupiah(d.total)}</div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Render timeline table initially
+      window.filterKasTable();
+    }
+
+    // Filter and search mutasi kas
+    window.filterKasTable = () => {
+      const q = document.getElementById('kas-search').value.toLowerCase();
+      const cat = document.getElementById('kas-filter-cat').value;
+      const tbody = document.getElementById('kas-timeline-list');
+      
+      if (!tbody) return;
+
+      const filtered = state.finance.filter(f => {
+        // Skip target / RAB
+        if (f.kategori === 'RAB') return false;
+
+        // Filter category
+        if (cat === 'pemasukan' && !(f.status === 'pemasukan' || f.status === 'approved')) return false;
+        if (cat === 'pengeluaran' && f.status !== 'pengeluaran') return false;
+
+        // Search text
+        const pembayar = (f.nama_pembayar || '').toLowerCase();
+        const ket = (f.keterangan || '').toLowerCase();
+        const kat = (f.kategori || '').toLowerCase();
+        
+        return pembayar.includes(q) || ket.includes(q) || kat.includes(q);
+      });
+
+      // Sort by date/created_at desc
+      filtered.sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at) : new Date(a.tanggal || 0);
+        const dateB = b.created_at ? new Date(b.created_at) : new Date(b.tanggal || 0);
+        return dateB - dateA;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-500 italic">Tidak ada transaksi ditemukan</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(f => {
+        const isPemasukan = f.status === 'pemasukan' || f.status === 'approved';
+        const colorClass = isPemasukan ? 'text-emerald-400 font-bold' : 'text-red-400 font-medium';
+        const sign = isPemasukan ? '+' : '-';
+        const rawDate = f.created_at || f.tanggal;
+
+        return `
+          <tr class="hover:bg-white/5 transition-colors border-b border-white/5">
+            <td class="py-3.5 pl-2 font-medium text-slate-400 text-[10px] w-20">${formatShortDate(rawDate)}</td>
+            <td class="py-3.5">
+              <span class="text-[9px] font-black uppercase text-indigo-400 px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 mr-1.5 inline-block">${f.kategori || 'Kas'}</span>
+              <div class="text-white font-bold text-xs mt-1">${capitalizeName(f.nama_pembayar || 'Mutasi Kas')}</div>
+              <p class="text-[10px] text-slate-500 mt-0.5">${f.keterangan || '-'}</p>
+            </td>
+            <td class="py-3.5 text-right pr-2 font-mono ${colorClass} text-xs whitespace-nowrap">${sign} ${formatRupiah(f.nominal)}</td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    // IntersectionObserver reveal animations
+    if (typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) e.target.classList.add('visible');
+        });
+      }, { threshold: 0.05 });
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    } else {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    }
+  </script>
+
+  <!-- Shared Nav Injected Component -->
+  <script src="js/transitions.js"></script>
+  <script src="js/nav-component.js"></script>
+</body>
+</html>
