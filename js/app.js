@@ -194,7 +194,6 @@ window.populateEventSettingsForm = () => {
   const setEventTimeEl = document.getElementById("set-event-time");
   const setEventGuestEl = document.getElementById("set-event-guest");
   const setEventWaHumasEl = document.getElementById("set-event-wa-humas");
-  const setEventEmailPanitiaEl = document.getElementById("set-event-email-panitia");
   const apiBendaharaEl = document.getElementById("api-access-bendahara");
   const apiSekretarisEl = document.getElementById("api-access-sekretaris");
   const setEventWaDisabledEl = document.getElementById("set-event-wa-disabled");
@@ -208,7 +207,6 @@ window.populateEventSettingsForm = () => {
       if (setEventTimeEl) setEventTimeEl.value = window.STATE.eventTime || "";
       if (setEventGuestEl) setEventGuestEl.value = window.STATE.eventGuest || "";
       if (setEventWaHumasEl) setEventWaHumasEl.value = window.STATE.eventWaHumas || "";
-      if (setEventEmailPanitiaEl) setEventEmailPanitiaEl.value = (window.STATE.eventInfo && window.STATE.eventInfo.email_panitia) || "";
       
       if (setEventWaDisabledEl) {
           setEventWaDisabledEl.checked = window.STATE.eventInfo && window.STATE.eventInfo.wa_disabled === true;
@@ -1072,7 +1070,7 @@ window.processCombinedData = () => {
       listAlumniFin.innerHTML = window.STATE.alumni
         .map(
           (a) =>
-            `<option value="${window.escapeHtml(a.nama)} (${window.escapeHtml(a.angkatan || '-')})" data-id="${window.escapeHtml(a.id)}" data-name="${window.escapeHtml(a.nama)}" data-email="${window.escapeHtml(a.email || '')}"></option>`,
+            `<option value="${window.escapeHtml(a.nama)} (${window.escapeHtml(a.angkatan || '-')})" data-id="${window.escapeHtml(a.id)}" data-name="${window.escapeHtml(a.nama)}"></option>`,
         )
         .join("");
     }
@@ -4839,7 +4837,6 @@ window.handleUpdateEventInfo = async (e) => {
   
   const waHumasVal = document.getElementById("set-event-wa-humas").value.trim().replace(/\D/g, "");
   const waDisabledVal = document.getElementById("set-event-wa-disabled").checked;
-  const emailPanitiaVal = document.getElementById("set-event-email-panitia").value.trim();
   
   try {
     await db
@@ -4852,7 +4849,6 @@ window.handleUpdateEventInfo = async (e) => {
           event_guest: document.getElementById("set-event-guest").value,
           wa_humas: waHumasVal,
           wa_disabled: waDisabledVal,
-          email_panitia: emailPanitiaVal,
           api_access_roles: apiAccess,
         },
         { merge: true },
@@ -5422,8 +5418,6 @@ window.openSettings = () => {
       document.getElementById("fin-kategori").value = "Donasi";
       stCont.classList.add("hidden");
       nomCont.classList.replace("col-span-1", "col-span-2");
-      const emailField = document.getElementById("fin-email");
-      if (emailField) emailField.value = a.email || "";
     } else {
       document.getElementById("hidden-fin-ref-id").value = "";
       selectContainer.classList.remove("hidden");
@@ -5436,8 +5430,6 @@ window.openSettings = () => {
       document.getElementById("fin-status").value = "pemasukan";
       stCont.classList.remove("hidden");
       nomCont.classList.replace("col-span-2", "col-span-1");
-      const emailField = document.getElementById("fin-email");
-      if (emailField) emailField.value = "";
     }
     const payMethodDropdown = document.getElementById("fin-payment-method");
     if (payMethodDropdown) payMethodDropdown.value = "Transfer Bank";
@@ -5551,11 +5543,8 @@ window.openSettings = () => {
     if (opt) {
       const id = opt.getAttribute("data-id");
       const name = opt.getAttribute("data-name");
-      const email = opt.getAttribute("data-email") || "";
       document.getElementById("fin-nama").value = name;
       document.getElementById("hidden-fin-ref-id").value = id;
-      const emailField = document.getElementById("fin-email");
-      if (emailField) emailField.value = email;
     } else {
       document.getElementById("hidden-fin-ref-id").value = "";
     }

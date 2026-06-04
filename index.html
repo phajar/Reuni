@@ -1053,10 +1053,6 @@
             <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp</label>
             <input type="text" name="nowa" id="alm-nowa" class="input-field" placeholder="Nomor WA (tanpa +62)" />
           </div>
-          <div class="md:col-span-2">
-            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Email</label>
-            <input type="email" name="email" id="alm-email" class="input-field" placeholder="alamat@email.com" />
-          </div>
           <div class="md:col-span-2 pt-2">
             <button type="button" onclick="window.switchAlmTab('domisili')" class="btn-md3 btn-md3-tonal w-full">
               <i class="fas fa-map-marker-alt mr-2"></i> Lanjut Isi Domisili &rarr;
@@ -1314,10 +1310,6 @@
         
         <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kategori</label><select name="kategori" id="fin-kategori" class="input-field"><option value="Donasi">Donasi</option><option value="Iuran Bulanan">Iuran Bulanan</option><option value="Operasional">Operasional</option><option value="Lainnya">Lainnya</option></select></div>
         
-        <div>
-          <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Email Penerima Kuitansi (Opsional)</label>
-          <input type="email" name="email_pembayar" id="fin-email" class="input-field mt-1" placeholder="Contoh: alumni@email.com" />
-        </div>
         <div class="grid grid-cols-2 gap-4">
           <div class="col-span-1">
             <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Metode Pembayaran</label>
@@ -2789,10 +2781,6 @@
                   <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp Humas / Bantuan (Format: 628xxx)</label>
                   <input type="text" id="set-event-wa-humas" class="input-field mt-1" placeholder="Format: 628xxxxxxxx (Tanpa +, 0, atau spasi)" />
                 </div>
-                <div>
-                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Email Panitia / Hubungan Alumni</label>
-                  <input type="email" id="set-event-email-panitia" class="input-field mt-1" placeholder="Contoh: alumni@alfatah.id" />
-                </div>
                 <div class="pt-3 border-t border-white/10 mt-3">
                   <label class="text-[10px] font-bold text-amber-500 uppercase ml-1 flex items-center gap-1.5">
                     <i class="fas fa-toggle-on"></i> Mode Testing (Nonaktifkan WA)
@@ -3926,10 +3914,6 @@
                   <option value="Tunai">Tunai / Cash</option>
                   <option value="QRIS">QRIS</option>
                 </select>
-              </div>
-              <div class="flex flex-col gap-1 text-xs pt-1">
-                <span class="text-slate-400">Email Penerima Kuitansi:</span>
-                <input type="email" id="verify-email" class="bg-[#0f132a] border border-white/10 rounded-lg text-white text-xs px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full" placeholder="email@contoh.com" />
               </div>
               <div id="verify-mdr-row" class="flex justify-between text-xs hidden">
                 <span class="text-slate-400">Biaya MDR (0.7%):</span>

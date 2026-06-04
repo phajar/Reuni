@@ -339,11 +339,6 @@
                           </div>
                       </div>
 
-                      <div>
-                          <label class="text-sm font-black text-emerald-400 uppercase ml-1 mb-2 block tracking-wider">Alamat Email (Untuk Tanda Terima PDF)</label>
-                          <input type="email" id="email-pembayar" class="input-field text-sm" placeholder="Contoh: alumni@email.com" required />
-                          <p class="text-xs text-slate-500 mt-1.5 ml-1">Kuitansi resmi PDF akan dikirimkan otomatis ke email ini setelah disetujui.</p>
-                      </div>
 
                       <div>
                           <label class="text-sm font-black text-emerald-400 uppercase ml-1 mb-2 block tracking-wider">Nominal yang Ditransfer (Rp)</label>
@@ -1112,9 +1107,6 @@ try {
             document.getElementById('select-alumni').value = a.id;
             document.getElementById('alumni-search-results').classList.add('hidden');
             window.selectedAlumnus = a;
-            if (a.email && document.getElementById('email-pembayar')) {
-                document.getElementById('email-pembayar').value = a.email;
-            }
         }
     };
 
@@ -1512,7 +1504,6 @@ try {
                         angkatan: Number(document.getElementById('baru-angkatan').value),
                         lembaga: document.getElementById('baru-lembaga').value,
                         nowa: checkWA,
-                        email: document.getElementById('email-pembayar').value.trim(),
                         provinsi: window.normalizeWilayahName(document.getElementById('baru-prov').value),
                         kabupaten: window.normalizeWilayahName(document.getElementById('baru-kab').value),
                         kecamatan: window.normalizeWilayahName(document.getElementById('baru-kec').value),
@@ -1536,7 +1527,6 @@ try {
                         nominal: Number(rawNominal),
                         nama_pembayar: nama_pembayar,
                         nowa: nowa,
-                        email_pembayar: document.getElementById('email-pembayar').value.trim(),
                         ref_alumni_id: ref_alumni_id,
                         angkatan_pembayar: angkatan_pembayar,
                         lembaga_pembayar: lembaga_pembayar,
@@ -1656,7 +1646,6 @@ try {
                     angkatan: Number(document.getElementById('baru-angkatan').value),
                     lembaga: document.getElementById('baru-lembaga').value,
                     nowa: window.normalizeWA(document.getElementById('baru-nowa').value),
-                    email: document.getElementById('email-pembayar').value.trim(),
                     provinsi: window.normalizeWilayahName(document.getElementById('baru-prov').value),
                     kabupaten: window.normalizeWilayahName(document.getElementById('baru-kab').value),
                     kecamatan: window.normalizeWilayahName(document.getElementById('baru-kec').value),
@@ -1679,7 +1668,6 @@ try {
                 nominal: Number(rawNominal),
                 nominal_original: Number(rawNominal), // Simpan nominal asli untuk referensi kuitansi
                 mdr_fee: 0,                           // Default 0 sebelum diverifikasi admin
-                email_pembayar: document.getElementById('email-pembayar').value.trim(),
                 status: "pending_payment", 
                 kategori: "Donasi",
                 payment_method: "Transfer Bank",
