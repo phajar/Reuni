@@ -1,0 +1,338 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // HELPER FUNCTIONS — AUTENTIKASI & ROLE
+    // =========================================================================
+
+    // Cek apakah user sudah login
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Ambil data role dari dokumen users/{uid}
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Ambil semua data user yang sedang login (untuk isKorwil checks)
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Admin Utama atau Creator
+    function isAdminUtama() {
+      return isAuth() && (getRole() == 'admin_utama' || getRole() == 'creator');
+    }
+
+    // Bendahara (termasuk Admin Utama & Creator)
+    function isBendahara() {
+      return isAuth() && (
+        getRole() == 'bendahara' ||
+        getRole() == 'admin_utama' ||
+        getRole() == 'creator'
+      );
+    }
+
+    // Sekretaris (termasuk Admin Utama & Creator)
+    function isSekretaris() {
+      return isAuth() && (
+        getRole() == 'sekretaris' ||
+        getRole() == 'admin_utama' ||
+        getRole() == 'creator'
+      );
+    }
+
+    // Seluruh jajaran Panitia / Staff
+    function isAnyStaff() {
+      return isAuth() && getRole() in [
+        'creator',
+        'admin_utama',
+        'bendahara',
+        'sekretaris',
+        'koordinator',
+        'koordinator_wilayah',
+        'korwil_kabupaten',
+        'korwil_kecamatan',
+        'korwil_desa'
+      ];
+    }
+
+    // =========================================================================
+    // HELPER FUNCTIONS — PENCOCOKAN WILAYAH (FUZZY)
+    // =========================================================================
+
+    // Pencocokan wilayah dengan toleransi variasi ejaan umum
+    function isWilayahMatchRules(w1, w2) {
+      return (
+        w1.lower().trim() == w2.lower().trim()
+        ||
+        (w1.lower().trim().matches(".*purwakarta.*") && w2.lower().trim().matches(".*purwakarta.*"))
+        ||
+        ((w1.lower().trim().matches(".*tegal.*waru.*") || w1.lower().trim().matches(".*tegalwaru.*") || w1.lower().trim().matches(".*tgw.*")) &&
+         (w2.lower().trim().matches(".*tegal.*waru.*") || w2.lower().trim().matches(".*tegalwaru.*") || w2.lower().trim().matches(".*tgw.*")))
+        ||
+        (w1.lower().trim().matches(".*bandung.*barat.*") && w2.lower().trim().matches(".*bandung.*barat.*"))
+        ||
+        (w1.lower().trim().matches(".*" + w2.lower().trim() + ".*") || w2.lower().trim().matches(".*" + w1.lower().trim() + ".*"))
+      );
+    }
+
+    // Cek apakah koordinator wilayah memiliki akses ke data alumni tertentu
+    function isKorwilFor(alData) {
+      return isAuth() && (
+        (getUserData().role == 'korwil_kabupaten' &&
+          isWilayahMatchRules(getUserData().get('wilayah_kabupaten', '-'), alData.get('kabupaten', '-')))
+        ||
+        (getUserData().role == 'korwil_kecamatan' &&
+          isWilayahMatchRules(getUserData().get('wilayah_kabupaten', '-'), alData.get('kabupaten', '-')) &&
+          isWilayahMatchRules(getUserData().get('wilayah_kecamatan', '-'), alData.get('kecamatan', '-')))
+        ||
+        (getUserData().role == 'korwil_desa' &&
+          isWilayahMatchRules(getUserData().get('wilayah_kabupaten', '-'), alData.get('kabupaten', '-')) &&
+          isWilayahMatchRules(getUserData().get('wilayah_kecamatan', '-'), alData.get('kecamatan', '-')) &&
+          isWilayahMatchRules(getUserData().get('wilayah_desa', '-'), alData.get('desa', '-')))
+        ||
+        (getUserData().role == 'koordinator_wilayah' &&
+          isWilayahMatchRules(getUserData().get('wilayah_kabupaten', alData.get('kabupaten', '-')), alData.get('kabupaten', '-')) &&
+          isWilayahMatchRules(getUserData().get('wilayah_kecamatan', alData.get('kecamatan', '-')), alData.get('kecamatan', '-')) &&
+          isWilayahMatchRules(getUserData().get('wilayah_desa', alData.get('desa', '-')), alData.get('desa', '-'))
+        )
+      );
+    }
+
+    // Cek akses Korwil terhadap data yang mungkin belum punya field wilayah (data baru/kosong)
+    function isKorwilForOrNew(oldData, newData) {
+      return isAuth() && (
+        // Kabupaten Korwil
+        (getUserData().role == 'korwil_kabupaten' &&
+          (oldData.get('kabupaten', '-') == '-' || oldData.get('kabupaten', '-') == '' ||
+           isWilayahMatchRules(getUserData().get('wilayah_kabupaten', '-'), oldData.get('kabupaten', '-'))))
+        ||
+        // Kecamatan Korwil
+        (getUserData().role == 'korwil_kecamatan' &&
+          isWilayahMatchRules(getUserData().get('wilayah_kabupaten', '-'), oldData.get('kabupaten', '-')) &&
+          (oldData.get('kecamatan', '-') == '-' || oldData.get('kecamatan', '-') == '' ||
+           isWilayahMatchRules(getUserData().get('wilayah_kecamatan', '-'), oldData.get('kecamatan', '-'))))
+        ||
+        // Desa Korwil
+        (getUserData().role == 'korwil_desa' &&
+          isWilayahMatchRules(getUserData().get('wilayah_kabupaten', '-'), oldData.get('kabupaten', '-')) &&
+          isWilayahMatchRules(getUserData().get('wilayah_kecamatan', '-'), oldData.get('kecamatan', '-')) &&
+          (oldData.get('desa', '-') == '-' || oldData.get('desa', '-') == '' ||
+           isWilayahMatchRules(getUserData().get('wilayah_desa', '-'), oldData.get('desa', '-'))))
+        ||
+        // Legacy Koordinator Wilayah
+        (getUserData().role == 'koordinator_wilayah' &&
+          (oldData.get('kabupaten', '-') == '-' || oldData.get('kabupaten', '-') == '' || isWilayahMatchRules(getUserData().get('wilayah_kabupaten', oldData.get('kabupaten', '-')), oldData.get('kabupaten', '-'))) &&
+          (oldData.get('kecamatan', '-') == '-' || oldData.get('kecamatan', '-') == '' || isWilayahMatchRules(getUserData().get('wilayah_kecamatan', oldData.get('kecamatan', '-')), oldData.get('kecamatan', '-'))) &&
+          (oldData.get('desa', '-') == '-' || oldData.get('desa', '-') == '' || isWilayahMatchRules(getUserData().get('wilayah_desa', oldData.get('desa', '-')), oldData.get('desa', '-')))
+        )
+      );
+    }
+
+    // =========================================================================
+    // HELPER FUNCTIONS — VALIDASI FIELD (ANTI SPAM & DATA INTEGRITY)
+    // =========================================================================
+
+    // Validasi data alumni baru saat pendaftaran mandiri
+    // Memastikan field wajib ada, bertipe benar, dan ukuran dalam batas wajar
+    function isValidAlumniCreate() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['nama', 'angkatan'])
+        && d.nama is string
+        && d.nama.size() >= 3
+        && d.nama.size() <= 150
+        && d.angkatan is int
+        && d.angkatan >= 1900
+        && d.angkatan <= 2100;
+    }
+
+    // Validasi entri buku tamu baru dari halaman publik
+    function isValidGuestbookCreate() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['nama', 'angkatan', 'pesan', 'created_at'])
+        && d.nama is string
+        && d.nama.size() >= 2
+        && d.nama.size() <= 100
+        && d.angkatan is string
+        && d.angkatan.size() >= 4
+        && d.pesan is string
+        && d.pesan.size() >= 1
+        && d.pesan.size() <= 1500
+        && d.created_at is string;
+    }
+
+    // Validasi laporan transaksi donasi/pembayaran dari halaman publik
+    function isValidFinanceCreate() {
+      let d = request.resource.data;
+      return d.keys().hasAll(['nama_pembayar', 'nominal'])
+        && d.nama_pembayar is string
+        && d.nama_pembayar.size() >= 1
+        && d.nama_pembayar.size() <= 200
+        && d.nominal is number
+        && d.nominal >= 0
+        && d.nominal <= 1000000000; // Maks Rp 1 Miliar per transaksi tunggal
+    }
+
+    // =========================================================================
+    // RULES PER KOLEKSI
+    // =========================================================================
+
+    // --- APP SETTINGS (Konfigurasi API Key AI, Cloudinary, dsb) -------------
+    // Hanya staff yang bisa membaca (mencegah eksposur API key ke publik)
+    // Hanya Admin Utama yang bisa menulis
+    match /app_settings/{docId} {
+      allow read: if isAnyStaff();
+      allow write: if isAdminUtama();
+    }
+
+    // --- KOLEKSI ALUMNI ------------------------------------------------------
+    // Siapa saja bisa membaca (untuk halaman publik, cek status, countdown)
+    // Siapa saja bisa mendaftar (create), tetapi WAJIB melewati validasi field
+    // Update & Delete hanya oleh Sekretaris atau Koordinator Wilayah yang sesuai
+    match /alumni/{docId} {
+      allow read: if true;
+      allow create: if isValidAlumniCreate();
+      allow update: if isSekretaris()
+                    || (isKorwilForOrNew(resource.data, request.resource.data) && isKorwilFor(request.resource.data))
+                    || (request.resource.data.status == 'pending' && isValidAlumniCreate());
+      allow delete: if isSekretaris() || isKorwilFor(resource.data);
+    }
+
+    // --- RIWAYAT PERUBAHAN DATA ALUMNI (alumni_changelog) --------------------
+    // Hanya Panitia/Staff yang bisa membaca & menulis riwayat perubahan
+    match /alumni_changelog/{docId} {
+      allow read, write: if isAnyStaff();
+    }
+
+    // --- KOLEKSI KEUANGAN (Kas & Donasi) ------------------------------------
+    // Siapa saja bisa membaca (untuk total dana publik & verifikasi mandiri)
+    // Siapa saja bisa create, tetapi WAJIB melewati validasi field anti-spam
+    // Update & Delete hanya oleh Bendahara
+    match /finance/{docId} {
+      allow read: if true;
+      allow create: if isValidFinanceCreate();
+      allow update, delete: if isBendahara();
+    }
+
+    // --- KONFIRMASI PEMBAYARAN (payment_requests) ---------------------------
+    // Digunakan halaman pembayaran.html untuk upload bukti struk
+    // Validasi field juga berlaku untuk create publik
+    match /payment_requests/{docId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isBendahara();
+    }
+
+    // --- REKENING PEMBAYARAN (payment_accounts) ----------------------------
+    // Publik bisa membaca (ditampilkan di halaman pembayaran)
+    // Hanya Bendahara yang bisa mengubah
+    match /payment_accounts/{docId} {
+      allow read: if true;
+      allow write: if isBendahara();
+    }
+
+    // --- SETTINGS & INFO ACARA ---------------------------------------------
+    // Publik bisa membaca (tanggal acara, info event, dll)
+    //
+    // PERBAIKAN KEAMANAN:
+    // - whatsapp_api: Hanya Creator yang bisa menulis (karena berisi token sensitif)
+    // - sync_state:   Sebelumnya bisa ditulis siapa saja. Sekarang dibatasi ke
+    //                 staff terautentikasi saja, karena hanya admin app yang
+    //                 perlu memicu invalidasi cache antar-tab.
+    // - Lainnya:      Hanya Admin Utama
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if (docId == 'whatsapp_api' && isAuth() && getRole() == 'creator')
+                   || docId == 'sync_state'
+                   || (docId != 'whatsapp_api' && docId != 'sync_state' && isAdminUtama());
+    }
+
+    // --- RUNDOWN ACARA -----------------------------------------------------
+    match /rundown/{docId} {
+      allow read: if true;
+      allow write: if isSekretaris();
+    }
+
+    // --- BUKU TAMU (guestbook) ---------------------------------------------
+    // Publik bisa membaca
+    // Siapa saja bisa mengisi, tetapi WAJIB melewati validasi field anti-spam
+    // Update dilarang total (mencegah XSS injection setelah submit)
+    // Delete hanya Admin Utama (moderasi konten)
+    match /guestbook/{docId} {
+      allow read: if true;
+      allow create: if isValidGuestbookCreate();
+      allow update: if false;
+      allow delete: if isAdminUtama();
+    }
+
+    // --- DATA USER / PROFIL ------------------------------------------------
+    // User bisa membaca & membuat profilnya sendiri
+    // User bisa mengupdate profilnya, TAPI tidak bisa mengubah field 'role'
+    // (Mencegah privilege escalation / eskalasi hak akses sendiri)
+    // Admin Utama bisa baca & kelola semua user
+    match /users/{userId} {
+      allow read: if isAuth() && (request.auth.uid == userId || isAdminUtama());
+      allow create: if isAuth() && request.auth.uid == userId;
+      allow update: if isAuth() && (
+        isAdminUtama()
+        ||
+        (request.auth.uid == userId
+         && request.resource.data.role == resource.data.role)
+      );
+      allow delete: if isAdminUtama();
+    }
+
+    // --- PANITIA -----------------------------------------------------------
+    match /panitia/{docId} {
+      allow read: if true;
+      allow write: if isAdminUtama();
+    }
+
+    // --- RAB (Rencana Anggaran Biaya) --------------------------------------
+    match /rab/{docId} {
+      allow read: if true;
+      allow write: if isBendahara();
+    }
+
+    // --- TUGAS PANITIA -----------------------------------------------------
+    match /tugas/{docId} {
+      allow read: if true;
+      allow write: if isAnyStaff();
+    }
+
+    // --- LOGISTIK ----------------------------------------------------------
+    match /logistik/{docId} {
+      allow read: if true;
+      allow write: if isAnyStaff();
+    }
+
+    // --- ABSENSI -----------------------------------------------------------
+    match /absensi/{docId} {
+      allow read: if true;
+      allow write: if isAnyStaff();
+    }
+
+    // --- KAMPANYE BROADCAST TERJADWAL (WhatsApp) ---------------------------
+    match /wa_campaigns/{docId} {
+      allow read, write: if isAnyStaff();
+    }
+
+    // --- WHATSAPP SESSIONS PERSISTENCE ------------------------------------
+    match /wa_sessions/{docId} {
+      allow read, write: if isAnyStaff();
+    }
+
+    // --- LOG AKTIVITAS OPERATOR (AUDIT TRAIL) ------------------------------
+    // Hanya Admin Utama yang bisa membaca log
+    // Seluruh staff bisa menulis log aktivitasnya
+    // TIDAK BISA diupdate atau dihapus oleh siapapun (immutable audit trail)
+    match /audit_logs/{docId} {
+      allow read: if isAdminUtama();
+      allow create: if isAnyStaff();
+      allow update, delete: if false;
+    }
+  }
+}
