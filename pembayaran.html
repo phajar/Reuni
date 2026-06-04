@@ -152,7 +152,7 @@
       </a>
   </nav>
 
-  <main class="flex-1 flex flex-col items-center p-4 md:p-6 relative z-10 w-full max-w-xl mx-auto my-2">
+  <main class="flex-1 flex flex-col items-center p-4 md:p-6 relative z-10 w-full max-w-6xl mx-auto my-2">
       
       <div class="text-center mb-8 w-full">
           <span class="text-xs font-black uppercase bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full border border-emerald-500/20 tracking-widest inline-block mb-3">SABNG LOKAL & MANDIRI</span>
@@ -160,214 +160,230 @@
           <p class="text-xs text-slate-400">Silakan buka salah satu metode pembayaran di bawah untuk melakukan transfer.</p>
       </div>
 
-      <!-- LIVE TRACKER DONASI -->
-      <div id="live-donation-tracker" class="glass w-full p-6 rounded-[2.5rem] border border-emerald-500/20 shadow-xl mb-6 relative overflow-hidden hidden">
-        <div class="absolute -top-6 -right-6 w-24 h-24 bg-emerald-500/10 blur-[30px] pointer-events-none"></div>
-        
-        <div class="flex justify-between items-end mb-2">
-          <div>
-            <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest block mb-1"><i class="fas fa-heart animate-pulse mr-1"></i> Live Donasi Reuni</span>
-            <span class="text-lg font-black text-white" id="tracker-collected">Rp 0</span>
-          </div>
-          <div class="text-right">
-            <span class="text-[9px] text-slate-500 uppercase tracking-wider block">Target Acara</span>
-            <span class="text-xs font-bold text-slate-300" id="tracker-target">Rp 20.000.000</span>
-          </div>
-        </div>
-
-        <!-- PROGRESS BAR -->
-        <div class="w-full bg-black/40 border border-white/5 rounded-full h-3.5 overflow-hidden mb-4 relative shadow-inner">
-          <div id="tracker-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full w-0 rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(16,185,129,0.5)]"></div>
-        </div>
-
-        <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold mb-3">
-          <span id="tracker-percentage">0% Tercapai</span>
-          <span id="tracker-donor-count">0 Donatur</span>
-        </div>
-
-        <hr class="border-white/5 my-3" />
-
-        <!-- RUNNING TICKER FOR DONORS -->
-        <div class="flex items-center gap-2 overflow-hidden h-6 relative bg-black/30 px-3 py-1 rounded-xl border border-white/5">
-          <span class="text-[9px] font-black uppercase text-emerald-400 tracking-widest flex items-center whitespace-nowrap bg-[#060813] px-2 py-0.5 rounded border border-emerald-500/20 z-10">Terbaru</span>
-          <div class="relative flex-1 overflow-hidden h-full">
-            <div id="tracker-ticker-content" class="absolute flex gap-8 items-center whitespace-nowrap animate-marquee text-[11px] text-slate-300">
-              Menghubungkan ke server...
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- NOTIFIKASI PEMBAYARAN DINONAKTIFKAN -->
-      <div id="payment-disabled-container" class="w-full mb-6 hidden">
-          <div class="glass w-full p-8 rounded-[2.5rem] border border-red-500/20 bg-red-500/5 text-center">
-              <div class="w-16 h-16 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                  <i class="fas fa-ban"></i>
-              </div>
-              <h3 class="text-lg font-black uppercase mb-2 text-white">Pembayaran Ditutup</h3>
-              <p class="text-sm text-slate-400 leading-relaxed">Mohon maaf, metode pembayaran donasi reuni saat ini dinonaktifkan sementara oleh panitia. Silakan hubungi admin untuk informasi lebih lanjut.</p>
-          </div>
-      </div>
-
-      <!-- Toggle Metode Pembayaran -->
-      <div id="payment-method-toggle-container" class="w-full mb-6">
-          <label class="text-sm font-black text-slate-400 uppercase ml-1 mb-2.5 block tracking-wider">Metode Pembayaran</label>
-          <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 gap-1.5">
-              <button type="button" id="btn-payment-manual" onclick="window.setMetodePembayaran('manual')" class="flex-1 py-3.5 text-white font-black text-[10px] md:text-xs uppercase transition-all shadow-md tracking-wider rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700">Manual Transfer / QRIS</button>
-              <button type="button" id="btn-payment-online" onclick="window.setMetodePembayaran('online')" class="flex-1 py-3.5 text-slate-400 font-black text-[10px] md:text-xs uppercase transition-all tracking-wider rounded-xl hover:bg-white/5">Pembayaran Instan (Online)</button>
-          </div>
-      </div>
-
-      <!-- KONTEN MANUAL: Rekening & QRIS -->
-      <div id="manual-payment-info-container" class="w-full mb-6">
-          <label class="text-sm font-black text-slate-400 uppercase ml-1 mb-3 block tracking-wider"><i class="fas fa-credit-card mr-1 text-emerald-400"></i> Rekening Transfer / QRIS Panitia</label>
-          <div id="rekening-list-container" class="space-y-4">
-              <div class="glass w-full p-8 rounded-[2rem] text-center">
-                  <div class="w-5 h-5 border-2 border-slate-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p class="text-xs text-slate-500 italic">Memuat metode pembayaran panitia...</p>
-              </div>
-          </div>
-      </div>
-
-      <!-- KONTEN ONLINE: Panduan Midtrans -->
-      <div id="online-payment-info-container" class="w-full mb-6 hidden">
-          <div class="glass w-full p-6 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5">
-              <h3 class="text-sm font-black text-emerald-400 uppercase tracking-widest mb-2"><i class="fas fa-bolt mr-1"></i> Pembayaran Instan (Online)</h3>
-              <p class="text-xs text-slate-300 leading-relaxed">Anda akan dialihkan ke gerbang pembayaran aman Midtrans untuk membayar menggunakan QRIS otomatis, Gopay/ShopeePay, Virtual Account Bank (BCA, Mandiri, BNI, BRI), atau ritel modern (Alfamart/Indomaret). Transaksi Anda akan terverifikasi secara instan dan otomatis.</p>
-          </div>
-      </div>
-
-      <div class="glass w-full p-6 md:p-8 rounded-[2.5rem] border border-white/5 shadow-2xl relative">
-          <form id="form-payment" class="space-y-5">
-              <input type="hidden" id="metode-pembayaran" value="manual">
+      <!-- Wrapper Grid Dua Kolom untuk Desktop -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start w-full">
+          
+          <!-- KOLOM KIRI: Tracker & Metode Pembayaran (lg:col-span-5) -->
+          <div class="lg:col-span-5 space-y-6">
               
-              <div>
-                  <label class="text-sm font-black text-slate-400 uppercase ml-1 mb-2.5 block tracking-wider">Status Kepesertaan Anda</label>
+              <!-- LIVE TRACKER DONASI -->
+              <div id="live-donation-tracker" class="glass w-full p-6 rounded-[2.5rem] border border-emerald-500/20 shadow-xl relative overflow-hidden hidden">
+                <div class="absolute -top-6 -right-6 w-24 h-24 bg-emerald-500/10 blur-[30px] pointer-events-none"></div>
+                
+                <div class="flex justify-between items-end mb-2">
+                  <div>
+                    <span class="text-[10px] font-black text-emerald-400 uppercase tracking-widest block mb-1"><i class="fas fa-heart animate-pulse mr-1"></i> Live Donasi Reuni</span>
+                    <span class="text-lg font-black text-white" id="tracker-collected">Rp 0</span>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-[9px] text-slate-500 uppercase tracking-wider block">Target Acara</span>
+                    <span class="text-xs font-bold text-slate-300" id="tracker-target">Rp 20.000.000</span>
+                  </div>
+                </div>
+
+                <!-- PROGRESS BAR -->
+                <div class="w-full bg-black/40 border border-white/5 rounded-full h-3.5 overflow-hidden mb-4 relative shadow-inner">
+                  <div id="tracker-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-500 h-full w-0 rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(16,185,129,0.5)]"></div>
+                </div>
+
+                <div class="flex items-center justify-between text-[11px] text-slate-400 font-bold mb-3">
+                  <span id="tracker-percentage">0% Tercapai</span>
+                  <span id="tracker-donor-count">0 Donatur</span>
+                </div>
+
+                <hr class="border-white/5 my-3" />
+
+                <!-- RUNNING TICKER FOR DONORS -->
+                <div class="flex items-center gap-2 overflow-hidden h-6 relative bg-black/30 px-3 py-1 rounded-xl border border-white/5">
+                  <span class="text-[9px] font-black uppercase text-emerald-400 tracking-widest flex items-center whitespace-nowrap bg-[#060813] px-2 py-0.5 rounded border border-emerald-500/20 z-10">Terbaru</span>
+                  <div class="relative flex-1 overflow-hidden h-full">
+                    <div id="tracker-ticker-content" class="absolute flex gap-8 items-center whitespace-nowrap animate-marquee text-[11px] text-slate-300">
+                      Menghubungkan ke server...
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- NOTIFIKASI PEMBAYARAN DINONAKTIFKAN -->
+              <div id="payment-disabled-container" class="w-full hidden">
+                  <div class="glass w-full p-8 rounded-[2.5rem] border border-red-500/20 bg-red-500/5 text-center">
+                      <div class="w-16 h-16 bg-red-500/10 text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                          <i class="fas fa-ban"></i>
+                      </div>
+                      <h3 class="text-lg font-black uppercase mb-2 text-white">Pembayaran Ditutup</h3>
+                      <p class="text-sm text-slate-400 leading-relaxed">Mohon maaf, metode pembayaran donasi reuni saat ini dinonaktifkan sementara oleh panitia. Silakan hubungi admin untuk informasi lebih lanjut.</p>
+                  </div>
+              </div>
+
+              <!-- Toggle Metode Pembayaran -->
+              <div id="payment-method-toggle-container" class="w-full">
+                  <label class="text-sm font-black text-slate-400 uppercase ml-1 mb-2.5 block tracking-wider">Metode Pembayaran</label>
                   <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 gap-1.5">
-                      <button type="button" id="btn-tipe-lama" onclick="window.setTipe('lama')" class="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-black text-sm uppercase transition-all shadow-md tracking-wider">Sudah Terdaftar</button>
-                      <button type="button" id="btn-tipe-baru" onclick="window.setTipe('baru')" class="flex-1 py-3.5 rounded-xl hover:bg-white/5 text-slate-400 font-black text-sm uppercase transition-all tracking-wider">Belum Terdaftar</button>
+                      <button type="button" id="btn-payment-manual" onclick="window.setMetodePembayaran('manual')" class="flex-1 py-3.5 text-white font-black text-[10px] md:text-xs uppercase transition-all shadow-md tracking-wider rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700">Manual Transfer / QRIS</button>
+                      <button type="button" id="btn-payment-online" onclick="window.setMetodePembayaran('online')" class="flex-1 py-3.5 text-slate-400 font-black text-[10px] md:text-xs uppercase transition-all tracking-wider rounded-xl hover:bg-white/5">Pembayaran Instan (Online)</button>
                   </div>
-                  <input type="hidden" id="tipe-alumni" value="lama">
               </div>
 
-              <div id="form-lama" class="space-y-4 relative z-[999]">
-                  <div class="relative">
-                      <label class="text-sm font-black text-slate-400 uppercase ml-1 mb-2 block tracking-wider">Nama Alumni</label>
-                      <div class="relative">
-                          <input type="text" id="alumni-search-input" class="input-field pr-12 text-sm" placeholder="Ketik nama anda di sini..." autocomplete="off" required>
-                          <div class="absolute right-4 top-4.5 text-slate-500"><i class="fas fa-search text-xs"></i></div>
+              <!-- KONTEN MANUAL: Rekening & QRIS -->
+              <div id="manual-payment-info-container" class="w-full">
+                  <label class="text-sm font-black text-slate-400 uppercase ml-1 mb-3 block tracking-wider"><i class="fas fa-credit-card mr-1 text-emerald-400"></i> Rekening Transfer / QRIS Panitia</label>
+                  <div id="rekening-list-container" class="space-y-4">
+                      <div class="glass w-full p-8 rounded-[2rem] text-center">
+                          <div class="w-5 h-5 border-2 border-slate-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                          <p class="text-xs text-slate-500 italic">Memuat metode pembayaran panitia...</p>
                       </div>
-                      <div id="alumni-search-results" class="hidden absolute left-0 right-0 z-[9999] max-h-56 overflow-y-auto bg-[#0a0d1d] border border-white/10 rounded-2xl mt-2 p-2 shadow-2xl custom-scrollbar"></div>
-                      <input type="hidden" id="select-alumni" required>
                   </div>
               </div>
 
-              <div id="form-baru" class="space-y-4 hidden border border-amber-500/10 p-5 rounded-2xl bg-amber-500/5">
-                  <p class="text-sm text-amber-400 font-bold uppercase leading-relaxed"><i class="fas fa-info-circle mr-1 text-xs"></i> Nama Anda belum ada di sistem? Silakan isi formulir pendaftaran ini sekaligus.</p>
-                  <div><input type="text" id="baru-nama" class="input-field" placeholder="Nama Lengkap Sesuai Ijazah" /></div>
-                  <div class="grid grid-cols-2 gap-3">
-                      <div><input type="number" id="baru-angkatan" class="input-field" placeholder="Tahun Lulus (Cth: 2012)" /></div>
+              <!-- KONTEN ONLINE: Panduan Midtrans -->
+              <div id="online-payment-info-container" class="w-full hidden">
+                  <div class="glass w-full p-6 rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5">
+                      <h3 class="text-sm font-black text-emerald-400 uppercase tracking-widest mb-2"><i class="fas fa-bolt mr-1"></i> Pembayaran Instan (Online)</h3>
+                      <p class="text-xs text-slate-300 leading-relaxed">Anda akan dialihkan ke gerbang pembayaran aman Midtrans untuk membayar menggunakan QRIS otomatis, Gopay/ShopeePay, Virtual Account Bank (BCA, Mandiri, BNI, BRI), atau ritel modern (Alfamart/Indomaret). Transaksi Anda akan terverifikasi secara instan dan otomatis.</p>
+                  </div>
+              </div>
+
+          </div>
+
+          <!-- KOLOM KANAN: Formulir Donasi & Status Check (lg:col-span-7) -->
+          <div class="lg:col-span-7 space-y-6">
+              
+              <!-- Box Formulir Utama -->
+              <div class="glass w-full p-6 md:p-8 rounded-[2.5rem] border border-white/5 shadow-2xl relative">
+                  <form id="form-payment" class="space-y-5">
+                      <input type="hidden" id="metode-pembayaran" value="manual">
+                      
                       <div>
-                          <select id="baru-lembaga" class="input-field">
-                              <option value="" class="bg-[#0e1225] text-slate-400">-- Pilih Lembaga --</option>
-                              <option value="MA" class="bg-[#0e1225] text-white">MA</option>
-                              <option value="MTs" class="bg-[#0e1225] text-white">MTs</option>
-                          </select>
+                          <label class="text-sm font-black text-slate-400 uppercase ml-1 mb-2.5 block tracking-wider">Status Kepesertaan Anda</label>
+                          <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 gap-1.5">
+                              <button type="button" id="btn-tipe-lama" onclick="window.setTipe('lama')" class="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-black text-sm uppercase transition-all shadow-md tracking-wider">Sudah Terdaftar</button>
+                              <button type="button" id="btn-tipe-baru" onclick="window.setTipe('baru')" class="flex-1 py-3.5 rounded-xl hover:bg-white/5 text-slate-400 font-black text-sm uppercase transition-all tracking-wider">Belum Terdaftar</button>
+                          </div>
+                          <input type="hidden" id="tipe-alumni" value="lama">
                       </div>
+
+                      <div id="form-lama" class="space-y-4 relative z-[999]">
+                          <div class="relative">
+                              <label class="text-sm font-black text-slate-400 uppercase ml-1 mb-2 block tracking-wider">Nama Alumni</label>
+                              <div class="relative">
+                                  <input type="text" id="alumni-search-input" class="input-field pr-12 text-sm" placeholder="Ketik nama anda di sini..." autocomplete="off" required>
+                                  <div class="absolute right-4 top-4.5 text-slate-500"><i class="fas fa-search text-xs"></i></div>
+                              </div>
+                              <div id="alumni-search-results" class="hidden absolute left-0 right-0 z-[9999] max-h-56 overflow-y-auto bg-[#0a0d1d] border border-white/10 rounded-2xl mt-2 p-2 shadow-2xl custom-scrollbar"></div>
+                              <input type="hidden" id="select-alumni" required>
+                          </div>
+                      </div>
+
+                      <div id="form-baru" class="space-y-4 hidden border border-amber-500/10 p-5 rounded-2xl bg-amber-500/5">
+                          <p class="text-sm text-amber-400 font-bold uppercase leading-relaxed"><i class="fas fa-info-circle mr-1 text-xs"></i> Nama Anda belum ada di sistem? Silakan isi formulir pendaftaran ini sekaligus.</p>
+                          <div><input type="text" id="baru-nama" class="input-field" placeholder="Nama Lengkap Sesuai Ijazah" /></div>
+                          <div class="grid grid-cols-2 gap-3">
+                              <div><input type="number" id="baru-angkatan" class="input-field" placeholder="Tahun Lulus (Cth: 2012)" /></div>
+                              <div>
+                                  <select id="baru-lembaga" class="input-field">
+                                      <option value="" class="bg-[#0e1225] text-slate-400">-- Pilih Lembaga --</option>
+                                      <option value="MA" class="bg-[#0e1225] text-white">MA</option>
+                                      <option value="MTs" class="bg-[#0e1225] text-white">MTs</option>
+                                  </select>
+                              </div>
+                          </div>
+                          <div>
+                              <input type="text" id="baru-nowa" class="input-field" placeholder="No. WhatsApp Aktif" oninput="window.formatWAInput(this)" />
+                              <p id="wa-preview" class="text-xs text-slate-500 mt-1.5 ml-1 hidden"><i class="fab fa-whatsapp text-emerald-400 mr-1"></i><span id="wa-preview-text"></span></p>
+                          </div>
+                          <div class="grid grid-cols-2 gap-3">
+                              <div>
+                                  <input type="text" name="provinsi" id="baru-prov" list="list-baru-prov" class="input-field" placeholder="Ketik / Cari Provinsi..." autocomplete="off" />
+                                  <datalist id="list-baru-prov"></datalist>
+                              </div>
+                              <div>
+                                  <input type="text" id="baru-kab" list="list-baru-kab" class="input-field" placeholder="Kabupaten" disabled autocomplete="off" />
+                                  <datalist id="list-baru-kab"></datalist>
+                              </div>
+                          </div>
+                          <div class="grid grid-cols-2 gap-3">
+                              <div>
+                                  <input type="text" id="baru-kec" list="list-baru-kec" class="input-field" placeholder="Kecamatan" disabled autocomplete="off" />
+                                  <datalist id="list-baru-kec"></datalist>
+                              </div>
+                              <div>
+                                  <input type="text" id="baru-desa" list="list-baru-desa" class="input-field" placeholder="Desa / Kelurahan" disabled autocomplete="off" />
+                                  <datalist id="list-baru-desa"></datalist>
+                              </div>
+                          </div>
+                          <div>
+                              <div class="flex items-center justify-between mb-1.5 mt-1">
+                                  <label class="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-1">Alamat Lengkap</label>
+                                  <button type="button" id="btn-ekstrak-baru" onclick="window.runEkstrakBaru()" class="text-[9px] font-black text-indigo-400 hover:text-white uppercase tracking-widest flex items-center gap-1 transition-colors">
+                                      <i class="fas fa-magic"></i> Ekstrak Wilayah
+                                  </button>
+                              </div>
+                              <textarea id="baru-alamat" class="input-field resize-none h-16" placeholder="Alamat Rumah Lengkap (RT, RW, Jalan)"></textarea>
+                          </div>
+
+                      </div>
+
+                      <div id="bukti-upload-container">
+                          <label class="text-sm font-black text-emerald-400 uppercase ml-1 mb-2 block tracking-wider">Unggah Foto Struk / Bukti Transfer</label>
+                          <div class="flex gap-2">
+                              <input type="file" id="bukti-file" accept="image/*" onchange="window.previewImage(event)" class="input-field py-3.5 text-xs text-slate-400 flex-1" required />
+                              <button type="button" onclick="window.scanReceiptTesseract()" id="btn-scan-struk" class="px-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-black uppercase transition-all shadow-lg flex items-center justify-center whitespace-nowrap">
+                                  <i class="fas fa-magic mr-2"></i> Scan AI
+                              </button>
+                          </div>
+                          <p class="text-xs text-slate-500 mt-2 ml-1 italic">*Klik tombol Scan AI agar nominal terisi otomatis dari gambar struk.</p>
+                          
+                          <div id="preview-container" class="hidden mt-4 relative w-fit mx-auto border border-dashed border-emerald-500/30 rounded-2xl p-2 bg-emerald-500/5 shadow-inner">
+                              <img id="struk-preview" src="" class="max-h-36 rounded-xl object-contain" alt="Preview Struk" />
+                              <button type="button" onclick="window.removePreview()" class="absolute -top-3 -right-3 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow-lg hover:bg-red-600 transition-all"><i class="fas fa-times"></i></button>
+                          </div>
+                      </div>
+
+                      <div>
+                          <label class="text-sm font-black text-emerald-400 uppercase ml-1 mb-2 block tracking-wider">Nominal yang Ditransfer (Rp)</label>
+                          <input type="text" inputmode="numeric" id="nominal" onkeyup="window.formatRupiahInput(this)" class="input-field text-lg font-black text-emerald-400 tracking-wider font-mono" required placeholder="Contoh: 150.000" />
+                      </div>
+
+                      <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 py-5 rounded-2xl font-black uppercase text-sm tracking-widest text-white transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:shadow-[0_0_40px_rgba(16,185,129,0.6)] focus:outline-none focus:ring-2 focus:ring-emerald-400/50 mt-6"><i class="fas fa-paper-plane mr-2"></i> Konfirmasi & Lanjutkan</button>
+                  </form>
+
+                  <div id="success-screen" class="hidden text-center py-6">
+                      <div class="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-5 border border-emerald-500/20 animate-bounce"><i class="fas fa-check"></i></div>
+                      <h2 class="text-xl font-black uppercase text-white mb-2">Laporan Dikirim!</h2>
+                      <p class="text-xs text-slate-400 mb-6 leading-relaxed px-2">Terima kasih atas partisipasi Anda. Bukti transaksi &amp; data pendaftaran Anda telah berhasil dikirim ke antrean sistem verifikasi Admin/Bendahara.</p>
+                      <button onclick="window.location.href = window.location.pathname" class="bg-white/5 hover:bg-white/10 text-white py-3.5 px-6 rounded-xl font-bold text-sm uppercase tracking-widest transition-all border border-white/10">Kirim Pembayaran Lain</button>
+                  </div>
+              </div>
+
+              <!-- PANEL CEK STATUS PEMBAYARAN -->
+              <div id="panel-cek-status" class="glass w-full p-6 md:p-8 rounded-[2.5rem] border border-indigo-500/20 shadow-xl mt-6 relative overflow-hidden">
+                <div class="absolute -top-6 -right-6 w-24 h-24 bg-indigo-500/10 blur-[30px] pointer-events-none"></div>
+                <div class="flex items-center gap-3 mb-5">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 border border-indigo-500/30">
+                    <i class="fas fa-search"></i>
                   </div>
                   <div>
-                      <input type="text" id="baru-nowa" class="input-field" placeholder="No. WhatsApp Aktif" oninput="window.formatWAInput(this)" />
-                      <p id="wa-preview" class="text-xs text-slate-500 mt-1.5 ml-1 hidden"><i class="fab fa-whatsapp text-emerald-400 mr-1"></i><span id="wa-preview-text"></span></p>
+                    <h3 class="font-black uppercase text-sm text-white tracking-wide">Cek Status Pembayaran</h3>
+                    <p class="text-xs text-slate-400">Masukkan nomor WhatsApp Anda untuk mengecek status verifikasi.</p>
                   </div>
-                  <div class="grid grid-cols-2 gap-3">
-                      <div>
-                          <input type="text" name="provinsi" id="baru-prov" list="list-baru-prov" class="input-field" placeholder="Ketik / Cari Provinsi..." autocomplete="off" />
-                          <datalist id="list-baru-prov"></datalist>
-                      </div>
-                      <div>
-                          <input type="text" id="baru-kab" list="list-baru-kab" class="input-field" placeholder="Kabupaten" disabled autocomplete="off" />
-                          <datalist id="list-baru-kab"></datalist>
-                      </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-3">
-                      <div>
-                          <input type="text" id="baru-kec" list="list-baru-kec" class="input-field" placeholder="Kecamatan" disabled autocomplete="off" />
-                          <datalist id="list-baru-kec"></datalist>
-                      </div>
-                      <div>
-                          <input type="text" id="baru-desa" list="list-baru-desa" class="input-field" placeholder="Desa / Kelurahan" disabled autocomplete="off" />
-                          <datalist id="list-baru-desa"></datalist>
-                      </div>
-                  </div>
-                  <div>
-                      <div class="flex items-center justify-between mb-1.5 mt-1">
-                          <label class="text-[10px] font-black text-indigo-400 uppercase tracking-widest ml-1">Alamat Lengkap</label>
-                          <button type="button" id="btn-ekstrak-baru" onclick="window.runEkstrakBaru()" class="text-[9px] font-black text-indigo-400 hover:text-white uppercase tracking-widest flex items-center gap-1 transition-colors">
-                              <i class="fas fa-magic"></i> Ekstrak Wilayah
-                          </button>
-                      </div>
-                      <textarea id="baru-alamat" class="input-field resize-none h-16" placeholder="Alamat Rumah Lengkap (RT, RW, Jalan)"></textarea>
-                  </div>
-
-              </div>
-
-              <div id="bukti-upload-container">
-                  <label class="text-sm font-black text-emerald-400 uppercase ml-1 mb-2 block tracking-wider">Unggah Foto Struk / Bukti Transfer</label>
+                </div>
+                <div class="flex flex-col gap-2">
                   <div class="flex gap-2">
-                      <input type="file" id="bukti-file" accept="image/*" onchange="window.previewImage(event)" class="input-field py-3.5 text-xs text-slate-400 flex-1" required />
-                      <button type="button" onclick="window.scanReceiptTesseract()" id="btn-scan-struk" class="px-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-black uppercase transition-all shadow-lg flex items-center justify-center whitespace-nowrap">
-                          <i class="fas fa-magic mr-2"></i> Scan AI
-                      </button>
+                    <div class="relative flex-1">
+                      <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm pointer-events-none">+62</span>
+                      <input type="tel" id="cek-status-input" inputmode="numeric" class="input-field pl-14 text-sm" placeholder="81234567890" oninput="window.formatWAInputCekStatus(this)" />
+                    </div>
+                    <button onclick="window.cekStatusPembayaran()" id="btn-cek-status" class="px-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-lg whitespace-nowrap">
+                      <i class="fas fa-search mr-1"></i> Cek
+                    </button>
                   </div>
-                  <p class="text-xs text-slate-500 mt-2 ml-1 italic">*Klik tombol Scan AI agar nominal terisi otomatis dari gambar struk.</p>
-                  
-                  <div id="preview-container" class="hidden mt-4 relative w-fit mx-auto border border-dashed border-emerald-500/30 rounded-2xl p-2 bg-emerald-500/5 shadow-inner">
-                      <img id="struk-preview" src="" class="max-h-36 rounded-xl object-contain" alt="Preview Struk" />
-                      <button type="button" onclick="window.removePreview()" class="absolute -top-3 -right-3 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center text-xs shadow-lg hover:bg-red-600 transition-all"><i class="fas fa-times"></i></button>
-                  </div>
+                  <p id="cek-status-wa-preview" class="text-xs text-slate-500 mt-1.5 ml-1 hidden"><i class="fab fa-whatsapp text-emerald-400 mr-1"></i><span id="cek-status-wa-preview-text"></span></p>
+                </div>
+                <div id="cek-status-result" class="mt-4 hidden"></div>
               </div>
 
-              <div>
-                  <label class="text-sm font-black text-emerald-400 uppercase ml-1 mb-2 block tracking-wider">Nominal yang Ditransfer (Rp)</label>
-                  <input type="text" inputmode="numeric" id="nominal" onkeyup="window.formatRupiahInput(this)" class="input-field text-lg font-black text-emerald-400 tracking-wider font-mono" required placeholder="Contoh: 150.000" />
-              </div>
+          </div>
 
-              <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 py-5 rounded-2xl font-black uppercase text-sm tracking-widest text-white transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:shadow-[0_0_40px_rgba(16,185,129,0.6)] focus:outline-none focus:ring-2 focus:ring-emerald-400/50 mt-6"><i class="fas fa-paper-plane mr-2"></i> Konfirmasi & Lanjutkan</button>
-          </form>
-
-          <div id="success-screen" class="hidden text-center py-6">
-              <div class="w-20 h-20 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-5 border border-emerald-500/20 animate-bounce"><i class="fas fa-check"></i></div>
-              <h2 class="text-xl font-black uppercase text-white mb-2">Laporan Dikirim!</h2>
-              <p class="text-xs text-slate-400 mb-6 leading-relaxed px-2">Terima kasih atas partisipasi Anda. Bukti transaksi &amp; data pendaftaran Anda telah berhasil dikirim ke antrean sistem verifikasi Admin/Bendahara.</p>
-              <button onclick="window.location.href = window.location.pathname" class="bg-white/5 hover:bg-white/10 text-white py-3.5 px-6 rounded-xl font-bold text-sm uppercase tracking-widest transition-all border border-white/10">Kirim Pembayaran Lain</button>
-          </div>
-      </div>
-
-      <!-- PANEL CEK STATUS PEMBAYARAN -->
-      <div id="panel-cek-status" class="glass w-full p-6 md:p-8 rounded-[2.5rem] border border-indigo-500/20 shadow-xl mt-6 relative overflow-hidden">
-        <div class="absolute -top-6 -right-6 w-24 h-24 bg-indigo-500/10 blur-[30px] pointer-events-none"></div>
-        <div class="flex items-center gap-3 mb-5">
-          <div class="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 border border-indigo-500/30">
-            <i class="fas fa-search"></i>
-          </div>
-          <div>
-            <h3 class="font-black uppercase text-sm text-white tracking-wide">Cek Status Pembayaran</h3>
-            <p class="text-xs text-slate-400">Masukkan nomor WhatsApp Anda untuk mengecek status verifikasi.</p>
-          </div>
-        </div>
-        <div class="flex flex-col gap-2">
-          <div class="flex gap-2">
-            <div class="relative flex-1">
-              <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm pointer-events-none">+62</span>
-              <input type="tel" id="cek-status-input" inputmode="numeric" class="input-field pl-14 text-sm" placeholder="81234567890" oninput="window.formatWAInputCekStatus(this)" />
-            </div>
-            <button onclick="window.cekStatusPembayaran()" id="btn-cek-status" class="px-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-sm font-black uppercase tracking-widest transition-all shadow-lg whitespace-nowrap">
-              <i class="fas fa-search mr-1"></i> Cek
-            </button>
-          </div>
-          <p id="cek-status-wa-preview" class="text-xs text-slate-500 mt-1.5 ml-1 hidden"><i class="fab fa-whatsapp text-emerald-400 mr-1"></i><span id="cek-status-wa-preview-text"></span></p>
-        </div>
-        <div id="cek-status-result" class="mt-4 hidden"></div>
       </div>
   </main>
 
