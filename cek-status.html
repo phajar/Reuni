@@ -306,6 +306,7 @@
       }
       return num;
     }
+    window.normalizeWA = normalizeWA;
 
     // ── Toast ─────────────────────────────────────────────────────────────
     function notify(msg, type='error') {
@@ -1068,7 +1069,6 @@
       // Fallback jika gagal memuat JSON atau data tidak ditemukan di JSON (misal pendaftar baru)
       if (!loadedFromCloudinary || matchingAlumni.length === 0) {
         console.log("[Firestore Cek Status] Menggunakan fallback kueri Firestore...");
-        const db = _db || getFirestore(getApps()[0]);
         const q = query(collection(db, 'alumni'), where('nowa', '==', normalizedWA));
         const snap = await getDocs(q);
         matchingAlumni = snap.docs.map(d => ({ id: d.id, ...d.data() }));
