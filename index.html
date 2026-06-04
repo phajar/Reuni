@@ -1497,6 +1497,7 @@
         <span id="heading-integrasi" class="hidden"></span>
         <span id="heading-sistem" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Sistem & Integrasi</span>
         <button onclick="showTab('whatsapp')" id="btn-whatsapp" class="nav-btn text-emerald-400 hidden"><i class="fab fa-whatsapp text-base w-5 text-center"></i> WhatsApp Center</button>
+        <button onclick="showTab('wa-groups')" id="btn-wa-groups" class="nav-btn text-indigo-400 hidden"><i class="fas fa-users-cog text-base w-5 text-center"></i> Grup & Channel WA</button>
         <!-- Pusat Pengaturan menu removed from here and moved to Logo -->
       </nav>
 
@@ -1622,6 +1623,24 @@
                 <p class="text-[9px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1">Total Alumni <i class="fas fa-arrow-right text-[8px] opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0"></i></p>
                 <div id="stat-alumni" class="stat-value text-amber-500">0</div>
               </button>
+          </div>
+          
+          <!-- WhatsApp Bot Status Banner -->
+          <div id="home-wa-status-card" class="premium-card p-4 border-l-4 border-slate-500 flex flex-col sm:flex-row justify-between items-center gap-4 relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-16 h-16 bg-indigo-600/5 blur-[30px] pointer-events-none"></div>
+              <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 border border-indigo-500/20 text-lg animate-pulse">
+                      <i class="fab fa-whatsapp"></i>
+                  </div>
+                  <div class="text-left">
+                      <h4 class="text-xs font-black text-white uppercase tracking-wider">WhatsApp Gateway Bot</h4>
+                      <p class="text-[9px] text-slate-500 font-bold" id="home-wa-status-text">Status: Memeriksa koneksi...</p>
+                  </div>
+              </div>
+              <div class="flex items-center gap-3">
+                  <div class="w-2.5 h-2.5 rounded-full bg-slate-500" id="home-wa-status-dot"></div>
+                  <span class="text-[10px] font-black uppercase tracking-wider text-slate-400" id="home-wa-status-label">Offline</span>
+              </div>
           </div>
           
           <div id="home-countdown-container" class="hidden premium-card p-6 md:p-8 text-center relative overflow-hidden mb-6">
@@ -2106,7 +2125,7 @@
                 <select id="fin-type-filter" class="input-field text-xs w-auto py-2" onchange="applyFinanceFilter()">
                     <option value="all">Semua Tipe</option><option value="pemasukan">Masuk</option><option value="pengeluaran">Keluar</option>
                 </select>
-                <button onclick="window.openModalLaporanWA()" class="btn-md3 btn-md3-emerald-tonal px-4 hidden" title="Kirim Laporan ke Grup WA"><i class="fab fa-whatsapp"></i> Kirim Laporan</button>
+                <button id="btn-send-laporan-wa" onclick="window.openModalLaporanWA()" class="btn-md3 btn-md3-emerald-tonal px-4 hidden" title="Kirim Laporan ke Grup WA"><i class="fab fa-whatsapp"></i> Kirim Laporan</button>
                 <button onclick="window.exportOfficialLPJPDF()" class="btn-md3 btn-md3-danger px-4" title="Cetak Laporan LPJ Resmi Al-Fatah"><i class="fas fa-print mr-1"></i> LPJ Resmi</button>
                 <button onclick="exportFinanceToPDF()" class="btn-md3 btn-md3-outlined px-4" title="Export Laporan PDF"><i class="fas fa-file-pdf"></i> PDF</button>
               </div>
@@ -2263,6 +2282,10 @@
             <div>
               <h3 id="wa-header-title" class="text-sm font-black uppercase text-white tracking-wider">WhatsApp Gateway</h3>
               <p id="wa-header-desc" class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Manajemen Koneksi Bot Server</p>
+              <div id="wa-active-provider-info" class="text-[10px] text-indigo-400 font-bold uppercase mt-2.5 flex items-center gap-1.5">
+                <i class="fas fa-info-circle animate-pulse"></i>
+                <span>WhatsApp Aktif: Mendeteksi...</span>
+              </div>
             </div>
           </div>
           
@@ -2271,6 +2294,10 @@
             <div id="wa-node-status" class="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-300">
               <div class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
               <span class="font-bold uppercase text-[9px] tracking-wider">NodeJS Loading</span>
+            </div>
+            <div id="wa-local-api-status" class="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+              <div id="wa-local-dot" class="w-2 h-2 rounded-full bg-slate-500"></div>
+              <span id="wa-local-text" class="font-bold uppercase text-[9px] tracking-wider">API LOKAL: CHECKING</span>
             </div>
             <div id="wa-connection-status" class="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-300">
               <i class="fab fa-whatsapp text-emerald-400"></i>
@@ -2376,7 +2403,7 @@
           <div class="space-y-6">
             
             <!-- Connection & Link Card -->
-            <div class="premium-card p-6 space-y-6">
+            <div id="wa-link-card" class="premium-card p-6 space-y-6">
               
               <!-- Title & Custom Tabs -->
               <div class="space-y-4">
@@ -2467,6 +2494,20 @@
               
               <form id="form-wa-settings" onsubmit="window.handleWASettingsSubmit(event)" class="space-y-5">
                 
+                <!-- API WhatsApp Lokal -->
+                <div class="bg-black/25 p-4 rounded-2xl border border-white/5 space-y-3">
+                  <h5 class="text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5">
+                    <i class="fas fa-server text-xs"></i> API WhatsApp Lokal (Baileys)
+                  </h5>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">URL API WhatsApp Lokal (Kosongkan jika tidak pakai)</label>
+                    <input type="text" id="set-wa-local-url" class="input-field py-2.5 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="Contoh: http://localhost:7860" />
+                    <p class="text-[9px] text-slate-500 mt-1 ml-1 leading-normal">
+                      *Jika diisi, sistem akan memprioritaskan server lokal ini. Jika tidak aktif/terkoneksi, otomatis beralih ke provider API di bawah.
+                    </p>
+                  </div>
+                </div>
+                
                 <!-- Gateway Verifikasi -->
                 <div class="bg-black/25 p-4 rounded-2xl border border-white/5 space-y-3">
                   <h5 class="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
@@ -2533,6 +2574,84 @@
                   </div>
                 </div>
 
+                <!-- Pengaturan Laporan Berkala (Cron) -->
+                <div class="bg-black/25 p-4 rounded-2xl border border-white/5 space-y-3">
+                  <h5 class="text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5">
+                    <i class="fas fa-clock text-xs"></i> Laporan Keuangan Otomatis Terjadwal
+                  </h5>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Status Penjadwalan</label>
+                      <select id="set-wa-schedule-enabled" class="input-field py-2.5 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200">
+                        <option value="false">Mati (Disabled)</option>
+                        <option value="true">Aktif (Enabled)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Frekuensi</label>
+                      <select id="set-wa-schedule-frequency" class="input-field py-2.5 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200">
+                        <option value="off">Mati</option>
+                        <option value="daily">Setiap Hari</option>
+                        <option value="friday">Setiap Hari Jumat</option>
+                        <option value="monthly">Setiap Tanggal 1 Bulan</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Jam Pengiriman</label>
+                      <input type="time" id="set-wa-schedule-time" class="input-field py-2.5 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200" value="08:00" />
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1 flex justify-between items-center">
+                      <span>Grup & Channel Penerima Laporan Otomatis</span>
+                      <button type="button" onclick="window.toggleSelectAllWaScheduleTargets()" class="text-indigo-400 hover:text-indigo-300 font-bold uppercase text-[9px] tracking-wider bg-transparent border-none p-0 cursor-pointer">Pilih Semua</button>
+                    </label>
+                    <div id="wa-schedule-targets-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto custom-scrollbar p-3 rounded-xl bg-black/40 border border-white/10 mt-1 min-h-[60px]">
+                      <p class="text-[10px] text-slate-500 italic text-center py-2 col-span-2">Memuat target...</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Template Pesan Pengantar Laporan & Info Iuran -->
+                <div class="bg-black/25 p-4 rounded-2xl border border-white/5 space-y-3">
+                  <h5 class="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                    <i class="fas fa-envelope-open-text text-xs"></i> Template Caption & Bot Info
+                  </h5>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1 flex justify-between">
+                      <span>Template Pesan Pengantar Laporan</span>
+                      <span class="text-[8px] text-slate-500 normal-case font-normal">Variabel: {bulan}, {pemasukan}, {pengeluaran}, {saldo}</span>
+                    </label>
+                    <textarea id="set-wa-report-template" class="input-field py-2 px-3 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200 h-24 resize-none custom-scrollbar" placeholder="Masukkan template pesan..."></textarea>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Info Rekening Iuran (Perintah !iuran)</label>
+                    <textarea id="set-wa-iuran-info" class="input-field py-2 px-3 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200 h-24 resize-none custom-scrollbar" placeholder="Petunjuk transfer bank..."></textarea>
+                  </div>
+                </div>
+
+                <!-- Konfigurasi Verifikasi/Persetujuan Donasi via WA -->
+                <div class="bg-black/25 p-4 rounded-2xl border border-white/5 space-y-3">
+                  <h5 class="text-[10px] font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5">
+                    <i class="fas fa-user-check text-xs"></i> Verifikasi Donasi via WhatsApp
+                  </h5>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">JID Grup Persetujuan (Approval)</label>
+                    <div class="flex gap-2 mt-1">
+                      <input type="text" id="set-wa-approval-group-jid" class="input-field py-2.5 text-xs bg-black/40 border border-white/10 text-slate-200 flex-1" placeholder="120363xxxxxx@g.us" />
+                      <select id="select-wa-approval-group-auto" onchange="if(this.value) { document.getElementById('set-wa-approval-group-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[180px]">
+                        <option value="">-- Pilih Grup --</option>
+                      </select>
+                    </div>
+                    <p class="text-[8px] text-slate-500 mt-1 ml-1">Grup tempat bot meneruskan konfirmasi donasi baru untuk disetujui admin. (Tips: Sinkronkan grup WhatsApp di kolom kanan agar grup muncul di pilihan otomatis).</p>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Nomor WA Admin Penyaring (Koma-Separated)</label>
+                    <input type="text" id="set-wa-approval-admins" class="input-field py-2.5 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="628123456789, 628987654321" />
+                    <p class="text-[8px] text-slate-500 mt-1 ml-1">Nomor WhatsApp admin yang diizinkan menyetujui transaksi (gunakan kode negara 62).</p>
+                  </div>
+                </div>
+
                 <!-- Submit Button -->
                 <button type="submit" class="btn-md3 btn-md3-primary w-full mt-4 py-3.5 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg">
                   <i class="fas fa-save text-sm"></i> Simpan Pengaturan Gateway
@@ -2542,7 +2661,7 @@
           </div>
 
           <!-- Right Column: Grup WhatsApp & Kelola -->
-          <div class="space-y-6">
+          <div id="wa-web-right-col" class="space-y-6">
             <div class="premium-card p-6 md:p-8 space-y-6">
               <div class="flex justify-between items-center border-b border-white/5 pb-3">
                 <h4 class="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
@@ -2561,18 +2680,28 @@
               </div>
 
               <!-- UI to Add a Group Easily -->
-              <div class="bg-black/25 p-4 rounded-2xl border border-white/5 space-y-3">
-                <h5 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                  <i class="fas fa-plus text-[8px]"></i> Tambah Grup Baru
-                </h5>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1 bg-white/5 p-3 rounded-xl border border-white/5">
+                  <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 block">Pilih dari Hasil Sinkronisasi (Otomatis)</label>
+                  <select id="select-wa-group-auto" onchange="window.handleAutoSelectWaGroup(this)" class="input-field py-2 px-3 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-full mt-1">
+                    <option value="">-- Pilih Grup / Channel --</option>
+                  </select>
+                  <p class="text-[8px] text-slate-500 italic mt-0.5 ml-1"><i class="fas fa-info-circle mr-1"></i>Tips: Gunakan tab "WhatsApp Sync" di kanan untuk sinkronisasi grup/channel HP Anda.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Nama Grup</label>
-                    <input type="text" id="add-wa-group-name" class="input-field py-2 px-3 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="Panitia Reuni" />
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Nama Grup / Channel</label>
+                    <input type="text" id="add-wa-group-name" class="input-field py-2 px-3 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="Panitia Reuni atau Channel Info" />
                   </div>
                   <div>
-                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">ID / JID Grup WA</label>
-                    <input type="text" id="add-wa-group-jid" class="input-field py-2 px-3 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="1203632234@g.us" />
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Tipe</label>
+                    <select id="add-wa-group-type" class="input-field py-2 px-3 text-xs mt-1 bg-[#0e1225] border border-white/10 text-slate-200">
+                      <option value="group">Grup WA (@g.us)</option>
+                      <option value="channel">Channel WA (@newsletter)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">ID / JID WA</label>
+                    <input type="text" id="add-wa-group-jid" class="input-field py-2 px-3 text-xs mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="1203632234@g.us atau @newsletter" />
                   </div>
                 </div>
                 <button type="button" onclick="window.addNewGroupToWASettings()" class="btn-md3 btn-md3-outlined w-full !py-2.5 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 mt-2">
@@ -2582,8 +2711,6 @@
 
             </div>
           </div>
-
-        </div>
 
         <!-- Scheduled Campaigns (Full Width Card) -->
         <div id="wa-campaigns-card" class="premium-card p-6 space-y-4">
@@ -2612,8 +2739,128 @@
 
       </div>
 
+      <!-- TAB WA GROUPS: Kelola Grup & Channel WA -->
+      <div id="tab-wa-groups" class="tab-content hidden space-y-6">
+        
+        <!-- Header Panel -->
+        <div class="premium-card p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl shadow-lg border border-indigo-500/20">
+              <i class="fas fa-users-cog"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-black uppercase text-white tracking-wider">Grup & Channel WA</h3>
+              <p class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Kelola target broadcast grup atau channel WhatsApp</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segmented Control Tabs (MD3 style) -->
+        <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 max-w-md">
+          <button onclick="switchGroupTab('registered')" id="tab-btn-registered" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer bg-indigo-600 text-white shadow-md">
+            <i class="fas fa-list-ul mr-1.5"></i> Grup Terdaftar
+          </button>
+          <button onclick="switchGroupTab('sync')" id="tab-btn-sync" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200">
+            <i class="fab fa-whatsapp mr-1.5"></i> Sinkronisasi WA
+          </button>
+        </div>
+
+        <!-- Content: Registered Groups -->
+        <div id="tab-content-registered" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Left Column: List of Registered Groups & Channels -->
+          <div class="space-y-6">
+            <!-- Registered Groups Card -->
+            <div class="premium-card p-6 flex flex-col space-y-4">
+              <h4 class="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center justify-between border-b border-white/5 pb-2">
+                <span class="flex items-center gap-1.5"><i class="fas fa-users"></i> Grup Terdaftar</span>
+                <span id="registered-groups-count" class="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">0</span>
+              </h4>
+              <div id="wa-groups-list" class="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                <p class="text-xs text-slate-500 text-center italic py-4">Belum ada grup terdaftar.</p>
+              </div>
+            </div>
+
+            <!-- Registered Channels Card -->
+            <div class="premium-card p-6 flex flex-col space-y-4">
+              <h4 class="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center justify-between border-b border-white/5 pb-2">
+                <span class="flex items-center gap-1.5"><i class="fas fa-bullhorn"></i> Saluran / Channel Terdaftar</span>
+                <span id="registered-channels-count" class="text-[9px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-bold">0</span>
+              </h4>
+              <div id="wa-channels-list" class="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                <p class="text-xs text-slate-500 text-center italic py-4">Belum ada saluran terdaftar.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Add Group/Channel Form -->
+          <div class="premium-card p-6 flex flex-col space-y-4">
+            <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5 border-b border-white/5 pb-2">
+              <i class="fas fa-plus-circle text-indigo-400"></i> Tambah Grup / Channel Baru
+            </h4>
+            <div class="text-[10px] text-amber-400 font-bold bg-amber-400/10 p-3 rounded-xl border border-amber-400/20 flex items-start gap-2">
+              <i class="fas fa-info-circle mt-0.5 text-xs"></i>
+              <span>ID wajib berakhiran <strong>@g.us</strong> (grup) atau <strong>@newsletter</strong> (channel)</span>
+            </div>
+            <form onsubmit="handleWaGroupSubmit(event)" class="space-y-4">
+              <input type="hidden" id="set-wagroup-id" />
+              <div class="space-y-3">
+                <div>
+                  <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Nama Grup / Channel</label>
+                  <input type="text" id="set-wagroup-name" class="input-field text-xs py-3 px-4 w-full mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="Nama Grup / Channel" required />
+                </div>
+                <div>
+                  <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">ID JID (@g.us atau @newsletter)</label>
+                  <input type="text" id="set-wagroup-jid" class="input-field text-xs py-3 px-4 w-full mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="ID JID (@g.us atau @newsletter)" required />
+                </div>
+              </div>
+              <button type="submit" class="btn-md3 btn-md3-primary w-full mt-4">
+                <i class="fas fa-save mr-1.5"></i> Simpan Grup / Channel
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Content: WhatsApp Sync -->
+        <div id="tab-content-sync" class="hidden premium-card p-6 flex flex-col space-y-4">
+          <div class="flex gap-3 flex-wrap">
+            <button onclick="fetchGroupsFromWA()" id="btn-fetch-wa-groups" class="btn-md3 btn-md3-emerald flex-1 min-w-[140px]">
+              <i class="fas fa-users text-sm mr-1.5"></i> Ambil Grup WA
+            </button>
+            <button onclick="window.fetchChannelsFromWA()" id="btn-fetch-wa-channels" class="btn-md3 btn-md3-purple flex-1 min-w-[140px]">
+              <i class="fas fa-bullhorn text-sm mr-1.5"></i> Ambil Channel
+            </button>
+            <button onclick="importSelectedWaGroups()" id="btn-import-wa-groups" class="btn-md3 btn-md3-primary flex-1 min-w-[140px] hidden">
+              <i class="fas fa-download text-xs mr-1.5"></i> Impor Terpilih (<span id="selected-sync-count">0</span>)
+            </button>
+          </div>
+
+          <div class="text-[10px] text-slate-400 mb-2 font-bold px-1 flex justify-between items-center">
+            <span class="flex items-center gap-1.5"><i class="fas fa-list text-slate-500"></i> Daftar Grup / Channel di WhatsApp Anda:</span>
+            <button onclick="toggleSelectAllSyncGroups()" id="btn-select-all-sync" class="text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-wider text-[9px] hidden">
+              Pilih Semua
+            </button>
+          </div>
+          
+          <!-- SEARCH BAR UNTUK GRUP WA -->
+          <div id="wa-groups-search-container" class="hidden mb-3">
+            <div class="relative">
+              <input type="text" id="wa-groups-search" oninput="window.filterWaGroups()" class="input-field py-2.5 pl-9 pr-3 text-xs w-full bg-black/40 border border-white/10 text-slate-200" placeholder="Cari nama grup..." />
+              <i class="fas fa-search absolute left-3 top-3.5 text-[10px] text-slate-500"></i>
+            </div>
+          </div>
+
+          <div id="wa-sync-groups-list" class="space-y-2 mb-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1 min-h-[150px]">
+            <div class="flex flex-col items-center justify-center py-12 text-center text-slate-500">
+              <i class="fab fa-whatsapp text-slate-600 text-3xl mb-2"></i>
+              <p class="text-xs italic">Silakan klik "Ambil Grup" atau "Ambil Channel" untuk menyinkronkan data.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
       <!-- TAB SETTINGS: Pengaturan & Sistem -->
-            <!-- TAB SETTINGS: Pengaturan & Sistem (Pusat Pengaturan Terpadu) -->
+      <!-- TAB SETTINGS: Pengaturan & Sistem (Pusat Pengaturan Terpadu) -->
       <div id="tab-settings" class="tab-content hidden space-y-6 pb-36">
         
         <!-- Header Banner Card: Profil Saya -->
@@ -3146,10 +3393,13 @@
 
           <div class="space-y-4 mb-5 flex-1">
               <div>
-                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">1. Pilih Grup WA Tujuan</label>
-                  <select id="laporan-grup-select" class="input-field mt-1 bg-black/20 text-xs">
-                      <option value="">Memuat grup...</option>
-                  </select>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1 flex justify-between items-center">
+                    <span>1. Pilih Grup & Channel Tujuan</span>
+                    <button type="button" onclick="window.toggleSelectAllLaporanTargets()" class="text-indigo-400 hover:text-indigo-300 font-bold uppercase text-[9px] tracking-wider bg-transparent border-none p-0 cursor-pointer">Pilih Semua</button>
+                  </label>
+                  <div id="laporan-targets-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto custom-scrollbar pr-2 pb-1 bg-black/20 p-3 rounded-xl border border-white/5 mt-1 min-h-[80px]">
+                      <p class="text-[10px] text-slate-500 italic text-center py-4 col-span-2">Memuat target...</p>
+                  </div>
               </div>
 
               <div>
@@ -3189,98 +3439,7 @@
     </div>
   </div>
  
-  <div id="modal-group-management" class="hidden fixed inset-0 z-[500] flex items-center justify-center p-4">
-    <div onclick="closeModal('modal-group-management')" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="glass relative w-full max-w-2xl rounded-[2rem] p-8 shadow-2xl border border-indigo-500/20 modal-enter max-h-[90vh] flex flex-col">
-      
-      <!-- Header -->
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-lg font-black uppercase tracking-wider text-indigo-400 flex items-center gap-2">
-          <i class="fas fa-users-cog"></i> Manajemen Grup WA
-        </h3>
-        <button onclick="closeModal('modal-group-management')" class="text-slate-400 hover:text-white transition-colors">
-          <i class="fas fa-times text-xl"></i>
-        </button>
-      </div>
-
-      <!-- Segmented Control Tabs (MD3 style) -->
-      <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 mb-5">
-        <button onclick="switchGroupTab('registered')" id="tab-btn-registered" class="flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer bg-indigo-600 text-white shadow-md">
-          <i class="fas fa-list-ul mr-1.5"></i> Grup Terdaftar
-        </button>
-        <button onclick="switchGroupTab('sync')" id="tab-btn-sync" class="flex-1 py-2 text-center text-xs font-bold rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200">
-          <i class="fab fa-whatsapp mr-1.5"></i> Sinkronisasi WA
-        </button>
-      </div>
-
-      <!-- Content: Registered Groups -->
-      <div id="tab-content-registered" class="flex flex-col flex-1 overflow-hidden">
-        <div class="text-[10px] text-amber-400 font-bold mb-3 bg-amber-400/10 p-3 rounded-xl border border-amber-400/20 flex items-start gap-2">
-          <i class="fas fa-info-circle mt-0.5 text-xs"></i>
-          <span>ID Grup wajib berakhiran <strong>@g.us</strong> (Contoh: 1203630230234@g.us)</span>
-        </div>
-        
-        <div id="wa-groups-list" class="space-y-2 mb-4 overflow-y-auto custom-scrollbar flex-1 min-h-[180px] pr-1">
-          <p class="text-xs text-slate-500 text-center italic py-4">Memuat data grup...</p>
-        </div>
-        
-        <div class="border-t border-white/10 pt-4 mt-2">
-          <h4 class="text-[10px] font-black uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-1.5">
-            <i class="fas fa-plus-circle text-indigo-400"></i> Tambah Grup Baru
-          </h4>
-          <form onsubmit="handleWaGroupSubmit(event)" class="space-y-3">
-            <input type="hidden" id="set-wagroup-id" />
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <input type="text" id="set-wagroup-name" class="input-field text-xs py-3 px-4 w-full" placeholder="Nama Grup (Cth: Alumni Angkatan 2010)" required />
-              </div>
-              <div>
-                <input type="text" id="set-wagroup-jid" class="input-field text-xs py-3 px-4 w-full" placeholder="ID Grup (@g.us)" required />
-              </div>
-            </div>
-            <button type="submit" class="btn-md3 btn-md3-primary w-full mt-2">
-              <i class="fas fa-save mr-1.5"></i> Simpan Grup
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Content: WhatsApp Sync -->
-      <div id="tab-content-sync" class="hidden flex flex-col flex-1 overflow-hidden">
-        <div class="flex gap-3 mb-4">
-          <button onclick="fetchGroupsFromWA()" id="btn-fetch-wa-groups" class="btn-md3 btn-md3-emerald flex-1">
-            <i class="fab fa-whatsapp text-sm mr-1.5"></i> Ambil Grup dari WA
-          </button>
-          <button onclick="importSelectedWaGroups()" id="btn-import-wa-groups" class="btn-md3 btn-md3-primary flex-1 hidden">
-            <i class="fas fa-download text-xs mr-1.5"></i> Impor Terpilih (<span id="selected-sync-count">0</span>)
-          </button>
-        </div>
-
-        <div class="text-[10px] text-slate-400 mb-2 font-bold px-1 flex justify-between items-center">
-          <span class="flex items-center gap-1.5"><i class="fas fa-list text-slate-500"></i> Grup di WhatsApp Anda:</span>
-          <button onclick="toggleSelectAllSyncGroups()" id="btn-select-all-sync" class="text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-wider text-[9px] hidden">
-            Pilih Semua
-          </button>
-        </div>
-        
-        <!-- SEARCH BAR UNTUK GRUP WA -->
-        <div id="wa-groups-search-container" class="hidden mb-3">
-          <div class="relative">
-            <input type="text" id="wa-groups-search" oninput="window.filterWaGroups()" class="input-field py-2 pl-9 pr-3 text-xs" placeholder="Cari nama grup..." />
-            <i class="fas fa-search absolute left-3 top-3 text-[10px] text-slate-500"></i>
-          </div>
-        </div>
-
-        <div id="wa-sync-groups-list" class="space-y-2 mb-2 overflow-y-auto custom-scrollbar flex-1 min-h-[220px] pr-1">
-          <div class="flex flex-col items-center justify-center py-12 text-center text-slate-500">
-            <i class="fab fa-whatsapp text-4xl mb-3 text-slate-600"></i>
-            <p class="text-xs italic text-slate-400">Klik tombol "Ambil Grup dari WA" untuk menarik data grup WhatsApp yang aktif.</p>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
+  
 
       <!-- Spacer to prevent floating buttons on mobile from overlapping with pagination/content -->
       <div class="h-48 md:hidden"></div>

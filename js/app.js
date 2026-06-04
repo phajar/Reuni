@@ -187,6 +187,16 @@ window.openModal = (id) => {
 window.closeModal = (id) => {
   const el = document.getElementById(id);
   if (el) el.classList.add("hidden");
+  if (id === "modal-laporan-wa") {
+    if (window.currentLaporanPreviewUrl) {
+      URL.revokeObjectURL(window.currentLaporanPreviewUrl);
+      window.currentLaporanPreviewUrl = null;
+    }
+    const framePdf = document.getElementById("preview-pdf");
+    if (framePdf) framePdf.src = "";
+    const imgPng = document.getElementById("preview-png");
+    if (imgPng) imgPng.src = "";
+  }
 };
 window.populateEventSettingsForm = () => {
   const setEventDateEl = document.getElementById("set-event-date");
@@ -525,8 +535,21 @@ window.showTab = (tabId) => {
 
   document.getElementById(`tab-${tabId}`).classList.remove("hidden");
   
-  if (tabId === 'whatsapp' && typeof window.loadWaApiSettingsIntoTab === 'function') {
-      window.loadWaApiSettingsIntoTab();
+  if (tabId === 'whatsapp') {
+      if (typeof window.openWASettingsWeb === 'function') {
+          window.openWASettingsWeb();
+      } else if (typeof window.loadWaApiSettingsIntoTab === 'function') {
+          window.loadWaApiSettingsIntoTab();
+      }
+      if (typeof window.checkLocalWaStatus === 'function') {
+          window.checkLocalWaStatus();
+      }
+  }
+
+  if (tabId === 'wa-groups') {
+      if (typeof window.loadWaGroups === 'function') {
+          window.loadWaGroups();
+      }
   }
   
   if (tabId === 'settings') {
@@ -571,6 +594,7 @@ window.showTab = (tabId) => {
     guestbook: "Buku Tamu",
     logistik: "Donasi Barang",
     whatsapp: "WhatsApp Gateway",
+    "wa-groups": "Grup & Channel WA",
     settings: "Pengaturan & Sistem",
   };
   document.getElementById("page-title").innerText =
@@ -831,6 +855,11 @@ auth.onAuthStateChanged(async (user) => {
     }
     if (sAvatarEl) sAvatarEl.src = avatarUrl;
 
+    // Refresh WA settings permissions state if we are already logged in
+    if (typeof window.openWASettingsWeb === 'function') {
+      window.openWASettingsWeb();
+    }
+
     // SINKRONISASI INFO PENGGUNA DI SIDEBAR FOOTER
     const sidebarNameEl = document.getElementById("sidebar-user-name");
     const sidebarRoleEl = document.getElementById("sidebar-user-role");
@@ -919,10 +948,11 @@ auth.onAuthStateChanged(async (user) => {
     const canWA = ["creator", "admin_utama", "sekretaris", "bendahara"].includes(r);
     showElement("btn-whatsapp", canWA);
     showElement("btn-mobile-whatsapp", canWA);
+    showElement("btn-wa-groups", canWA);
     
     // Toggle layout di dalam tab-whatsapp
     showElement("wa-nodejs-container", isNative);
-    showElement("wa-status-chips", isNative);
+    showElement("wa-status-chips", true);
     showElement("wa-web-api-container", !isNative);
     
     const headerTitle = document.getElementById("wa-header-title");
@@ -1215,6 +1245,12 @@ window.renderAllTabs = () => {
         btnRek.classList.remove("hidden");
       else btnRek.classList.add("hidden");
     }
+    const btnSendLaporan = document.getElementById("btn-send-laporan-wa");
+    if (btnSendLaporan) {
+      if (r === "admin_utama" || r === "creator" || r === "bendahara" || r === "sekretaris")
+        btnSendLaporan.classList.remove("hidden");
+      else btnSendLaporan.classList.add("hidden");
+    }
   }
 };
 
@@ -1312,10 +1348,9 @@ window.loadDataRealtime = () => {
         
         const jsonString = JSON.stringify(approvedAlumni);
         const blob = new Blob([jsonString], { type: 'application/json' });
-        const file = new File([blob], 'alumni.json', { type: 'application/json' });
         
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", blob, 'alumni.json');
         formData.append("upload_preset", "Reuniakbar");
         formData.append("public_id", "alumni.json");
         formData.append("resource_type", "raw");
@@ -1353,10 +1388,9 @@ window.loadDataRealtime = () => {
         
         const jsonString = JSON.stringify(allAlumni);
         const blob = new Blob([jsonString], { type: 'application/json' });
-        const file = new File([blob], 'alumni_all.json', { type: 'application/json' });
         
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", blob, 'alumni_all.json');
         formData.append("upload_preset", "Reuniakbar");
         formData.append("public_id", "alumni_all.json");
         formData.append("resource_type", "raw");
@@ -1394,10 +1428,9 @@ window.loadDataRealtime = () => {
         
         const jsonString = JSON.stringify(allFinance);
         const blob = new Blob([jsonString], { type: 'application/json' });
-        const file = new File([blob], 'finance.json', { type: 'application/json' });
         
         const formData = new FormData();
-        formData.append("file", file);
+        formData.append("file", blob, 'finance.json');
         formData.append("upload_preset", "Reuniakbar");
         formData.append("public_id", "finance.json");
         formData.append("resource_type", "raw");
@@ -4822,21 +4855,34 @@ window.handleUpdateProfile = async (e) => {
 window.handleUpdateEventInfo = async (e) => {
   e.preventDefault();
   window.toggleLoading(true, "Menyimpan Info Acara...");
-  const isTbd = document.getElementById("set-event-tbd").checked;
-  const newDate = document.getElementById("set-event-date").value;
+  
+  const setEventTbd = document.getElementById("set-event-tbd");
+  const setEventDate = document.getElementById("set-event-date");
+  const setEventTime = document.getElementById("set-event-time");
+  const setEventGuest = document.getElementById("set-event-guest");
+  const setEventWaHumas = document.getElementById("set-event-wa-humas");
+  const setEventWaDisabled = document.getElementById("set-event-wa-disabled");
+  const apiBendahara = document.getElementById("api-access-bendahara");
+  const apiSekretaris = document.getElementById("api-access-sekretaris");
+
+  const isTbd = setEventTbd ? setEventTbd.checked : false;
+  const newDate = setEventDate ? setEventDate.value : "";
   const dFmt = isTbd
     ? "TBD"
     : newDate.length === 16
       ? newDate + ":00"
       : newDate;
+
   let apiAccess = ["admin_utama", "creator"];
-  if (document.getElementById("api-access-bendahara").checked)
+  if (apiBendahara && apiBendahara.checked)
     apiAccess.push("bendahara");
-  if (document.getElementById("api-access-sekretaris").checked)
+  if (apiSekretaris && apiSekretaris.checked)
     apiAccess.push("sekretaris");
   
-  const waHumasVal = document.getElementById("set-event-wa-humas").value.trim().replace(/\D/g, "");
-  const waDisabledVal = document.getElementById("set-event-wa-disabled").checked;
+  const waHumasVal = setEventWaHumas ? setEventWaHumas.value.trim().replace(/\D/g, "") : "";
+  const waDisabledVal = setEventWaDisabled ? setEventWaDisabled.checked : false;
+  const eventTimeVal = setEventTime ? setEventTime.value : "";
+  const eventGuestVal = setEventGuest ? setEventGuest.value : "";
   
   try {
     await db
@@ -4845,8 +4891,8 @@ window.handleUpdateEventInfo = async (e) => {
       .set(
         {
           event_date: dFmt,
-          event_time: document.getElementById("set-event-time").value,
-          event_guest: document.getElementById("set-event-guest").value,
+          event_time: eventTimeVal,
+          event_guest: eventGuestVal,
           wa_humas: waHumasVal,
           wa_disabled: waDisabledVal,
           api_access_roles: apiAccess,
@@ -4855,8 +4901,8 @@ window.handleUpdateEventInfo = async (e) => {
       );
     window.closeModal("modal-event-settings");
     window.notify("Info acara diperbarui!");
-  } catch (e) {
-    window.notify("Gagal", "error");
+  } catch (err) {
+    window.notify("Gagal: " + err.message, "error");
   } finally {
     window.toggleLoading(false);
   }
@@ -8242,34 +8288,91 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
 
     if (groups.length === 0) {
       container.innerHTML = `<p class="text-[10px] text-slate-500 text-center italic py-2">Belum ada grup terdaftar.</p>`;
+      const targetContainer = document.getElementById("wa-schedule-targets-container");
+      if (targetContainer) {
+        targetContainer.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center py-2 col-span-2">Belum ada grup terdaftar.</p>`;
+      }
       return;
     }
 
-    container.innerHTML = groups.map(g => `
-      <div class="flex justify-between items-center bg-white/5 px-3 py-2 rounded-xl border border-white/10 mb-1">
-        <div class="flex flex-col truncate flex-1 pr-2 text-left">
-          <span class="text-xs font-bold text-slate-300 truncate">${g.name}</span>
-          <span class="text-[8px] text-slate-500 truncate">${g.id}</span>
+    container.innerHTML = groups.map(g => {
+      const isChannel = (g.id || '').endsWith('@newsletter');
+      const iconClass = isChannel ? 'fas fa-bullhorn text-purple-400' : 'fas fa-users text-emerald-400';
+      return `
+        <div class="flex justify-between items-center bg-white/5 px-3 py-2 rounded-xl border border-white/10 mb-1">
+          <div class="flex items-center truncate flex-1 pr-2 text-left gap-2.5">
+            <i class="${iconClass} text-[10px] flex-shrink-0"></i>
+            <div class="flex flex-col truncate">
+              <span class="text-xs font-bold text-slate-300 truncate">${g.name}</span>
+              <span class="text-[8px] text-slate-500 truncate">${g.id}</span>
+            </div>
+          </div>
+          <button type="button" onclick="window.removeGroupFromWASettings('${g.id}')" class="text-red-400 hover:text-red-300 p-1.5 transition-colors">
+            <i class="fas fa-trash text-[10px]"></i>
+          </button>
         </div>
-        <button type="button" onclick="window.removeGroupFromWASettings('${g.id}')" class="text-red-400 hover:text-red-300 p-1.5 transition-colors">
-          <i class="fas fa-trash text-[10px]"></i>
-        </button>
-      </div>
-    `).join("");
+      `;
+    }).join("");
+
+    // Populate the Scheduled Reports Targets Checklist
+    const targetContainer = document.getElementById("wa-schedule-targets-container");
+    if (targetContainer) {
+      const activeTargets = window.lastWaBotConfig && window.lastWaBotConfig.schedule_targets 
+        ? JSON.parse(window.lastWaBotConfig.schedule_targets) 
+        : [];
+        
+      targetContainer.innerHTML = groups.map(g => {
+        const isChannel = (g.id || '').endsWith('@newsletter');
+        const iconClass = isChannel ? 'fas fa-bullhorn text-purple-400' : 'fas fa-users text-emerald-400';
+        const isChecked = activeTargets.includes(g.id) ? 'checked' : '';
+        return `
+          <label class="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 cursor-pointer transition-all text-xs text-slate-300">
+            <input type="checkbox" name="wa-schedule-target-check" value="${g.id}" ${isChecked} class="rounded text-indigo-500 focus:ring-indigo-500 w-4 h-4 bg-black/40 border-white/10" />
+            <span class="flex items-center gap-1.5 truncate">
+              <i class="${iconClass}"></i>
+              <span class="truncate">${g.name}</span>
+            </span>
+          </label>
+        `;
+      }).join("");
+    }
+  };
+
+  const autoSaveGroupsToFirestore = async (groups) => {
+    try {
+      const jsonString = JSON.stringify(groups);
+      await db.collection("settings").doc("whatsapp_api").set({
+        groups: jsonString
+      }, { merge: true });
+      
+      // Update local memory cache if present
+      if (window.lastWaApiConfig) {
+        window.lastWaApiConfig.groups = jsonString;
+      }
+      console.log("[Firestore JSON Save] Success wa_groups.json saved to settings/whatsapp_api document.");
+    } catch (e) {
+      console.error("[Firestore JSON Save] Error saving groups:", e);
+    }
   };
 
   window.addNewGroupToWASettings = () => {
     const nameInput = document.getElementById("add-wa-group-name");
     const jidInput = document.getElementById("add-wa-group-jid");
+    const typeSelect = document.getElementById("add-wa-group-type");
     if (!nameInput || !jidInput) return;
     const name = nameInput.value.trim();
     let jid = jidInput.value.trim();
+    const type = typeSelect ? typeSelect.value : "group";
 
-    if (!name) return window.notify("Nama grup tidak boleh kosong!", "error");
-    if (!jid) return window.notify("JID/ID grup tidak boleh kosong!", "error");
+    if (!name) return window.notify("Nama grup/channel tidak boleh kosong!", "error");
+    if (!jid) return window.notify("ID/JID tidak boleh kosong!", "error");
     
     if (!jid.includes("@")) {
-      jid = jid + "@g.us";
+      if (type === "channel") {
+        jid = jid + "@newsletter";
+      } else {
+        jid = jid + "@g.us";
+      }
     }
 
     const textarea = document.getElementById("set-wa-groups-data");
@@ -8281,7 +8384,7 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
     }
 
     if (groups.some(g => g.id === jid)) {
-      return window.notify("Grup dengan JID tersebut sudah ada!", "error");
+      return window.notify("Grup/channel dengan JID tersebut sudah ada!", "error");
     }
 
     groups.push({ id: jid, name: name });
@@ -8291,7 +8394,8 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
     jidInput.value = "";
 
     window.renderWASettingsGroups();
-    window.notify("Grup ditambahkan ke daftar!", "success");
+    autoSaveGroupsToFirestore(groups);
+    window.notify("Berhasil ditambahkan!", "success");
   };
 
   window.removeGroupFromWASettings = (jid) => {
@@ -8307,18 +8411,21 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
     textarea.value = JSON.stringify(groups);
 
     window.renderWASettingsGroups();
+    autoSaveGroupsToFirestore(groups);
     window.notify("Grup dihapus dari daftar!", "warning");
   };
 
   window.handleWASettingsSubmit = async (e) => {
     e.preventDefault();
     
-    // Batasi akses hanya untuk role 'creator'
-    if (!window.STATE.user || window.STATE.user.role !== 'creator') {
+    // Batasi akses hanya untuk role 'creator' atau 'admin_utama'
+    const userRole = (window.STATE.user && window.STATE.user.role || '').toLowerCase().trim();
+    if (userRole !== 'creator' && userRole !== 'admin_utama') {
       window.notify("Akses ditolak! Hanya Kreator yang dapat menyunting pengaturan API WhatsApp.", "error");
       return;
     }
     
+    const localApiUrl = document.getElementById("set-wa-local-url").value.trim();
     const providerVerifikasi = document.getElementById("set-wa-provider-verifikasi").value;
     const tokenVerifikasi = document.getElementById("set-wa-token-verifikasi").value;
     const providerBroadcast = document.getElementById("set-wa-provider-broadcast").value;
@@ -8329,15 +8436,52 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
 
     window.toggleLoading(true, "Menyimpan pengaturan WA...");
     try {
-      await db.collection("settings").doc("whatsapp_api").set({
+      const configData = {
+        local_api_url: localApiUrl,
         provider_verifikasi: providerVerifikasi,
         token_verifikasi: tokenVerifikasi,
         provider_broadcast: providerBroadcast,
         token_broadcast: tokenBroadcast,
         provider_keuangan: providerKeuangan,
-        token_keuangan: tokenKeuangan,
-        groups_data: groupsData
-      }, { merge: true });
+        token_keuangan: tokenKeuangan
+      };
+      if (groupsData) {
+        configData.groups = groupsData;
+      }
+      await db.collection("settings").doc("whatsapp_api").set(configData, { merge: true });
+      window.lastWaApiConfig = configData;
+      
+      // Save Bot Config (Scheduling, Templates & Approvals)
+      const scheduleEnabled = document.getElementById("set-wa-schedule-enabled").value === "true";
+      const scheduleFrequency = document.getElementById("set-wa-schedule-frequency").value;
+      const scheduleTime = document.getElementById("set-wa-schedule-time").value;
+      const reportTemplate = document.getElementById("set-wa-report-template").value;
+      const iuranInfo = document.getElementById("set-wa-iuran-info").value;
+      const approvalGroupJid = document.getElementById("set-wa-approval-group-jid") ? document.getElementById("set-wa-approval-group-jid").value.trim() : "";
+      const approvalAdmins = document.getElementById("set-wa-approval-admins") ? document.getElementById("set-wa-approval-admins").value.trim() : "";
+      
+      const scheduleChecked = document.querySelectorAll('input[name="wa-schedule-target-check"]:checked');
+      const scheduleTargets = Array.from(scheduleChecked).map(cb => cb.value);
+      
+      const botConfigData = {
+        schedule_enabled: scheduleEnabled,
+        schedule_frequency: scheduleFrequency,
+        schedule_time: scheduleTime,
+        report_template: reportTemplate,
+        iuran_info: iuranInfo,
+        schedule_targets: JSON.stringify(scheduleTargets),
+        approval_group_jid: approvalGroupJid,
+        approval_admins: approvalAdmins
+      };
+      
+      await db.collection("settings").doc("wa_bot_config").set(botConfigData, { merge: true });
+      window.lastWaBotConfig = botConfigData;
+
+      // Trigger status check immediately
+      if (typeof window.checkLocalWaStatus === 'function') {
+        window.checkLocalWaStatus();
+      }
+      
       window.notify("Pengaturan WA Berhasil Disimpan!", "success");
       window.closeModal("modal-wa-settings");
     } catch(err) {
@@ -8354,15 +8498,33 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
     const loading = document.getElementById("preview-loading");
 
     loading.classList.remove("hidden");
-    if (framePdf) framePdf.classList.add("hidden");
+    if (framePdf) {
+      framePdf.classList.add("hidden");
+      framePdf.src = "";
+    }
     imgPng.classList.add("hidden");
+    imgPng.src = "";
+
+    // Revoke old object URL if any to prevent memory leaks
+    if (window.currentLaporanPreviewUrl) {
+      URL.revokeObjectURL(window.currentLaporanPreviewUrl);
+      window.currentLaporanPreviewUrl = null;
+    }
 
     try {
-      // ALWAYS generate the high-fidelity premium image preview for unified visual inspection on Android WebView!
-      const { fileBlob } = await window.generateLaporanFile("image");
-      const fileUrl = URL.createObjectURL(fileBlob);
-      imgPng.src = fileUrl;
-      imgPng.classList.remove("hidden");
+      const { fileBlob } = await window.generateLaporanFile(format);
+      if (fileBlob) {
+        window.currentLaporanPreviewUrl = URL.createObjectURL(fileBlob);
+        if (format === "pdf") {
+          if (framePdf) {
+            framePdf.src = window.currentLaporanPreviewUrl;
+            framePdf.classList.remove("hidden");
+          }
+        } else {
+          imgPng.src = window.currentLaporanPreviewUrl;
+          imgPng.classList.remove("hidden");
+        }
+      }
     } catch (e) {
       console.error("Gagal generate preview", e);
     } finally {
@@ -8374,26 +8536,41 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
   window.openModalLaporanWA = async () => {
     window.toggleLoading(true, "Memuat Data Grup...");
     try {
-      const waSnap = await db.collection("settings").doc("whatsapp_api").get();
-      const groupsStr = waSnap.exists
-        ? waSnap.data().groups_data || "[]"
-        : "[]";
-      const groupSelect = document.getElementById("laporan-grup-select");
+      let groupsStr = "[]";
+      try {
+        const config = await window.getWaApiConfig();
+        if (config && config.groups) {
+          groupsStr = config.groups;
+        }
+      } catch (e) {
+        console.warn("[WA] Failed to load settings groups from Firestore:", e);
+      }
+      const targetContainer = document.getElementById("laporan-targets-container");
 
       try {
         const groups = JSON.parse(groupsStr);
         if (groups.length > 0) {
-          groupSelect.innerHTML =
-            '<option value="">-- Pilih Grup WA --</option>' +
-            groups
-              .map((g) => `<option value="${g.id}">${g.name}</option>`)
-              .join("");
+          targetContainer.innerHTML = groups
+            .map((g) => {
+              const isChannel = (g.id || '').endsWith('@newsletter');
+              const iconClass = isChannel ? 'fas fa-bullhorn text-purple-400' : 'fas fa-users text-emerald-400';
+              return `
+                <label class="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 cursor-pointer transition-all text-xs text-slate-300">
+                  <input type="checkbox" name="laporan-target-check" value="${g.id}" class="rounded text-indigo-500 focus:ring-indigo-500 w-4 h-4 bg-black/40 border-white/10" />
+                  <span class="flex items-center gap-1.5 truncate">
+                    <i class="${iconClass}"></i>
+                    <span class="truncate">${g.name}</span>
+                  </span>
+                </label>
+              `;
+            })
+            .join("");
         } else {
-          groupSelect.innerHTML =
-            '<option value="">Belum ada grup (Tarik di Setting API)</option>';
+          targetContainer.innerHTML =
+            '<p class="text-[10px] text-slate-500 italic text-center py-4 col-span-2">Belum ada grup/channel terdaftar. Tarik di Setting API.</p>';
         }
       } catch (e) {
-        groupSelect.innerHTML = '<option value="">Error membaca grup</option>';
+        targetContainer.innerHTML = '<p class="text-[10px] text-red-400 italic text-center py-4 col-span-2">Error membaca target.</p>';
       }
 
       let inC = 0,
@@ -8409,8 +8586,33 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
         year: "numeric",
       });
 
-      document.getElementById("laporan-msg-input").value =
-        `Assalamu'alaikum wr. wb.\n\nBerikut kami lampirkan Laporan Keuangan Reuni Akbar AL-FATAH (Periode ${bulan}).\n\nTotal Pemasukan: *${window.formatRupiah(inC)}*\nTotal Pengeluaran: *${window.formatRupiah(outC)}*\nSaldo Kas Saat Ini: *${window.formatRupiah(saldo)}*\n\nTerima kasih atas transparansi dan dukungan semua pihak.\n\nTtd,\nBendahara Panitia.`;
+      if (!window.lastWaBotConfig) {
+        try {
+          const configSnap = await db.collection("settings").doc("wa_bot_config").get();
+          if (configSnap.exists) {
+            window.lastWaBotConfig = configSnap.data();
+          }
+        } catch (e) {
+          console.warn("Failed to load wa_bot_config in openModalLaporanWA:", e);
+        }
+      }
+
+      let template = '';
+      if (window.lastWaBotConfig && window.lastWaBotConfig.report_template) {
+        template = window.lastWaBotConfig.report_template;
+      }
+      
+      if (!template.trim()) {
+        template = `Assalamu'alaikum wr. wb.\n\nBerikut kami lampirkan Laporan Keuangan Reuni Akbar AL-FATAH (Periode {bulan}).\n\nTotal Pemasukan: *{pemasukan}*\nTotal Pengeluaran: *{pengeluaran}*\nSaldo Kas Saat Ini: *{saldo}*\n\nTerima kasih atas transparansi dan dukungan semua pihak.\n\nTtd,\nBendahara Panitia.`;
+      }
+      
+      const processedMsg = template
+        .replace(/{bulan}/g, bulan)
+        .replace(/{pemasukan}/g, window.formatRupiah(inC))
+        .replace(/{pengeluaran}/g, window.formatRupiah(outC))
+        .replace(/{saldo}/g, window.formatRupiah(saldo));
+        
+      document.getElementById("laporan-msg-input").value = processedMsg;
 
       // PANGGIL PREVIEW OTOMATIS SAAT MODAL DIBUKA
       window.renderLaporanPreview();
@@ -8420,6 +8622,24 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
     } finally {
       window.toggleLoading(false);
     }
+  };
+
+  window.toggleSelectAllLaporanTargets = () => {
+    const checkboxes = document.querySelectorAll('input[name="laporan-target-check"]');
+    if (checkboxes.length === 0) return;
+    const hasUnchecked = Array.from(checkboxes).some(cb => !cb.checked);
+    checkboxes.forEach(cb => {
+      cb.checked = hasUnchecked;
+    });
+  };
+
+  window.toggleSelectAllWaScheduleTargets = () => {
+    const checkboxes = document.querySelectorAll('input[name="wa-schedule-target-check"]');
+    if (checkboxes.length === 0) return;
+    const hasUnchecked = Array.from(checkboxes).some(cb => !cb.checked);
+    checkboxes.forEach(cb => {
+      cb.checked = hasUnchecked;
+    });
   };
 
   // 3. FUNGSI KIRIM LAPORAN KEUANGAN MULTI-PROVIDER TELAH DIPINDAHKAN KE api-whatsapp.js

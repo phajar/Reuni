@@ -1,1 +1,7 @@
 backend/
+node_modules/
+whatsapp-bot/node_modules/
+whatsapp-bot/auth_info/
+scratch/
+whatsapp-bot/test_logo.js
+*.bat

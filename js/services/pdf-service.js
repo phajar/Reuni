@@ -939,172 +939,319 @@
     } else {
       const canvas = document.createElement("canvas");
       canvas.width = 800;
-      canvas.height = 680;
+      canvas.height = 930;
       const ctx = canvas.getContext("2d");
 
-      // 1. Cosmic Obsidian Background Gradient
-      const bgGrad = ctx.createLinearGradient(0, 0, 800, 680);
-      bgGrad.addColorStop(0, "#070913");
-      bgGrad.addColorStop(0.5, "#0F132A");
-      bgGrad.addColorStop(1, "#1B1230");
-      ctx.fillStyle = bgGrad;
+      const loadImg = (src) => {
+        if (!src) return Promise.resolve(null);
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+      };
+
+      // 1. Background & Border
+      ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // 2. High-Tech Glow Borders
-      ctx.strokeStyle = "rgba(99, 102, 241, 0.4)"; // Soft indigo neon glow
-      ctx.lineWidth = 4;
-      ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
-
-      ctx.strokeStyle = "rgba(16, 185, 129, 0.35)"; // Accent emerald border
+      ctx.strokeStyle = "#e2e8f0";
       ctx.lineWidth = 1;
       ctx.strokeRect(15, 15, canvas.width - 30, canvas.height - 30);
 
-      // 3. Premium Header Section
-      const headGrad = ctx.createLinearGradient(0, 0, 800, 0);
-      headGrad.addColorStop(0, "rgba(16, 185, 129, 0.95)"); // Vibrant Emerald
-      headGrad.addColorStop(1, "rgba(79, 70, 229, 0.95)");  // Cosmic Indigo
-      ctx.fillStyle = headGrad;
-      ctx.fillRect(20, 20, canvas.width - 40, 95);
+      // 2. Official Header Logo & Text
+      const logoImg = await loadImg("img/logo.png");
+      if (logoImg) {
+        ctx.drawImage(logoImg, 50, 40, 60, 60);
+      }
 
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 22px sans-serif";
+      ctx.fillStyle = "#000000";
       ctx.textAlign = "center";
-      ctx.fillText("LAPORAN KEUANGAN REUNI AL-FATAH", canvas.width / 2, 60);
+      
+      ctx.font = "bold 20px 'Times New Roman', Times, serif";
+      ctx.fillText("ALUMNI PONDOK PESANTREN", 430, 58);
+      
+      ctx.font = "bold 20px 'Times New Roman', Times, serif";
+      ctx.fillText("AL-FATAH TEGALWARU PURWAKARTA", 430, 83);
+      
+      ctx.font = "italic 11px 'Times New Roman', Times, serif";
+      ctx.fillStyle = "#333333";
+      ctx.fillText("Jl. BBI Cirata Kp. Cilangkap Rt. 10 Rw.05 Cadassari Tegalwaru Purwakarta 41165", 430, 105);
 
-      ctx.font = "11px sans-serif";
-      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-      const bulan = new Date().toLocaleDateString("id-ID", {
-        month: "long",
-        year: "numeric",
+      // Decorative Double Lines
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(50, 117);
+      ctx.lineTo(750, 117);
+      ctx.stroke();
+      
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(50, 122);
+      ctx.lineTo(750, 122);
+      ctx.stroke();
+
+      // 3. Document Title Section
+      ctx.fillStyle = "#000000";
+      ctx.textAlign = "center";
+      
+      ctx.font = "bold 16px 'Times New Roman', Times, serif";
+      ctx.fillText("LAPORAN KEUANGAN REUNI AKBAR", 400, 155);
+      
+      ctx.font = "normal 12px 'Times New Roman', Times, serif";
+      ctx.fillStyle = "#555555";
+      const printDateStr = new Date().toLocaleDateString("id-ID", {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
-      ctx.fillText(`Periode Rekap: ${bulan}   |   Dicetak: ${new Date().toLocaleString("id-ID")}`, canvas.width / 2, 90);
+      ctx.fillText(`Tanggal Cetak Dokumen: ${printDateStr}`, 400, 175);
 
-      // 4. Summaries Grid Block (Side-by-side premium card styling)
+      // 4. Financial Recap Data
       let inC = 0, outC = 0;
       window.STATE.finance.forEach((f) => {
         let v = Number(f.nominal) || 0;
-        if (f.status === "pengeluaran") outC += v;
+        if (f.status.toLowerCase() === "pengeluaran") outC += v;
         else inC += v;
       });
       const saldo = inC - outC;
 
-      // Card 1: Pemasukan (Income)
-      ctx.fillStyle = "rgba(16, 185, 129, 0.08)";
-      ctx.fillRect(40, 140, 220, 95);
-      ctx.strokeStyle = "rgba(16, 185, 129, 0.3)";
+      // Recap Container Box
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(50, 200, 700, 70);
+      
+      ctx.strokeStyle = "#cbd5e1";
       ctx.lineWidth = 1;
-      ctx.strokeRect(40, 140, 220, 95);
+      ctx.strokeRect(50, 200, 700, 70);
       
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "bold 10px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("TOTAL PEMASUKAN", 150, 172);
-      ctx.fillStyle = "#10b981";
-      ctx.font = "bold 18px sans-serif";
-      ctx.fillText(window.formatRupiah(inC), 150, 208);
-
-      // Card 2: Pengeluaran (Expense)
-      ctx.fillStyle = "rgba(239, 68, 68, 0.08)";
-      ctx.fillRect(290, 140, 220, 95);
-      ctx.strokeStyle = "rgba(239, 68, 68, 0.3)";
-      ctx.strokeRect(290, 140, 220, 95);
+      // Divider Lines
+      ctx.beginPath();
+      ctx.moveTo(280, 200);
+      ctx.lineTo(280, 270);
+      ctx.moveTo(510, 200);
+      ctx.lineTo(510, 270);
+      ctx.stroke();
       
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "bold 10px sans-serif";
-      ctx.fillText("TOTAL PENGELUARAN", 400, 172);
-      ctx.fillStyle = "#ef4444";
-      ctx.font = "bold 18px sans-serif";
-      ctx.fillText(window.formatRupiah(outC), 400, 208);
-
-      // Card 3: Saldo Kas (Balance)
-      ctx.fillStyle = "rgba(79, 70, 229, 0.12)";
-      ctx.fillRect(540, 140, 220, 95);
-      ctx.strokeStyle = "rgba(99, 102, 241, 0.45)";
-      ctx.strokeRect(540, 140, 220, 95);
-      
-      ctx.fillStyle = "#c7d2fe";
-      ctx.font = "bold 10px sans-serif";
-      ctx.fillText("SALDO KAS SEKARANG", 650, 172);
-      ctx.fillStyle = "#818cf8";
-      ctx.font = "bold 19px sans-serif";
-      ctx.fillText(window.formatRupiah(saldo), 650, 208);
-
-      // 5. Transaction History Grid (Last 6 Transactions)
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 13px sans-serif";
+      // Column 1: Pemasukan
+      ctx.fillStyle = "#475569";
+      ctx.font = "bold 10px 'Times New Roman', Times, serif";
       ctx.textAlign = "left";
-      ctx.fillText("Riwayat Transaksi Terkini", 40, 272);
+      ctx.fillText("REALISASI PEMASUKAN", 70, 225);
+      ctx.fillStyle = "#15803d"; // Green
+      ctx.font = "bold 18px 'Times New Roman', Times, serif";
+      ctx.fillText(window.formatRupiah(inC), 70, 252);
+      
+      // Column 2: Pengeluaran
+      ctx.fillStyle = "#475569";
+      ctx.font = "bold 10px 'Times New Roman', Times, serif";
+      ctx.fillText("REALISASI PENGELUARAN", 300, 225);
+      ctx.fillStyle = "#b91c1c"; // Red
+      ctx.font = "bold 18px 'Times New Roman', Times, serif";
+      ctx.fillText(window.formatRupiah(outC), 300, 252);
+      
+      // Column 3: Saldo Kas
+      ctx.fillStyle = "#475569";
+      ctx.font = "bold 10px 'Times New Roman', Times, serif";
+      ctx.fillText("SALDO KAS RIIL SAAT INI", 530, 225);
+      ctx.fillStyle = "#1e293b"; // Dark Slate
+      ctx.font = "bold 18px 'Times New Roman', Times, serif";
+      ctx.fillText(window.formatRupiah(saldo), 530, 252);
+
+      // 5. Transaction History Table
+      ctx.fillStyle = "#000000";
+      ctx.textAlign = "left";
+      ctx.font = "bold 12px 'Times New Roman', Times, serif";
+      ctx.fillText("Daftar Transaksi Terkini:", 50, 295);
+
+      const startX = 50;
+      const startY = 305;
+      const rowHeight = 30;
+      const cols = [
+        { label: "No", width: 40, align: "center" },
+        { label: "Tanggal", width: 90, align: "left" },
+        { label: "Keterangan Transaksi", width: 260, align: "left" },
+        { label: "Kategori", width: 110, align: "left" },
+        { label: "Aliran", width: 70, align: "center" },
+        { label: "Nominal", width: 130, align: "right" }
+      ];
 
       // Draw Table Header
-      ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
-      ctx.fillRect(40, 288, 720, 36);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-      ctx.strokeRect(40, 288, 720, 36);
-
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "bold 10px sans-serif";
-      ctx.fillText("No", 55, 310);
-      ctx.fillText("Keterangan / Pembayar", 100, 310);
-      ctx.fillText("Kategori", 320, 310);
-      ctx.fillText("Tipe", 500, 310);
-      ctx.fillText("Nominal", 640, 310);
-
-      // Draw rows
-      const lastTrans = window.STATE.finance.slice(-6).reverse();
-      let rowY = 324;
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(startX, startY, 700, 30);
       
-      lastTrans.forEach((t, idx) => {
-        ctx.fillStyle = idx % 2 === 0 ? "rgba(255, 255, 255, 0.01)" : "rgba(255, 255, 255, 0.025)";
-        ctx.fillRect(40, rowY, 720, 38);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
-        ctx.strokeRect(40, rowY, 720, 38);
-
-        ctx.fillStyle = "#e2e8f0";
-        ctx.font = "11px sans-serif";
-        ctx.fillText(String(idx + 1), 55, rowY + 23);
-        
-        const nama = t.nama_pembayar || t.keterangan || "-";
-        ctx.fillText(nama.substring(0, 24), 100, rowY + 23);
-        ctx.fillText(t.kategori || "-", 320, rowY + 23);
-
-        // Type with glowing dot
-        if (t.status === "pengeluaran") {
-          ctx.fillStyle = "#ef4444";
-          ctx.beginPath();
-          ctx.arc(506, rowY + 19, 4, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.fillStyle = "#f87171";
-          ctx.fillText("Keluar", 520, rowY + 23);
-          
-          ctx.fillStyle = "#f87171";
-          ctx.font = "bold 11px sans-serif";
-          ctx.fillText("-" + window.formatRupiah(t.nominal), 640, rowY + 23);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 11px 'Times New Roman', Times, serif";
+      
+      let curX = startX;
+      cols.forEach(col => {
+        let textX = curX;
+        if (col.align === "center") {
+          textX = curX + col.width / 2;
+          ctx.textAlign = "center";
+        } else if (col.align === "right") {
+          textX = curX + col.width - 10;
+          ctx.textAlign = "right";
         } else {
-          ctx.fillStyle = "#10b981";
-          ctx.beginPath();
-          ctx.arc(506, rowY + 19, 4, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.fillStyle = "#34d399";
-          ctx.fillText("Masuk", 520, rowY + 23);
-          
-          ctx.fillStyle = "#34d399";
-          ctx.font = "bold 11px sans-serif";
-          ctx.fillText("+" + window.formatRupiah(t.nominal), 640, rowY + 23);
+          textX = curX + 10;
+          ctx.textAlign = "left";
         }
-        rowY += 38;
+        ctx.fillText(col.label, textX, startY + 18);
+        curX += col.width;
       });
 
-      // 6. Security Footer
-      ctx.fillStyle = "rgba(255, 255, 255, 0.015)";
-      ctx.fillRect(20, 580, canvas.width - 40, 70);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
-      ctx.strokeRect(20, 580, canvas.width - 40, 70);
+      // Draw Rows (Last 8)
+      const transactions = window.STATE.finance.slice(-8).reverse();
+      let curY = startY + 30;
 
-      ctx.fillStyle = "#475569";
-      ctx.font = "italic 11px sans-serif";
+      transactions.forEach((t, index) => {
+        ctx.fillStyle = index % 2 === 0 ? "#ffffff" : "#f8fafc";
+        ctx.fillRect(startX, curY, 700, rowHeight);
+        
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(startX, curY + rowHeight);
+        ctx.lineTo(startX + 700, curY + rowHeight);
+        ctx.stroke();
+        
+        ctx.font = "normal 11px 'Times New Roman', Times, serif";
+        let cellX = startX;
+        
+        cols.forEach(col => {
+          let textX = cellX;
+          ctx.fillStyle = "#1e293b";
+          
+          if (col.align === "center") {
+            textX = cellX + col.width / 2;
+            ctx.textAlign = "center";
+          } else if (col.align === "right") {
+            textX = cellX + col.width - 10;
+            ctx.textAlign = "right";
+          } else {
+            textX = cellX + 10;
+            ctx.textAlign = "left";
+          }
+          
+          let val = "";
+          if (col.label === "No") {
+            val = String(index + 1);
+          } else if (col.label === "Tanggal") {
+            val = String(t.tanggal || "-").split(",")[0];
+          } else if (col.label === "Keterangan Transaksi") {
+            val = (t.nama || t.keterangan || t.nama_pembayar || "-");
+            if (val.length > 38) val = val.substring(0, 35) + "...";
+          } else if (col.label === "Kategori") {
+            val = (t.kategori || "-");
+            if (val.length > 15) val = val.substring(0, 12) + "...";
+          } else if (col.label === "Aliran") {
+            val = t.status.toLowerCase() === "pengeluaran" ? "Keluar" : "Masuk";
+            ctx.fillStyle = val === "Keluar" ? "#b91c1c" : "#15803d";
+            ctx.font = "bold 11px 'Times New Roman', Times, serif";
+          } else if (col.label === "Nominal") {
+            val = window.formatRupiah(t.nominal);
+            ctx.font = "bold 11px 'Times New Roman', Times, serif";
+          }
+          
+          ctx.fillText(val, textX, curY + 18);
+          cellX += col.width;
+        });
+        
+        curY += rowHeight;
+      });
+
+      // 6. Committee Signatures Section
+      const list = (window.STATE && window.STATE.panitia) ? window.STATE.panitia : [];
+      let ketua = null;
+      let sekretaris = null;
+      let bendahara = null;
+
+      list.forEach(p => {
+          const jab = (p.jabatan || "").toLowerCase();
+          if (jab.includes("ketua") && !ketua) {
+              ketua = p;
+          } else if (jab.includes("sekretaris") && !sekretaris) {
+              sekretaris = p;
+          } else if (jab.includes("bendahara") && !bendahara) {
+              bendahara = p;
+          }
+      });
+
+      const usedIds = new Set();
+      if (ketua) usedIds.add(ketua.id);
+      if (sekretaris) usedIds.add(sekretaris.id);
+      if (bendahara) usedIds.add(bendahara.id);
+
+      const unused = list.filter(p => !usedIds.has(p.id));
+      if (!ketua && unused.length > 0) { ketua = unused.shift(); }
+      if (!sekretaris && unused.length > 0) { sekretaris = unused.shift(); }
+      if (!bendahara && unused.length > 0) { bendahara = unused.shift(); }
+
+      const sigKetua = ketua || { nama: "", jabatan: "Ketua Panitia", tanda_tangan: null };
+      const sigSekretaris = sekretaris || { nama: "", jabatan: "Sekretaris", tanda_tangan: null };
+      const sigBendahara = bendahara || { nama: "", jabatan: "Bendahara", tanda_tangan: null };
+
+      const leftSig = sigBendahara;
+      const rightSig = sigKetua;
+
+      ctx.fillStyle = "#000000";
       ctx.textAlign = "center";
-      ctx.fillText("Laporan Resmi Terintegrasi dihasilkan langsung secara real-time oleh Portal Reuni Al-Fatah.", canvas.width / 2, 608);
-      ctx.fillText("Seluruh riwayat keuangan telah tercatat permanen pada sistem ledger keuangan.", canvas.width / 2, 626);
+      ctx.font = "normal 11px 'Times New Roman', Times, serif";
+      ctx.fillText("Hormat kami,", 400, 615);
+      
+      ctx.font = "bold 11px 'Times New Roman', Times, serif";
+      ctx.fillText("PANITIA PELAKSANA REUNI AKBAR AL-FATAH", 400, 630);
+      
+      const sigY = 660;
+      
+      // Left Signature (Bendahara)
+      ctx.font = "bold 11px 'Times New Roman', Times, serif";
+      ctx.fillText(leftSig.jabatan || "Bendahara,", 200, sigY);
+      
+      if (leftSig.tanda_tangan) {
+        const leftSigImg = await loadImg(leftSig.tanda_tangan);
+        if (leftSigImg) {
+          ctx.drawImage(leftSigImg, 130, sigY + 5, 140, 63);
+        }
+      }
+      
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(100, sigY + 75);
+      ctx.lineTo(300, sigY + 75);
+      ctx.stroke();
+      
+      ctx.font = "normal 11px 'Times New Roman', Times, serif";
+      ctx.fillText(leftSig.nama ? `( ${leftSig.nama} )` : "( ____________________ )", 200, sigY + 92);
+      
+      // Right Signature (Ketua)
+      ctx.font = "bold 11px 'Times New Roman', Times, serif";
+      ctx.fillText("Mengetahui,", 600, sigY - 15);
+      ctx.fillText(rightSig.jabatan || "Ketua Panitia,", 600, sigY);
+      
+      if (rightSig.tanda_tangan) {
+        const rightSigImg = await loadImg(rightSig.tanda_tangan);
+        if (rightSigImg) {
+          ctx.drawImage(rightSigImg, 530, sigY + 5, 140, 63);
+        }
+      }
+      
+      ctx.beginPath();
+      ctx.moveTo(500, sigY + 75);
+      ctx.lineTo(700, sigY + 75);
+      ctx.stroke();
+      
+      ctx.fillText(rightSig.nama ? `( ${rightSig.nama} )` : "( ____________________ )", 600, sigY + 92);
+
+      // 7. Security Footer Section
+      ctx.fillStyle = "#64748b";
+      ctx.font = "italic 10px 'Times New Roman', Times, serif";
+      ctx.textAlign = "center";
+      ctx.fillText("Laporan Resmi Terintegrasi dihasilkan langsung secara real-time oleh Portal Reuni Al-Fatah.", 400, 890);
+      ctx.fillText("Seluruh riwayat keuangan telah tercatat permanen pada sistem ledger keuangan.", 400, 905);
 
       fileBlob = await new Promise((resolve) =>
         canvas.toBlob(resolve, "image/png"),

@@ -197,7 +197,9 @@ service cloud.firestore {
       allow create: if isValidAlumniCreate();
       allow update: if isSekretaris()
                     || (isKorwilForOrNew(resource.data, request.resource.data) && isKorwilFor(request.resource.data))
-                    || (request.resource.data.status == 'pending' && isValidAlumniCreate());
+                    || (request.resource.data.status == 'pending' && isValidAlumniCreate())
+                    || (request.resource.data.status == 'approved'
+                        && request.resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_keuangan);
       allow delete: if isSekretaris() || isKorwilFor(resource.data);
     }
 
@@ -214,7 +216,10 @@ service cloud.firestore {
     match /finance/{docId} {
       allow read: if true;
       allow create: if isValidFinanceCreate();
-      allow update, delete: if isBendahara();
+      allow update: if isBendahara()
+                    || (request.resource.data.status == 'pemasukan'
+                        && request.resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_keuangan);
+      allow delete: if isBendahara();
     }
 
     // --- KONFIRMASI PEMBAYARAN (payment_requests) ---------------------------
@@ -245,7 +250,7 @@ service cloud.firestore {
     // - Lainnya:      Hanya Admin Utama
     match /settings/{docId} {
       allow read: if true;
-      allow write: if (docId == 'whatsapp_api' && isAuth() && getRole() == 'creator')
+      allow write: if (docId == 'whatsapp_api' && isAuth() && (getRole() == 'creator' || getRole() == 'admin_utama'))
                    || docId == 'sync_state'
                    || (docId != 'whatsapp_api' && docId != 'sync_state' && isAdminUtama());
     }
@@ -326,11 +331,11 @@ service cloud.firestore {
     }
 
     // --- LOG AKTIVITAS OPERATOR (AUDIT TRAIL) ------------------------------
-    // Hanya Admin Utama yang bisa membaca log
+    // Publik bisa membaca log (termasuk WhatsApp bot lokal)
     // Seluruh staff bisa menulis log aktivitasnya
     // TIDAK BISA diupdate atau dihapus oleh siapapun (immutable audit trail)
     match /audit_logs/{docId} {
-      allow read: if isAdminUtama();
+      allow read: if true;
       allow create: if isAnyStaff();
       allow update, delete: if false;
     }
