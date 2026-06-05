@@ -3028,7 +3028,25 @@ function terbilang(nominal) {
     return temp.trim();
 }
 
-function generateReceiptSvg(txId, txData, alumnusData, logoBase64 = '') {
+async function getImageAsBase64(urlOrBase64) {
+    if (!urlOrBase64) return '';
+    if (urlOrBase64.startsWith('data:image')) {
+        return urlOrBase64;
+    }
+    try {
+        const response = await fetch(urlOrBase64);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const mimeType = response.headers.get('content-type') || 'image/png';
+        return `data:${mimeType};base64,${buffer.toString('base64')}`;
+    } catch (err) {
+        console.error('[WA BOT] Failed to fetch image from URL to Base64:', err.message);
+        return '';
+    }
+}
+
+function generateReceiptSvg(txId, txData, alumnusData, logoBase64 = '', signatureBase64 = '', bendaharaNama = 'Ahmad Pajar Bahri') {
     const nominalVal = Number(txData.nominal) || 0;
     const terbilangStr = terbilang(nominalVal) + " Rupiah";
     const dateStr = txData.tanggal || new Date().toLocaleDateString("id-ID", {
@@ -3100,11 +3118,15 @@ function generateReceiptSvg(txId, txData, alumnusData, logoBase64 = '') {
   <text x="480" y="314" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" fill="#64748b" text-anchor="middle">Purwakarta, ${dateStr}</text>
   <text x="480" y="328" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">Bendahara,</text>
   
-  <!-- Signature stroke simulation -->
+  <!-- Signature Image or stroke simulation -->
+  ${signatureBase64 ? `
+  <image href="${signatureBase64}" x="410" y="326" width="140" height="39" />
+  ` : `
   <path d="M 440 355 Q 470 330 480 365 T 510 345" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>
+  `}
   
   <line x1="400" y1="366" x2="560" y2="366" stroke="#94a3b8" stroke-width="1"/>
-  <text x="480" y="380" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">Ahmad Pajar Bahri</text>
+  <text x="480" y="380" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">${bendaharaNama}</text>
 
   <!-- Seal Badge (Watermark) -->
   <g transform="translate(560, 140) rotate(15)">
@@ -3162,8 +3184,33 @@ async function sendOfficialReceipt(txId, txData) {
             console.error('[WA BOT] Gagal membaca logo.png:', logoErr.message);
         }
         
+        // Fetch bendahara details and signature from Firestore
+        let bendaharaData = { nama: 'Ahmad Pajar Bahri', jabatan: 'Bendahara', tanda_tangan: null };
+        try {
+            const panitiaCol = collection(db, 'panitia');
+            const panitiaSnapshot = await getDocs(panitiaCol);
+            panitiaSnapshot.forEach((doc) => {
+                const data = doc.data();
+                const jabatan = String(data.jabatan || '').toLowerCase();
+                if (jabatan.includes('bendahara')) {
+                    bendaharaData = {
+                        nama: data.nama || 'Ahmad Pajar Bahri',
+                        jabatan: data.jabatan || 'Bendahara',
+                        tanda_tangan: data.tanda_tangan || null
+                    };
+                }
+            });
+        } catch (panitiaErr) {
+            console.error('[WA BOT] Gagal memuat data bendahara dari Firestore:', panitiaErr.message);
+        }
+
+        let signatureBase64 = '';
+        if (bendaharaData.tanda_tangan) {
+            signatureBase64 = await getImageAsBase64(bendaharaData.tanda_tangan);
+        }
+        
         const sharp = require('sharp');
-        const svgString = generateReceiptSvg(txId, txData, alumnusData, logoBase64);
+        const svgString = generateReceiptSvg(txId, txData, alumnusData, logoBase64, signatureBase64, bendaharaData.nama);
         const imageBuffer = await sharp(Buffer.from(svgString)).png().toBuffer();
         
         const formattedNominal = formatRupiah(txData.nominal);
@@ -3190,8 +3237,22 @@ async function sendOfficialReceipt(txId, txData) {
         
         console.log(`[WA BOT] Official receipt sent to JID: ${targetJid}`);
         
+        // Fetch token_keuangan to authorize the update in firestore rules
+        let tokenKeuangan = '';
+        try {
+            const waConfigSnap = await getDoc(doc(db, 'settings', 'whatsapp_api'));
+            if (waConfigSnap.exists()) {
+                tokenKeuangan = waConfigSnap.data().token_keuangan || '';
+            }
+        } catch (tokenErr) {
+            console.error('[WA BOT] Gagal membaca token_keuangan untuk update kuitansi:', tokenErr);
+        }
+
         const txRef = doc(db, 'finance', txId);
-        await setDoc(txRef, { receipt_sent: true }, { merge: true });
+        await setDoc(txRef, { 
+            receipt_sent: true,
+            bot_token: tokenKeuangan
+        }, { merge: true });
         
     } catch (err) {
         console.error(`[WA BOT] Failed to send receipt for transaction ${txId}:`, err);
