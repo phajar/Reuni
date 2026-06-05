@@ -189,16 +189,63 @@ window.stopWAServer = () => {
     }
 };
 
-window.resetWASession = () => {
+window.resetWASession = async () => {
     if(!confirm('Anda yakin ingin mereset sesi WhatsApp? Anda harus scan QR ulang.')) return;
-    if (window.Capacitor && window.Capacitor.Plugins.CapacitorNodeJS) {
+    
+    const isNative = !!(window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorNodeJS);
+    
+    if (isNative) {
         window.Capacitor.Plugins.CapacitorNodeJS.send({
             eventName: 'reset_session',
             args: [{ sessionId: window.currentWaSessionId }]
         });
         window.notify('Mereset sesi...', 'warning');
     } else {
-        window.notify('Plugin Node.js tidak tersedia.', 'error');
+        const config = await window.getWaApiConfig();
+        
+        const localUrl = (config && config.local_api_url || '').trim();
+        if (!localUrl) {
+            return window.notify('API WhatsApp Lokal belum diatur di panel kiri!', 'error');
+        }
+        
+        let cleanLocalUrl = localUrl;
+        let localApiKey = '';
+        if (cleanLocalUrl.includes('|')) {
+            const parts = cleanLocalUrl.split('|');
+            cleanLocalUrl = parts[0].trim();
+            localApiKey = parts[1].trim();
+        }
+        if (cleanLocalUrl.endsWith('/')) {
+            cleanLocalUrl = cleanLocalUrl.slice(0, -1);
+        }
+        
+        window.toggleLoading(true, 'Mereset sesi WhatsApp...');
+        window.notify('Mengirim permintaan reset sesi...', 'warning');
+        
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            };
+            if (localApiKey) {
+                headers['Authorization'] = `Bearer ${localApiKey}`;
+            }
+            const res = await fetch(`${cleanLocalUrl}/api/reset`, {
+                method: 'POST',
+                headers: headers
+            });
+            const data = await res.json();
+            window.toggleLoading(false);
+            
+            if (data && data.success) {
+                window.notify('Sesi WhatsApp berhasil direset. Silakan scan QR code baru.', 'success');
+            } else {
+                window.notify('Gagal mereset sesi: ' + (data.error || 'Server error'), 'error');
+            }
+        } catch (err) {
+            window.toggleLoading(false);
+            window.notify('Gagal menghubungi API lokal: ' + err.message, 'error');
+        }
     }
 };
 
