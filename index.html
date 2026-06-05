@@ -820,7 +820,7 @@
 
   <div id="modal-rundown" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
     <div onclick="closeModal('modal-rundown')" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-indigo-500/20 modal-enter">
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-indigo-500/20 modal-enter max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex justify-between items-center mb-6"><h3 id="modal-rundown-title" class="text-lg font-black uppercase text-indigo-400">Tambah Rundown</h3><button onclick="closeModal('modal-rundown')" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button></div>
       <form onsubmit="handleRundownSubmit(event)" id="form-rundown" class="space-y-4">
         <input type="hidden" name="id" id="rnd-id">
@@ -840,7 +840,7 @@
 
   <div id="modal-set-wilayah" class="hidden fixed inset-0 z-[450] flex items-center justify-center p-4">
     <div onclick="closeModal('modal-set-wilayah')" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="glass relative w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-indigo-500/20 modal-enter">
+    <div class="glass relative w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-indigo-500/20 modal-enter max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex justify-between items-center mb-4"><h3 class="text-sm font-black uppercase text-indigo-400">Atur Wilayah Koordinator</h3><button type="button" onclick="closeModal('modal-set-wilayah')" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-times"></i></button></div>
       <form onsubmit="handleSaveWilayahKoor(event)" class="space-y-3">
           <input type="hidden" id="koor-uid" />
@@ -1294,7 +1294,7 @@
 
   <div id="modal-finance" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4">
     <div onclick="closeModal('modal-finance')" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="glass relative w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl modal-enter border border-emerald-500/20">
+    <div class="glass relative w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl modal-enter border border-emerald-500/20 max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex justify-between items-center mb-6"><h2 id="modal-finance-title" class="text-xl font-black uppercase text-emerald-400">Input Transaksi</h2><button onclick="closeModal('modal-finance')" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button></div>
       <form id="form-finance" class="space-y-4">
         <input type="hidden" name="id" id="fin-id" /><input type="hidden" name="ref_alumni_id" id="hidden-fin-ref-id" />
@@ -1331,7 +1331,7 @@
   </div>
   <div id="modal-logistik" class="hidden fixed inset-0 z-[400] flex items-center justify-center p-4">
     <div onclick="window.closeModal('modal-logistik')" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="glass relative w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border border-indigo-500/20 modal-enter">
+    <div class="glass relative w-full max-w-sm rounded-[2.5rem] p-8 shadow-2xl border border-indigo-500/20 modal-enter max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex justify-between items-center mb-6">
         <h3 id="modal-logistik-title" class="text-lg font-black uppercase text-indigo-400">Input Donasi Barang</h3>
         <button onclick="window.closeModal('modal-logistik')" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button>
@@ -1417,7 +1417,7 @@
   <!-- MODAL TAMBAH/EDIT TUGAS -->
   <div id="modal-tugas" class="hidden fixed inset-0 z-[170] flex items-center justify-center p-4">
     <div onclick="closeModal('modal-tugas')" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="glass relative w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl modal-enter border border-amber-500/20">
+    <div class="glass relative w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl modal-enter border border-amber-500/20 max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex justify-between items-center mb-6">
         <h2 id="modal-tugas-title" class="text-xl font-black uppercase text-amber-400">Tambah Tugas</h2>
         <button type="button" onclick="closeModal('modal-tugas')" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button>
@@ -1534,10 +1534,6 @@
 
     <main class="flex-1 p-4 pb-44 lg:p-8 xl:p-12 overflow-y-auto max-h-screen custom-scrollbar relative">
         
-        <button onclick="window.toggleSidebar()" class="hidden fixed top-4 left-4 z-[120] w-12 h-12 glass hover:bg-white/10 rounded-2xl flex items-center justify-center text-indigo-400 shadow-2xl border border-white/10 bg-[#060813]/90 backdrop-blur-xl transition-all">
-            <i class="fas fa-bars text-xl"></i>
-        </button>
-
       <!-- Logo at absolute top right (Clickable Settings Entry) -->
       <div class="fixed top-4 right-4 lg:top-8 lg:right-8 z-[200]">
         <!-- The Clickable Logo Circle -->
@@ -1577,6 +1573,9 @@
           <button onclick="window.clickLogoSubMenu('utilities')" id="subbtn-logo-utilities" class="nav-sub-btn">
             <i class="fas fa-toolbox text-[11px] w-4"></i> Tools & Notif
           </button>
+          <button onclick="showTab('whatsapp'); window.toggleLogoDropdown();" id="subbtn-logo-whatsapp" class="nav-sub-btn hidden">
+            <i class="fab fa-whatsapp text-[11px] w-4"></i> WhatsApp Gateway
+          </button>
           <button onclick="window.clickLogoSubMenu('gallery')" id="subbtn-logo-gallery" class="nav-sub-btn hidden">
             <i class="fas fa-camera text-[11px] w-4"></i> Galeri Dokumentasi
           </button>
@@ -1585,13 +1584,17 @@
 
       <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 pt-4 lg:pt-0">
           
-          <div class="flex items-center gap-3 lg:gap-4">
-            <div class="relative inline-block">
+          <div class="flex items-center gap-3 lg:gap-4 w-full lg:w-auto">
+            <!-- Mobile Menu Toggle Button (Inline & Beautiful) -->
+            <button onclick="window.toggleSidebar()" class="lg:hidden w-10 h-10 glass hover:bg-white/10 rounded-2xl flex items-center justify-center text-indigo-400 shadow-lg border border-white/10 active:scale-95 transition-all flex-shrink-0" title="Buka Menu">
+                <i class="fas fa-bars text-base"></i>
+            </button>
+            <div class="relative inline-block flex-shrink-0">
               <img id="user-avatar-header" onclick="openSettings()" src="https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff" class="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover shadow-lg border-2 border-indigo-500/50 cursor-pointer hover:scale-105 active:scale-95 transition-all animate-enter" alt="Foto Profil" title="Edit Profil">
             </div>
-            <div>
-              <h1 id="page-title" class="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white">Dashboard</h1>
-              <p id="greeting" class="text-slate-500 text-[10px] lg:text-xs font-black uppercase mt-1"></p>
+            <div class="min-w-0">
+              <h1 id="page-title" class="text-2xl lg:text-3xl font-black uppercase tracking-tight text-white truncate">Dashboard</h1>
+              <p id="greeting" class="text-slate-500 text-[10px] lg:text-xs font-black uppercase mt-1 truncate"></p>
             </div>
           </div>
           
@@ -2483,6 +2486,50 @@
 
             </div>
 
+            <!-- Buat WhatsApp Status Card (Hanya muncul jika terkoneksi local bot) -->
+            <div id="wa-status-card" class="premium-card p-6 space-y-4">
+              <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                <h4 class="text-xs font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <i class="fas fa-edit"></i> Buat WhatsApp Status
+                </h4>
+              </div>
+              <p class="text-[10px] text-slate-400 leading-relaxed">
+                Kirim status baru ke kontak WhatsApp Anda. Anda dapat mengirim teks saja atau menyertakan gambar dengan caption.
+              </p>
+              
+              <div class="space-y-3">
+                <!-- Teks Status / Caption -->
+                <div class="space-y-1.5">
+                  <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Teks / Caption Status</label>
+                  <textarea id="wa-status-message" class="input-field py-2 px-3 text-xs bg-black/40 border border-white/10 text-slate-200 h-20 resize-none custom-scrollbar" placeholder="Ketik status baru Anda di sini..."></textarea>
+                </div>
+                
+                <!-- Lampiran Gambar (Opsional) -->
+                <div class="space-y-1.5">
+                  <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Gambar Status (Opsional)</label>
+                  <div class="flex items-center gap-3">
+                    <input type="file" id="wa-status-file" accept="image/*" class="hidden" onchange="window.handleWaStatusFileChange(this)" />
+                    <button type="button" onclick="document.getElementById('wa-status-file').click()" class="btn-md3 btn-md3-tonal py-2 px-3 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 flex-shrink-0">
+                      <i class="fas fa-image text-emerald-400"></i> Pilih Gambar
+                    </button>
+                    <span id="wa-status-file-name" class="text-[9px] text-slate-500 truncate flex-1 italic">Belum ada gambar terpilih</span>
+                    <button type="button" id="wa-status-file-clear" onclick="window.clearWaStatusFile()" class="hidden text-red-400 hover:text-red-300 p-1.5">
+                      <i class="fas fa-times text-xs"></i>
+                    </button>
+                  </div>
+                  <!-- Image Preview (Hidden by default) -->
+                  <div id="wa-status-image-preview-container" class="hidden mt-2 relative w-full max-h-40 rounded-xl border border-white/5 overflow-hidden bg-black/20 flex items-center justify-center">
+                    <img id="wa-status-image-preview" src="" class="max-h-36 object-contain" />
+                  </div>
+                </div>
+
+                <!-- Tombol Kirim -->
+                <button type="button" onclick="window.postWaStatus()" id="btn-wa-post-status" class="btn-md3 btn-md3-primary w-full py-3 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 mt-2 shadow-lg">
+                  <i class="fas fa-paper-plane"></i> Posting Status
+                </button>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -2649,9 +2696,12 @@
                     <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">JID Grup Keuangan / Persetujuan Donasi</label>
                     <div class="flex gap-2 mt-1">
                       <input type="text" id="set-wa-approval-group-jid" class="input-field py-2.5 text-xs bg-black/40 border border-white/10 text-slate-200 flex-1" placeholder="120363xxxxxx@g.us" />
-                      <select id="select-wa-approval-group-auto" onchange="if(this.value) { document.getElementById('set-wa-approval-group-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[180px]">
-                        <option value="">-- Pilih Grup --</option>
+                      <select id="select-wa-approval-group-auto" onchange="if(this.value) { document.getElementById('set-wa-approval-group-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[140px]">
+                        <option value="">-- Pilih --</option>
                       </select>
+                      <button type="button" onclick="window.fetchGroupsForSelect('select-wa-approval-group-auto', 'set-wa-approval-group-jid', 'group')" class="px-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white flex items-center justify-center text-xs flex-shrink-0" title="Ambil Grup langsung dari WA">
+                        <i class="fas fa-sync-alt"></i>
+                      </button>
                     </div>
                     <p class="text-[8px] text-slate-500 mt-1 ml-1">Grup tempat bot meneruskan konfirmasi donasi baru untuk disetujui admin.</p>
                   </div>
@@ -2659,9 +2709,12 @@
                     <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">JID Grup Pendataan Alumni</label>
                     <div class="flex gap-2 mt-1">
                       <input type="text" id="set-wa-group-pendataan-jid" class="input-field py-2.5 text-xs bg-black/40 border border-white/10 text-slate-200 flex-1" placeholder="120363xxxxxx@g.us" />
-                      <select id="select-wa-group-pendataan-auto" onchange="if(this.value) { document.getElementById('set-wa-group-pendataan-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[180px]">
-                        <option value="">-- Pilih Grup --</option>
+                      <select id="select-wa-group-pendataan-auto" onchange="if(this.value) { document.getElementById('set-wa-group-pendataan-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[140px]">
+                        <option value="">-- Pilih --</option>
                       </select>
+                      <button type="button" onclick="window.fetchGroupsForSelect('select-wa-group-pendataan-auto', 'set-wa-group-pendataan-jid', 'group')" class="px-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white flex items-center justify-center text-xs flex-shrink-0" title="Ambil Grup langsung dari WA">
+                        <i class="fas fa-sync-alt"></i>
+                      </button>
                     </div>
                     <p class="text-[8px] text-slate-500 mt-1 ml-1">Grup tempat bot meneruskan notifikasi pendaftaran alumni baru.</p>
                   </div>
@@ -2669,9 +2722,12 @@
                     <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">JID Grup Log / Audit Aktivitas</label>
                     <div class="flex gap-2 mt-1">
                       <input type="text" id="set-wa-group-log-jid" class="input-field py-2.5 text-xs bg-black/40 border border-white/10 text-slate-200 flex-1" placeholder="120363xxxxxx@g.us" />
-                      <select id="select-wa-group-log-auto" onchange="if(this.value) { document.getElementById('set-wa-group-log-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[180px]">
-                        <option value="">-- Pilih Grup --</option>
+                      <select id="select-wa-group-log-auto" onchange="if(this.value) { document.getElementById('set-wa-group-log-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[140px]">
+                        <option value="">-- Pilih --</option>
                       </select>
+                      <button type="button" onclick="window.fetchGroupsForSelect('select-wa-group-log-auto', 'set-wa-group-log-jid', 'group')" class="px-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white flex items-center justify-center text-xs flex-shrink-0" title="Ambil Grup langsung dari WA">
+                        <i class="fas fa-sync-alt"></i>
+                      </button>
                     </div>
                     <p class="text-[8px] text-slate-500 mt-1 ml-1">Grup tempat bot meneruskan log aktivitas sistem (penghapusan, perubahan data alumni, dll).</p>
                   </div>
@@ -2711,11 +2767,16 @@
 
               <!-- UI to Add a Group Easily -->
                 <div class="space-y-1 bg-white/5 p-3 rounded-xl border border-white/5">
-                  <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 block">Pilih dari Hasil Sinkronisasi (Otomatis)</label>
-                  <select id="select-wa-group-auto" onchange="window.handleAutoSelectWaGroup(this)" class="input-field py-2 px-3 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-full mt-1">
-                    <option value="">-- Pilih Grup / Channel --</option>
-                  </select>
-                  <p class="text-[8px] text-slate-500 italic mt-0.5 ml-1"><i class="fas fa-info-circle mr-1"></i>Tips: Gunakan tab "WhatsApp Sync" di kanan untuk sinkronisasi grup/channel HP Anda.</p>
+                  <label class="text-[9px] font-bold text-slate-400 uppercase ml-1 block">Pilih dari WhatsApp Anda (Sinkronisasi Langsung)</label>
+                  <div class="flex gap-2 mt-1">
+                    <select id="select-wa-group-auto" onchange="window.handleAutoSelectWaGroup(this)" class="input-field py-2 px-3 text-xs bg-[#0e1225] border border-white/10 text-slate-200 flex-1">
+                      <option value="">-- Pilih Grup / Channel --</option>
+                    </select>
+                    <button type="button" onclick="window.fetchGroupsForSelect('select-wa-group-auto', null, 'all')" class="px-3 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white flex items-center justify-center text-xs flex-shrink-0" title="Ambil Grup/Channel dari WA">
+                      <i class="fas fa-sync-alt"></i>
+                    </button>
+                  </div>
+                  <p class="text-[8px] text-slate-500 italic mt-0.5 ml-1"><i class="fas fa-info-circle mr-1"></i>Tips: Anda dapat menyinkronkan daftar grup/saluran langsung menggunakan tombol di atas.</p>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
@@ -2940,6 +3001,9 @@
             <button onclick="window.switchSettingsSubTab('utilities')" id="subbtn-mobile-settings-utilities" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300">
               <i class="fas fa-toolbox text-emerald-400 text-sm"></i> Tools
             </button>
+            <button onclick="showTab('whatsapp')" id="subbtn-mobile-settings-whatsapp" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300 hidden">
+              <i class="fab fa-whatsapp text-emerald-400 text-sm"></i> WhatsApp
+            </button>
             <button onclick="window.switchSettingsSubTab('gallery')" id="subbtn-mobile-settings-gallery" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300 hidden">
               <i class="fas fa-camera text-pink-400 text-sm"></i> Galeri
             </button>
@@ -2982,6 +3046,11 @@
               <button onclick="window.switchSettingsSubTab('utilities')" id="subbtn-settings-utilities" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal">
                 <i class="fas fa-toolbox text-base w-5 text-center text-emerald-400"></i>
                 <span>Tools & Notif</span>
+              </button>
+
+              <button onclick="showTab('whatsapp')" id="subbtn-settings-whatsapp" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal hidden">
+                <i class="fab fa-whatsapp text-base w-5 text-center text-emerald-400"></i>
+                <span>WhatsApp Gateway</span>
               </button>
 
               <button onclick="window.switchSettingsSubTab('gallery')" id="subbtn-settings-gallery" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal hidden">

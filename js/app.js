@@ -515,8 +515,8 @@ window.clickLogoSubMenu = (subTabName) => {
   window.switchSettingsSubTab(subTabName);
   window.toggleLogoDropdown();
   
-  // Otomatis tutup sidebar di HP setelah diklik
-  if (window.innerWidth < 768) {
+  // Otomatis tutup sidebar di HP/Tablet setelah diklik
+  if (window.innerWidth < 1024) {
     const sidebar = document.getElementById("main-sidebar");
     if (sidebar && !sidebar.classList.contains("-translate-x-full")) {
       window.toggleSidebar();
@@ -638,8 +638,8 @@ window.showTab = (tabId) => {
 
   window.renderAllTabs();
 
-  // OTOMATIS TUTUP SIDEBAR DI HP SETELAH DIKLIK
-  if (window.innerWidth < 768) {
+  // OTOMATIS TUTUP SIDEBAR DI HP/TABLET SETELAH DIKLIK
+  if (window.innerWidth < 1024) {
     const sidebar = document.getElementById("main-sidebar");
     if (sidebar && !sidebar.classList.contains("-translate-x-full")) {
       window.toggleSidebar();
@@ -982,6 +982,9 @@ auth.onAuthStateChanged(async (user) => {
     showElement("btn-whatsapp", canWA);
     showElement("btn-mobile-whatsapp", canWA);
     showElement("btn-wa-groups", canWA);
+    showElement("subbtn-logo-whatsapp", canWA);
+    showElement("subbtn-settings-whatsapp", canWA);
+    showElement("subbtn-mobile-settings-whatsapp", canWA);
     
     // Toggle layout di dalam tab-whatsapp
     if (isNative) {

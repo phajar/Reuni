@@ -748,6 +748,144 @@ app.post('/send-message', authenticateApiKey, async (req, res) => {
     }
 });
 
+// POST Endpoint to send status/story update
+app.post('/send-status', authenticateApiKey, async (req, res) => {
+    const { message, fileUrl, fileType } = req.body;
+
+    if (!message && !fileUrl) {
+        return res.status(400).json({ success: false, error: 'Message or file is required.' });
+    }
+
+    if (connectionStatus !== 'open' || !sock) {
+        return res.status(503).json({ success: false, error: 'WhatsApp bot is not connected.' });
+    }
+
+    try {
+        // Fetch all approved alumni to form statusJidList
+        const statusJidList = [];
+        try {
+            const alumniCol = collection(db, 'alumni');
+            const q = query(alumniCol, where('status', '==', 'approved'));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.nowa) {
+                    let cleanPhone = data.nowa.replace(/\D/g, '');
+                    if (cleanPhone.startsWith('08')) {
+                        cleanPhone = '628' + cleanPhone.substring(2);
+                    }
+                    const jid = `${cleanPhone}@s.whatsapp.net`;
+                    if (!statusJidList.includes(jid)) {
+                        statusJidList.push(jid);
+                    }
+                }
+            });
+            console.log(`[WA BOT] Generated statusJidList with ${statusJidList.length} approved alumni.`);
+        } catch (dbErr) {
+            console.warn('[WA BOT] Failed to fetch alumni for statusJidList:', dbErr.message);
+        }
+
+        // Add standard admin numbers to the list just in case
+        try {
+            const botConfigSnap = await getDoc(doc(db, 'settings', 'wa_bot_config'));
+            if (botConfigSnap.exists) {
+                const botConfig = botConfigSnap.data();
+                if (botConfig.approval_admins) {
+                    const admins = botConfig.approval_admins.split(',');
+                    admins.forEach(admin => {
+                        let cleanAdmin = admin.trim().replace(/\D/g, '');
+                        if (cleanAdmin.startsWith('08')) {
+                            cleanAdmin = '628' + cleanAdmin.substring(2);
+                        }
+                        if (cleanAdmin) {
+                            const jid = `${cleanAdmin}@s.whatsapp.net`;
+                            if (!statusJidList.includes(jid)) {
+                                statusJidList.push(jid);
+                            }
+                        }
+                    });
+                }
+            }
+        } catch (configErr) {
+            console.warn('[WA BOT] Failed to load config admins for statusJidList:', configErr.message);
+        }
+
+        // Send options
+        const sendOptions = {
+            broadcast: true
+        };
+        if (statusJidList.length > 0) {
+            sendOptions.statusJidList = statusJidList;
+        }
+
+        if (fileUrl) {
+            console.log(`[WA BOT] Sending status media: URL=${fileUrl.startsWith('data:') ? 'base64_data' : fileUrl}, Type=${fileType}`);
+            let isImage = false;
+            let mediaContent;
+            let mimeType;
+
+            if (fileUrl.startsWith('data:')) {
+                const matches = fileUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+                if (matches && matches.length === 3) {
+                    mimeType = matches[1];
+                    const base64Data = matches[2];
+                    mediaContent = Buffer.from(base64Data, 'base64');
+                    isImage = mimeType.startsWith('image/');
+                } else {
+                    return res.status(400).json({ success: false, error: 'Invalid data URI format.' });
+                }
+            } else {
+                if (fileType) {
+                    isImage = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(fileType.toLowerCase());
+                } else {
+                    const ext = fileUrl.split('.').pop().toLowerCase();
+                    isImage = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+                }
+                
+                if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+                    mediaContent = { url: fileUrl };
+                } else {
+                    let localPath = fileUrl;
+                    if (localPath.startsWith('file://')) {
+                        localPath = decodeURIComponent(localPath.replace(/^file:\/\/\/?/, ''));
+                    }
+                    if (fs.existsSync(localPath)) {
+                        mediaContent = fs.readFileSync(localPath);
+                    } else {
+                        mediaContent = { url: fileUrl };
+                    }
+                }
+                mimeType = isImage ? `image/${fileType || 'jpeg'}` : 'video/mp4';
+            }
+
+            if (isImage) {
+                await sock.sendMessage('status@broadcast', {
+                    image: mediaContent,
+                    caption: message || ''
+                }, sendOptions);
+            } else {
+                await sock.sendMessage('status@broadcast', {
+                    video: mediaContent,
+                    caption: message || '',
+                    gifPlayback: false
+                }, sendOptions);
+            }
+        } else {
+            await sock.sendMessage('status@broadcast', { 
+                text: message,
+                backgroundColor: '#075E54',
+                font: 1
+            }, sendOptions);
+        }
+        
+        console.log(`[WA BOT] WhatsApp Status posted successfully to status@broadcast`);
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('[WA BOT] Failed to post status:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Keep Alive / Wake Up Endpoint
 app.get('/ping', authenticateApiKey, (req, res) => {
     res.json({ success: true, status: connectionStatus });
@@ -1678,7 +1816,7 @@ async function handleIuranCommand(jid) {
                        `──────────────────────\n` +
                        `Halo Rekan Alumni/Panitia, silakan melakukan transfer/pembayaran melalui salah satu rekening resmi terdaftar:\n\n` +
                        accountsText +
-                       `Setelah melakukan pembayaran, mohon konfirmasi bukti transfer dengan ketik *!konfirmasi [nominal]* (sambil melampirkan foto bukti transfer) atau melalui tautan:\n` +
+                       `Setelah melakukan pembayaran, mohon konfirmasi bukti transfer dengan ketik *!konfirmasi [nominal] [nomor_wa_alumni_opsional]* (sambil melampirkan foto bukti transfer) atau melalui tautan:\n` +
                        `👉 https://phajar.github.io/Reuni/pembayaran.html\n\n` +
                        `Terima kasih atas partisipasi Anda!`;
         } else {
@@ -1785,14 +1923,60 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
         const cleanPhone = normalizeWA(senderNumber);
         const isLid = senderJid.endsWith('@lid');
         
+        // Parse nominal and target phone number (if any)
+        let nominal = 0;
+        let targetPhoneRaw = '';
+        const cleanMsg = msgText.trim();
+        const commandPart = cleanMsg.split(/\s+/)[0];
+        const contentPart = cleanMsg.substring(commandPart.length).trim();
+        if (contentPart) {
+            const parts = contentPart.split(/\s+/);
+            const nominalWord = parts[0];
+            const rawNominal = nominalWord.replace(/\D/g, '');
+            nominal = Number(rawNominal);
+            
+            if (parts.length > 1) {
+                let p1 = parts[1].split('/')[0].trim();
+                const targetDigits = p1.replace(/\D/g, '');
+                if (targetDigits.length >= 9 && targetDigits.length <= 15) {
+                    targetPhoneRaw = p1;
+                }
+            }
+        }
+        
+        if (!nominal || isNaN(nominal) || nominal <= 0) {
+            const msgInvalidNominal = `*⚠️ FORMAT KONFIRMASI SALAH*\n` +
+                                      `──────────────────────\n` +
+                                      `Silakan gunakan format berikut:\n` +
+                                      `👉 *!konfirmasi [nominal] [nomor_wa_alumni_opsional]* sambil melampirkan foto struk/bukti transfer.\n\n` +
+                                      `*Contoh Konfirmasi Sendiri:* \n` +
+                                      `Kirim foto bukti transfer dengan caption: \n` +
+                                      `*!konfirmasi 100000*\n\n` +
+                                      `*Contoh Konfirmasi Orang Lain:* \n` +
+                                      `Kirim foto bukti transfer dengan caption: \n` +
+                                      `*!konfirmasi 100000 082130445019*`;
+            await sock.sendMessage(jid, { text: msgInvalidNominal });
+            return;
+        }
+        
+        // Determine lookup phone
+        let lookupPhone = '';
+        let isUsingTargetPhone = false;
+        if (targetPhoneRaw) {
+            lookupPhone = normalizeWA(targetPhoneRaw);
+            isUsingTargetPhone = true;
+        } else {
+            lookupPhone = cleanPhone;
+        }
+        
         let snapEmpty = true;
         let snap = null;
         
-        if (!isLid) {
+        if (lookupPhone) {
             const phoneFormats = [
-                cleanPhone,
-                '0' + cleanPhone.slice(2),
-                cleanPhone.slice(2)
+                lookupPhone,
+                '0' + lookupPhone.slice(2),
+                lookupPhone.slice(2)
             ];
             
             const alumniCol = collection(db, 'alumni');
@@ -1802,14 +1986,47 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
         }
         
         if (snapEmpty) {
-            const displayPhone = isLid ? '' : ` (*+${cleanPhone}*)`;
-            const msgNotRegistered = `*⚠️ NOMOR ANDA BELUM TERDAFTAR*\n` +
-                                     `──────────────────────\n` +
-                                     `Mohon maaf, nomor WhatsApp Anda${displayPhone} belum terdaftar di database alumni kami.\n\n` +
-                                     `Silakan lakukan pendaftaran terlebih dahulu melalui link formulir pendaftaran resmi berikut:\n` +
-                                     `👉 https://phajar.github.io/Reuni/pendaftaran.html\n\n` +
-                                     `Setelah mendaftar dan disetujui oleh admin, Anda dapat melakukan konfirmasi donasi kembali. Terima kasih!`;
-            await sock.sendMessage(jid, { text: msgNotRegistered });
+            if (isUsingTargetPhone) {
+                let sentInvitation = false;
+                try {
+                    const targetJid = `${lookupPhone}@s.whatsapp.net`;
+                    const msgInviteToTarget = `*📢 PENDAFTARAN ALUMNI REUNI AKBAR PP AL-FATAH*\n` +
+                                              `──────────────────────\n` +
+                                              `Assalamu'alaikum Wr. Wb.\n\n` +
+                                              `Halo Rekan Alumni, nomor WhatsApp Anda baru saja dicantumkan oleh seseorang untuk konfirmasi donasi reuni.\n\n` +
+                                              `Namun, nomor WhatsApp Anda belum terdaftar di database alumni kami.\n\n` +
+                                              `Mohon kesediaannya untuk mendaftarkan diri terlebih dahulu melalui link formulir pendaftaran resmi berikut:\n` +
+                                              `👉 https://phajar.github.io/Reuni/pendaftaran.html\n\n` +
+                                              `Setelah data Anda diverifikasi dan disetujui oleh admin, donasi tersebut dapat kami proses. Terima kasih banyak atas dukungannya!\n\n` +
+                                              `Wassalamu'alaikum Wr. Wb.`;
+                    
+                    await sock.sendMessage(targetJid, { text: msgInviteToTarget });
+                    sentInvitation = true;
+                } catch (inviteErr) {
+                    console.error('[WA BOT] Gagal mengirim undangan daftar ke nomor tujuan:', inviteErr);
+                }
+
+                const msgNotRegistered = `*⚠️ NOMOR TUJUAN BELUM TERDAFTAR*\n` +
+                                         `──────────────────────\n` +
+                                         `Mohon maaf, nomor WhatsApp tujuan (*+${lookupPhone}*) belum terdaftar di database alumni kami.\n\n` +
+                                         (sentInvitation 
+                                             ? `Kami telah mengirimkan undangan pendaftaran secara otomatis ke nomor tersebut (*+${lookupPhone}*) agar alumni yang bersangkutan dapat segera mendaftar.\n\n`
+                                             : `Gagal mengirimkan undangan otomatis ke nomor tersebut. Silakan minta alumni yang bersangkutan untuk mendaftar mandiri terlebih dahulu.\n\n`
+                                         ) +
+                                         `Silakan lakukan konfirmasi kembali setelah alumni tersebut terdaftar. Terima kasih!`;
+                await sock.sendMessage(jid, { text: msgNotRegistered });
+            } else {
+                const displayPhone = isLid ? '' : ` (*+${cleanPhone}*)`;
+                const msgNotRegistered = `*⚠️ NOMOR ANDA BELUM TERDAFTAR*\n` +
+                                         `──────────────────────\n` +
+                                         `Mohon maaf, nomor WhatsApp Anda${displayPhone} belum terdaftar di database alumni kami.\n\n` +
+                                         `Silakan lakukan pendaftaran terlebih dahulu melalui link formulir pendaftaran resmi berikut:\n` +
+                                         `👉 https://phajar.github.io/Reuni/pendaftaran.html\n\n` +
+                                         `Atau jika Anda ingin mengonfirmasi donasi untuk alumni lain yang sudah terdaftar, gunakan format:\n` +
+                                         `👉 *!konfirmasi [nominal] [nomor_wa_alumni]*\n\n` +
+                                         `Setelah mendaftar dan disetujui oleh admin, Anda dapat melakukan konfirmasi donasi kembali. Terima kasih!`;
+                await sock.sendMessage(jid, { text: msgNotRegistered });
+            }
             return;
         }
         
@@ -1828,27 +2045,6 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
             alumnusData = alumnusDoc.data();
         }
         
-        let nominal = 0;
-        const cleanMsg = msgText.trim();
-        const commandPart = cleanMsg.split(/\s+/)[0];
-        const contentPart = cleanMsg.substring(commandPart.length).trim();
-        if (contentPart) {
-            const rawNominal = contentPart.replace(/\D/g, '');
-            nominal = Number(rawNominal);
-        }
-        
-        if (!nominal || isNaN(nominal) || nominal <= 0) {
-            const msgInvalidNominal = `*⚠️ FORMAT KONFIRMASI SALAH*\n` +
-                                      `──────────────────────\n` +
-                                      `Silakan gunakan format berikut:\n` +
-                                      `👉 *!konfirmasi [nominal]* sambil melampirkan foto struk/bukti transfer.\n\n` +
-                                      `*Contoh:* \n` +
-                                      `Kirim foto bukti transfer dengan caption: \n` +
-                                      `*!konfirmasi 100000*`;
-            await sock.sendMessage(jid, { text: msgInvalidNominal });
-            return;
-        }
-        
         let buktiUrl = '';
         const messageType = Object.keys(m.message)[0];
         let imageMsg = null;
@@ -1859,13 +2055,14 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
         }
         
         if (!imageMsg) {
+            const examplePhone = isUsingTargetPhone ? ` ${targetPhoneRaw}` : '';
             const msgNoReceipt = `*⚠️ BUKTI TRANSFER WAJIB DILAMPIRKAN*\n` +
                                  `──────────────────────\n` +
-                                 `Mohon maaf *${alumnusData.nama}*, konfirmasi donasi Anda tidak dapat kami proses karena Anda tidak melampirkan foto bukti transfer.\n\n` +
+                                 `Mohon maaf, konfirmasi donasi untuk *${alumnusData.nama}* tidak dapat kami proses karena Anda tidak melampirkan foto bukti transfer.\n\n` +
                                  `Silakan lakukan konfirmasi ulang dengan cara mengirimkan/melampirkan foto struk/bukti transfer Anda dan menuliskan caption:\n` +
-                                 `👉 *!konfirmasi [nominal]*\n\n` +
+                                 `👉 *!konfirmasi [nominal] [nomor_wa_alumni_opsional]*\n\n` +
                                  `*Contoh caption:* \n` +
-                                 `*!konfirmasi 100000*`;
+                                 `*!konfirmasi ${nominal || 100000}${examplePhone}*`;
             await sock.sendMessage(jid, { text: msgNoReceipt });
             return;
         }
@@ -1891,7 +2088,7 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
                 } catch (sharpErr) {
                     console.warn('[WA BOT] Gagal mengompresi bukti transfer dengan sharp, menggunakan file asli:', sharpErr.message);
                 }
-
+                
                 console.log(`[WA BOT] Mengunggah bukti transfer sebesar ${buffer.length} bytes ke Cloudinary...`);
                 const uploadRes = await uploadBufferToCloudinary(buffer);
                 if (uploadRes) {
@@ -1973,11 +2170,10 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
         
         const msgSuccess = `*✅ KONFIRMASI DONASI BERHASIL*\n` +
                            `──────────────────────\n` +
-                           `Halo *${alumnusData.nama}* (Tahun Lulus ${alumnusData.angkatan}),\n` +
-                           `Konfirmasi donasi Anda sebesar *${formatRupiah(nominal)}* telah kami terima di sistem.\n\n` +
+                           `Konfirmasi donasi untuk *${alumnusData.nama}* (Tahun Lulus ${alumnusData.angkatan}) sebesar *${formatRupiah(nominal)}* telah kami terima di sistem.\n\n` +
                            `• *Status* : Menunggu Verifikasi Bendahara ⏳\n` +
                            `• *Bukti Transfer* : ${buktiUrl ? 'Terunggah 🟢' : 'Tidak Ada / Kosong ⚠️'}\n\n` +
-                           `Mohon tunggu proses verifikasi oleh Bendahara. Anda dapat memantau status secara berkala melalui link berikut:\n` +
+                           `Mohon tunggu proses verifikasi oleh Bendahara. Status donasi dapat dipantau secara berkala melalui link berikut:\n` +
                            `👉 https://phajar.github.io/Reuni/cek-status.html\n\n` +
                            `Jazakumullahu khairan katsiran atas partisipasi Anda! 🙏`;
         await sock.sendMessage(jid, { text: msgSuccess });
@@ -2621,7 +2817,7 @@ async function handleMenuCommand(jid, m) {
                       `🔹 *!saldo* : Cek saldo kas riil saat ini\n` +
                       `🔹 *!laporan* : Laporan keuangan & 5 transaksi terakhir\n` +
                       `🔹 *!iuran* : Cara iuran & QRIS dinamis\n` +
-                      `🔹 *!konfirmasi [nominal]* : Lapor bukti transfer\n` +
+                      `🔹 *!konfirmasi [nominal] [nomor_wa_tujuan]* : Lapor bukti transfer\n` +
                       `🔹 *!status* : Cek status pendaftaran & iuran Anda\n` +
                       `🔹 *!undangan* : Dapatkan link undangan digital personal\n` +
                       `🔹 *!menu* : Tampilkan menu ringkas ini\n` +
@@ -2671,9 +2867,10 @@ async function handleHelpCommand(jid, m) {
                       `Mengirimkan gambar infografis laporan keuangan formal resmi lengkap beserta rincian 5 transaksi kas terbaru.\n\n` +
                       `💳 *!iuran*\n` +
                       `Menampilkan informasi rekening bank panitia beserta gambar QRIS dinamis untuk pembayaran.\n\n` +
-                      `📩 *!konfirmasi [nominal]*\n` +
+                      `📩 *!konfirmasi [nominal] [nomor_wa_tujuan_opsional]*\n` +
                       `Melaporkan bukti transfer. Kirim/lampirkan foto struk transfer Anda dengan caption:\n` +
-                      `👉 Contoh: *!konfirmasi 150000*\n\n` +
+                      `👉 Contoh Sendiri: *!konfirmasi 150000*\n` +
+                      `👉 Contoh Orang Lain: *!konfirmasi 150000 082130445019*\n\n` +
                       `📊 *!status*\n` +
                       `Mengecek status akun pendaftaran, kehadiran, dan status/nominal pembayaran iuran donasi Anda.\n\n` +
                       `✉️ *!undangan*\n` +
@@ -2796,7 +2993,7 @@ async function handleStatusCommand(jid, m) {
                          `📌 *Akun*      : ${statusLabel}\n` +
                          `🙋 *Kehadiran* : ${kehadiranLabel}\n` +
                          `💳 *Iuran Kas* : ${paymentStatus}\n\n` +
-                         `Untuk konfirmasi pembayaran, silakan kirim foto struk/bukti transfer Anda dengan caption: *!konfirmasi [nominal]*\n` +
+                         `Untuk konfirmasi pembayaran, silakan kirim foto struk/bukti transfer Anda dengan caption: *!konfirmasi [nominal] [nomor_wa_alumni_opsional]*\n` +
                          `_(Contoh: *!konfirmasi 100000*)_`;
                          
         await sock.sendMessage(jid, { text: textStatus });

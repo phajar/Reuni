@@ -95,6 +95,24 @@ if (document.readyState === 'loading') {
 }
 // -----------------------------
 
+window.populateSelectWithSaved = (selectEl, jidValue, groupsList, placeholder = '-- Pilih Grup --') => {
+    if (!selectEl) return;
+    let hasJid = false;
+    let optionsHtml = `<option value="">${placeholder}</option>`;
+    groupsList.forEach(g => {
+        const isSelected = g.jid === jidValue;
+        if (isSelected) hasJid = true;
+        optionsHtml += `<option value="${g.jid}" data-name="${g.nama_grup || g.name || ''}" ${isSelected ? 'selected' : ''}>${g.nama_grup || g.name || g.jid}</option>`;
+    });
+    if (jidValue && !hasJid) {
+        optionsHtml += `<option value="${jidValue}" selected>Terarsip/Belum Sinkron: ${jidValue}</option>`;
+    }
+    selectEl.innerHTML = optionsHtml;
+    if (jidValue) {
+        selectEl.value = jidValue;
+    }
+};
+
 // --- WHATSAPP CONFIG LOAD HELPER (FIRESTORE) ---
 window.getWaApiConfig = async () => {
     if (window.lastWaApiConfig && Object.keys(window.lastWaApiConfig).length > 0) {
@@ -1196,19 +1214,14 @@ window.loadWaGroups = async () => {
 
         // Populate select-wa-approval-group-auto, select-wa-group-pendataan-auto, and select-wa-group-log-auto dropdowns
         const groupsOnly = localGroups.filter(g => (g.jid || '').endsWith('@g.us'));
-        const groupOptionsHtml = '<option value="">-- Pilih Grup --</option>' +
-            groupsOnly.map(g => {
-                return `<option value="${g.jid}">${g.nama_grup || g.name || g.jid}</option>`;
-            }).join('');
 
-        const approvalAutoSelect = document.getElementById("select-wa-approval-group-auto");
-        if (approvalAutoSelect) approvalAutoSelect.innerHTML = groupOptionsHtml;
+        const approvalJid = document.getElementById("set-wa-approval-group-jid") ? document.getElementById("set-wa-approval-group-jid").value.trim() : "";
+        const pendataanJid = document.getElementById("set-wa-group-pendataan-jid") ? document.getElementById("set-wa-group-pendataan-jid").value.trim() : "";
+        const logJid = document.getElementById("set-wa-group-log-jid") ? document.getElementById("set-wa-group-log-jid").value.trim() : "";
 
-        const pendataanAutoSelect = document.getElementById("select-wa-group-pendataan-auto");
-        if (pendataanAutoSelect) pendataanAutoSelect.innerHTML = groupOptionsHtml;
-
-        const logAutoSelect = document.getElementById("select-wa-group-log-auto");
-        if (logAutoSelect) logAutoSelect.innerHTML = groupOptionsHtml;
+        window.populateSelectWithSaved(document.getElementById("select-wa-approval-group-auto"), approvalJid, groupsOnly);
+        window.populateSelectWithSaved(document.getElementById("select-wa-group-pendataan-auto"), pendataanJid, groupsOnly);
+        window.populateSelectWithSaved(document.getElementById("select-wa-group-log-auto"), logJid, groupsOnly);
     } catch(err) { console.error("Gagal load WA Groups", err); }
 };
 
@@ -2391,8 +2404,8 @@ window.openWASettingsWeb = async () => {
             
             // Populate select-wa-group-auto dropdown from wa_registered_groups
             const autoSelect = document.getElementById("select-wa-group-auto");
+            const registeredGroups = JSON.parse(localStorage.getItem('wa_registered_groups')) || [];
             if (autoSelect) {
-                const registeredGroups = JSON.parse(localStorage.getItem('wa_registered_groups')) || [];
                 autoSelect.innerHTML = '<option value="">-- Pilih Grup / Channel --</option>' +
                     registeredGroups.map(g => {
                         const isChannel = (g.jid || '').endsWith('@newsletter');
@@ -2402,21 +2415,28 @@ window.openWASettingsWeb = async () => {
             }
 
             // Populate all group dropdown selectors from wa_registered_groups
-            const registeredGroups = JSON.parse(localStorage.getItem('wa_registered_groups')) || [];
             const groupsOnly = registeredGroups.filter(g => (g.jid || '').endsWith('@g.us'));
-            const groupOptionsHtml = '<option value="">-- Pilih Grup --</option>' +
-                groupsOnly.map(g => {
-                    return `<option value="${g.jid}">${g.nama_grup || g.name || g.jid}</option>`;
-                }).join('');
 
-            const approvalAutoSelect = document.getElementById("select-wa-approval-group-auto");
-            if (approvalAutoSelect) approvalAutoSelect.innerHTML = groupOptionsHtml;
+            window.populateSelectWithSaved(
+                document.getElementById("select-wa-approval-group-auto"),
+                botConfig.approval_group_jid || "",
+                groupsOnly,
+                '-- Pilih Grup --'
+            );
 
-            const pendataanAutoSelect = document.getElementById("select-wa-group-pendataan-auto");
-            if (pendataanAutoSelect) pendataanAutoSelect.innerHTML = groupOptionsHtml;
+            window.populateSelectWithSaved(
+                document.getElementById("select-wa-group-pendataan-auto"),
+                botConfig.group_pendataan_jid || "",
+                groupsOnly,
+                '-- Pilih Grup --'
+            );
 
-            const logAutoSelect = document.getElementById("select-wa-group-log-auto");
-            if (logAutoSelect) logAutoSelect.innerHTML = groupOptionsHtml;
+            window.populateSelectWithSaved(
+                document.getElementById("select-wa-group-log-auto"),
+                botConfig.group_log_jid || "",
+                groupsOnly,
+                '-- Pilih Grup --'
+            );
         }
         if (typeof window.renderWASettingsGroups === "function") {
             window.renderWASettingsGroups();
@@ -2474,6 +2494,141 @@ window.handleAutoSelectWaGroup = (selectEl) => {
     if (nameInput) nameInput.value = name;
     if (jidInput) jidInput.value = jid;
     if (typeSelect) typeSelect.value = isChannel ? "channel" : "group";
+};
+
+window.fetchWaGroupsAndChannelsDirect = async () => {
+    const config = await window.getWaApiConfig();
+    if (!config || Object.keys(config).length === 0) {
+        throw new Error('Pengaturan API WA belum diset.');
+    }
+    const localUrl = (config.local_api_url || '').trim();
+    let list = [];
+
+    if (localUrl) {
+        let cleanLocalUrl = localUrl;
+        let localApiKey = '';
+        if (cleanLocalUrl.includes('|')) {
+            const parts = cleanLocalUrl.split('|');
+            cleanLocalUrl = parts[0].trim();
+            localApiKey = parts[1].trim();
+        }
+        if (cleanLocalUrl.endsWith('/')) {
+            cleanLocalUrl = cleanLocalUrl.slice(0, -1);
+        }
+        const headers = { 'ngrok-skip-browser-warning': 'true' };
+        if (localApiKey) {
+            headers['Authorization'] = `Bearer ${localApiKey}`;
+        }
+        
+        // Fetch groups
+        try {
+            const res = await fetch(`${cleanLocalUrl}/api/groups`, { headers });
+            const data = await res.json();
+            if (data.success && data.groups) {
+                data.groups.forEach(g => {
+                    list.push({ jid: g.jid, name: g.name || 'Grup Tanpa Nama' });
+                });
+            }
+        } catch (e) {
+            console.warn('[WA] Gagal mengambil grup dari local API:', e.message);
+        }
+
+        // Fetch channels
+        try {
+            const res = await fetch(`${cleanLocalUrl}/api/channels`, { headers });
+            const data = await res.json();
+            if (data.success && data.channels) {
+                data.channels.forEach(c => {
+                    list.push({ jid: c.jid, name: c.name || 'Channel Tanpa Nama' });
+                });
+            }
+        } catch (e) {
+            console.warn('[WA] Gagal mengambil channel dari local API:', e.message);
+        }
+    } else {
+        const provider = config.provider_broadcast || 'fonnte';
+        const token = config.token_broadcast || '';
+
+        if (provider === 'fonnte') {
+            try {
+                await fetch('https://api.fonnte.com/fetch-group', {
+                    method: 'POST',
+                    headers: { 'Authorization': token.trim() }
+                });
+            } catch (e) {}
+            const res = await fetch('https://api.fonnte.com/get-whatsapp-group', {
+                method: 'POST',
+                headers: { 'Authorization': token.trim() }
+            });
+            const data = await res.json();
+            if (data.status === true || data.status === 'true') {
+                (data.data || []).forEach(g => {
+                    list.push({ jid: g.id, name: g.name || 'Grup Tanpa Nama' });
+                });
+            }
+        }
+    }
+    return list;
+};
+
+window.fetchGroupsForSelect = async (selectId, inputId, typeFilter = 'all') => {
+    const selectEl = document.getElementById(selectId);
+    if (!selectEl) return;
+    
+    selectEl.innerHTML = '<option value="">Mengambil data dari WA...</option>';
+    selectEl.disabled = true;
+    
+    try {
+        const list = await window.fetchWaGroupsAndChannelsDirect();
+        
+        let filtered = list;
+        if (typeFilter === 'group') {
+            filtered = list.filter(item => (item.jid || '').endsWith('@g.us'));
+        } else if (typeFilter === 'channel') {
+            filtered = list.filter(item => (item.jid || '').endsWith('@newsletter'));
+        }
+        
+        const inputEl = inputId ? document.getElementById(inputId) : null;
+        const currentInputValue = inputEl ? inputEl.value.trim() : '';
+        
+        if (filtered.length === 0) {
+            let optionsHtml = '<option value="">-- Tidak Ada Grup/Channel Ditemukan --</option>';
+            if (currentInputValue) {
+                optionsHtml += `<option value="${currentInputValue}" selected>Terarsip/Belum Sinkron: ${currentInputValue}</option>`;
+            }
+            selectEl.innerHTML = optionsHtml;
+            window.notify('Tidak ada grup/channel yang ditemukan dari WhatsApp Anda.', 'warning');
+        } else {
+            let hasJid = false;
+            let optionsHtml = '<option value="">-- Pilih --</option>';
+            
+            filtered.forEach(g => {
+                const isChannel = (g.jid || '').endsWith('@newsletter');
+                const prefix = isChannel ? '[Channel] ' : '[Grup] ';
+                const isSelected = g.jid === currentInputValue;
+                if (isSelected) hasJid = true;
+                optionsHtml += `<option value="${g.jid}" data-name="${g.name || ''}" ${isSelected ? 'selected' : ''}>${prefix}${g.name || g.jid}</option>`;
+            });
+            
+            if (currentInputValue && !hasJid) {
+                optionsHtml += `<option value="${currentInputValue}" selected>Terarsip/Belum Sinkron: ${currentInputValue}</option>`;
+            }
+            
+            selectEl.innerHTML = optionsHtml;
+            
+            if (currentInputValue) {
+                selectEl.value = currentInputValue;
+            }
+            
+            window.notify(`Berhasil mengambil ${filtered.length} grup/channel dari WhatsApp!`, 'success');
+        }
+    } catch (err) {
+        selectEl.innerHTML = '<option value="">-- Gagal Mengambil Data --</option>';
+        window.notify('Gagal mengambil dari WA: ' + err.message, 'error');
+        console.error(err);
+    } finally {
+        selectEl.disabled = false;
+    }
 };
 
 window.checkLocalWaStatus = async () => {
@@ -2727,3 +2882,137 @@ setInterval(() => {
 setTimeout(() => {
     window.checkLocalWaStatus().catch(e => console.error(e));
 }, 1000);
+
+// ==========================================
+// FITUR POSTING STATUS WHATSAPP
+// ==========================================
+
+window.handleWaStatusFileChange = (input) => {
+    const file = input.files[0];
+    const fileNameSpan = document.getElementById('wa-status-file-name');
+    const clearBtn = document.getElementById('wa-status-file-clear');
+    const previewContainer = document.getElementById('wa-status-image-preview-container');
+    const previewImg = document.getElementById('wa-status-image-preview');
+
+    if (!file) {
+        window.clearWaStatusFile();
+        return;
+    }
+
+    if (fileNameSpan) fileNameSpan.innerText = file.name;
+    if (clearBtn) clearBtn.classList.remove('hidden');
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        if (previewImg) previewImg.src = e.target.result;
+        if (previewContainer) previewContainer.classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+};
+
+window.clearWaStatusFile = () => {
+    const fileInput = document.getElementById('wa-status-file');
+    const fileNameSpan = document.getElementById('wa-status-file-name');
+    const clearBtn = document.getElementById('wa-status-file-clear');
+    const previewContainer = document.getElementById('wa-status-image-preview-container');
+    const previewImg = document.getElementById('wa-status-image-preview');
+
+    if (fileInput) fileInput.value = '';
+    if (fileNameSpan) fileNameSpan.innerText = 'Belum ada gambar terpilih';
+    if (clearBtn) clearBtn.classList.add('hidden');
+    if (previewImg) previewImg.src = '';
+    if (previewContainer) previewContainer.classList.add('hidden');
+};
+
+window.postWaStatus = async () => {
+    const messageInput = document.getElementById('wa-status-message');
+    const fileInput = document.getElementById('wa-status-file');
+    const btn = document.getElementById('btn-wa-post-status');
+
+    if (!messageInput) return;
+    const message = messageInput.value.trim();
+    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+    if (!message && !file) {
+        return window.notify('Ketik pesan status atau pilih gambar terlebih dahulu!', 'error');
+    }
+
+    // Check configuration & server url
+    const config = await window.getWaApiConfig();
+    const localUrl = (config && config.local_api_url || '').trim();
+    if (!localUrl) {
+        return window.notify('Status hanya bisa diposting jika menggunakan Server WhatsApp Lokal!', 'error');
+    }
+
+    let cleanLocalUrl = localUrl;
+    let localApiKey = '';
+    if (cleanLocalUrl.includes('|')) {
+        const parts = cleanLocalUrl.split('|');
+        cleanLocalUrl = parts[0].trim();
+        localApiKey = parts[1].trim();
+    }
+    if (cleanLocalUrl.endsWith('/')) {
+        cleanLocalUrl = cleanLocalUrl.slice(0, -1);
+    }
+
+    // Change button state
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> Memposting...';
+
+    try {
+        let fileUrl = null;
+        let fileType = null;
+
+        // If there's an image file, convert to base64
+        if (file) {
+            fileType = file.name.split('.').pop().toLowerCase();
+            const reader = new FileReader();
+            const base64Promise = new Promise((resolve, reject) => {
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+            });
+            reader.readAsDataURL(file);
+            fileUrl = await base64Promise;
+        }
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+        };
+        if (localApiKey) {
+            headers['Authorization'] = `Bearer ${localApiKey}`;
+        }
+
+        const response = await fetch(`${cleanLocalUrl}/send-status`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({
+                message: message,
+                fileUrl: fileUrl,
+                fileType: fileType
+            })
+        });
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || `Server lokal mengembalikan error HTTP ${response.status}.`);
+        }
+
+        const data = await response.json();
+        if (data && data.success) {
+            window.notify('Status WhatsApp berhasil diposting!', 'success');
+            messageInput.value = '';
+            window.clearWaStatusFile();
+        } else {
+            throw new Error(data.error || 'Server gagal memproses posting status.');
+        }
+    } catch (err) {
+        window.notify('Gagal memposting status: ' + err.message, 'error');
+        console.error(err);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+};
