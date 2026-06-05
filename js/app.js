@@ -2408,7 +2408,17 @@ window.approveUserRegistration = async (uid) => {
     // Kirim WhatsApp otomatis jika nomor WhatsApp tersedia
     if (userData.nowa) {
       const cleanPhone = window.normalizePhoneNumber ? window.normalizePhoneNumber(userData.nowa) : userData.nowa.replace(/\D/g, '');
-      const msg = `*AKTIVASI AKUN PANITIA REUNI AL-FATAH* 🔓\n\nHalo *${userData.nama}*,\n\nSelamat! Akun panitia Anda telah disetujui oleh Admin Utama.\n\nSekarang Anda dapat login ke Dashboard Portal Panitia menggunakan:\n- Email: *${userData.email}*\n- PIN/Password: *(PIN yang telah Anda daftarkan)*\n\nSilakan masuk melalui tautan berikut:\n👉 https://phajar.github.io/Reuni/login.html\n\nMari kita bersinergi bersama untuk menyukseskan Reuni Akbar Pondok Pesantren AL-FATAH! 🤝\n\n_Pesan ini dikirim otomatis oleh Sistem Reuni Al-Fatah._`;
+      const msg = `*🔓 AKTIVASI AKUN PANITIA REUNI AL-FATAH*\n` +
+                  `──────────────────────\n` +
+                  `Halo *${userData.nama}*,\n\n` +
+                  `Selamat! Akun panitia Anda telah disetujui oleh Admin Utama.\n\n` +
+                  `Sekarang Anda dapat login ke Dashboard Portal Panitia menggunakan:\n` +
+                  `• *Email*        : ${userData.email}\n` +
+                  `• *PIN/Password* : (PIN yang telah Anda daftarkan)\n\n` +
+                  `Silakan masuk melalui tautan berikut:\n` +
+                  `👉 https://phajar.github.io/Reuni/login.html\n\n` +
+                  `Mari kita bersinergi bersama untuk menyukseskan Reuni Akbar Pondok Pesantren AL-FATAH! 🤝\n\n` +
+                  `_Sistem Bot Reuni PP Al-Fatah_`;
 
       if (window.sendWhatsAppInternal) {
         await window.sendWhatsAppInternal(cleanPhone, msg, null, 'broadcast');
@@ -4550,15 +4560,15 @@ window.handleRequest = async (id, action) => {
           const payAccountsSnap = await db.collection("payment_accounts").get();
           const accounts = payAccountsSnap.docs.map(doc => doc.data());
           if (accounts.length > 0) {
-            paymentListStr = "\n*Berikut daftar rekening resmi panitia untuk penyaluran donasi/kontribusi:*\n";
+            paymentListStr = "\n*Daftar rekening resmi panitia untuk penyaluran donasi/kontribusi:*\n";
             accounts.forEach(acc => {
               const bankName = acc.bank || "Bank";
               const accountNum = acc.norek || "-";
               const ownerName = acc.nama || acc.nama_rek || "-";
               if (bankName.toUpperCase() === "QRIS") {
-                paymentListStr += `- *QRIS Nasional* (a.n. ${ownerName})\n`;
+                paymentListStr += `• *QRIS Nasional* (a.n. ${ownerName})\n`;
               } else {
-                paymentListStr += `- *${bankName}*: ${accountNum} (a.n. ${ownerName})\n`;
+                paymentListStr += `• *${bankName}* : ${accountNum} (a.n. ${ownerName})\n`;
               }
             });
           }
@@ -4567,10 +4577,12 @@ window.handleRequest = async (id, action) => {
         }
 
         if (!paymentListStr) {
-          paymentListStr = "\n*Berikut rekening resmi panitia untuk penyaluran donasi/kontribusi:*\n- *Bank BJB*: 0139190333100 (a.n. REUNI AKBAR AL FATAH)\n";
+          paymentListStr = "\n*Rekening resmi panitia untuk penyaluran donasi/kontribusi:*\n• *Bank BJB* : 0139190333100 (a.n. REUNI AKBAR AL FATAH)\n";
         }
 
         const pesanTeks =
+          "*🎉 PENDAFTARAN ALUMNI DIVERIFIKASI 🎉*\n" +
+          "──────────────────────\n" +
           "Assalamu'alaikum wr. wb.\n\n" +
           "Halo *" + alumniData.nama + "*,\n\n" +
           "Selamat, data pendaftaran Anda untuk acara Reuni Akbar AL-FATAH telah *BERHASIL DIVERIFIKASI* oleh panitia. Akun Anda kini aktif!\n\n" +
@@ -4579,7 +4591,7 @@ window.handleRequest = async (id, action) => {
           "Setelah melakukan transfer, silakan konfirmasi pembayaran Kakak dengan mengunggah bukti transfer melalui link berikut:\n" +
           "👉 https://phajar.github.io/Reuni/pembayaran.html?wa=" + nomor + "\n\n" +
           "Terima kasih atas partisipasi dan kontribusi Kakak. Sampai jumpa di reuni akbar! 🤝\n\n" +
-          "_Pesan ini dikirim otomatis oleh Sistem Reuni Al-Fatah._";
+          "_Sistem Bot Reuni PP Al-Fatah_";
 
         try {
           await window.sendWhatsAppAPI(nomor, pesanTeks, null, null, "Pendaftaran", null);

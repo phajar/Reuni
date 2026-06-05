@@ -1201,7 +1201,11 @@ async function startRegistrationFlow(jid, m) {
         const botNumber = connectionUser || '';
         const botLink = botNumber ? `https://wa.me/${botNumber}?text=daftar` : 'chat pribadi';
         await sock.sendMessage(jid, { 
-            text: `⚠️ *Pendaftaran Mandiri harus dilakukan melalui Chat Pribadi (PC).*\n\nSilakan kirim pesan ke chat pribadi bot ini atau klik tautan berikut untuk memulai pendaftaran:\n👉 ${botLink}` 
+            text: `*⚠️ PEMBERITAHUAN PENDAFTARAN*\n` +
+                  `──────────────────────\n` +
+                  `Pendaftaran Mandiri harus dilakukan melalui *Chat Pribadi (PC)*.\n\n` +
+                  `Silakan kirim pesan ke chat pribadi bot ini atau klik tautan berikut untuk memulai pendaftaran:\n` +
+                  `👉 *${botLink}*`
         });
         return;
     }
@@ -1226,9 +1230,16 @@ async function startRegistrationFlow(jid, m) {
         
         if (!querySnapshot.empty) {
             const alumniDoc = querySnapshot.docs[0].data();
-            const statusLabel = alumniDoc.status === 'approved' ? 'Disetujui / Aktif' : 'Menunggu Peninjauan';
+            const statusLabel = alumniDoc.status === 'approved' ? '🟢 Disetujui / Aktif' : '🟡 Menunggu Peninjauan';
             await sock.sendMessage(jid, { 
-                text: `⚠️ *Nomor Anda Sudah Terdaftar*\n\nData Anda sudah tercatat di sistem reuni:\n👤 *Nama:* ${alumniDoc.nama}\n🎓 *Angkatan:* Lulus Tahun ${alumniDoc.angkatan}\n📌 *Status Pendaftaran:* ${statusLabel}\n\nKetik *!status* untuk informasi status pembayaran atau kehadiran Anda.` 
+                text: `*⚠️ NOMOR SUDAH TERDAFTAR*\n` +
+                      `──────────────────────\n` +
+                      `Nomor WhatsApp Anda sudah tercatat di database alumni:\n\n` +
+                      `👤 *Nama*      : ${alumniDoc.nama}\n` +
+                      `🎓 *Angkatan*  : Lulus Tahun ${alumniDoc.angkatan}\n` +
+                      `🏫 *Lembaga*   : ${alumniDoc.lembaga || '-'}\n` +
+                      `📌 *Status*    : ${statusLabel}\n\n` +
+                      `Ketik *!status* untuk mengecek rincian status pembayaran iuran atau kehadiran Anda.` 
             });
             return;
         }
@@ -1243,11 +1254,10 @@ async function startRegistrationFlow(jid, m) {
         });
 
         await sock.sendMessage(jid, {
-            text: `*╭────────────────────────╮*\n` +
-                  `*   👋 DAFTAR REUNI AL-FATAH   *\n` +
-                  `*╰────────────────────────╯*\n\n` +
-                  `Saya akan memandu Anda untuk mendaftar secara otomatis langsung dari WhatsApp.\n\n` +
-                  `👉 *Langkah 1 dari 4*\n` +
+            text: `*✨ PENDAFTARAN REUNI AKBAR ✨*\n` +
+                  `──────────────────────\n` +
+                  `Selamat Datang di Pendaftaran Reuni Akbar Ponpes AL-FATAH. Saya akan memandu Anda melakukan pendaftaran secara mandiri.\n\n` +
+                  `*👉 Langkah 1 dari 4*\n` +
                   `Silakan ketik *Nama Lengkap* Anda:`
         });
     } catch (err) {
@@ -1280,13 +1290,14 @@ async function handleRegistrationFlow(jid, cleanMsg, m) {
             session.data.nama = capitalizeName(cleanMsg);
             session.step = 2;
             await sock.sendMessage(jid, {
-                text: `👤 *Nama:* ${session.data.nama}\n\n` +
-                      `👉 *Langkah 2 dari 4*\n` +
+                text: `👤 *Nama* : ${session.data.nama}\n` +
+                      `──────────────────────\n` +
+                      `*👉 Langkah 2 dari 4*\n` +
                       `Tahun berapa Anda lulus dari Ponpes AL-FATAH?\n` +
-                      `(Contoh ketik: *2012* atau *2015*):`
+                      `_(Contoh ketik: *2012* atau *2015*)_`
             });
             break;
- 
+
         case 2: // Angkatan (Tahun Lulus)
             const angkatanNum = parseInt(cleanMsg.replace(/\D/g, ''), 10);
             if (isNaN(angkatanNum) || angkatanNum < 1970 || angkatanNum > 2030) {
@@ -1296,15 +1307,16 @@ async function handleRegistrationFlow(jid, cleanMsg, m) {
             session.data.angkatan = angkatanNum;
             session.step = 3;
             await sock.sendMessage(jid, {
-                text: `🎓 *Angkatan:* Lulus Tahun ${session.data.angkatan}\n\n` +
-                      `👉 *Langkah 3 dari 4*\n` +
+                text: `🎓 *Angkatan* : Lulus Tahun ${session.data.angkatan}\n` +
+                      `──────────────────────\n` +
+                      `*👉 Langkah 3 dari 4*\n` +
                       `Pilih Lembaga pendidikan terakhir Anda di Ponpes AL-FATAH:\n` +
-                      `1. *MA* (Madrasah Aliyah)\n` +
-                      `2. *MTs* (Madrasah Tsanawiyah)\n\n` +
-                      `(Silakan ketik angka *1*, *2*, atau tulis langsung *MA* / *MTs*):`
+                      `1️⃣ *MA* (Madrasah Aliyah)\n` +
+                      `2️⃣ *MTs* (Madrasah Tsanawiyah)\n\n` +
+                      `_(Silakan ketik angka *1*, *2*, atau tulis langsung *MA* / *MTs*)_`
             });
             break;
- 
+
         case 3: // Lembaga (MA / MTs)
             let chosenLembaga = '';
             if (cleanMsg === '1' || textUpper === 'MA') {
@@ -1312,27 +1324,28 @@ async function handleRegistrationFlow(jid, cleanMsg, m) {
             } else if (cleanMsg === '2' || textUpper === 'MTS') {
                 chosenLembaga = 'MTs';
             }
- 
+
             if (!chosenLembaga) {
                 await sock.sendMessage(jid, {
                     text: `⚠️ *Pilihan tidak valid.*\n\nSilakan pilih Lembaga pendidikan Anda:\n1. *MA* (Madrasah Aliyah)\n2. *MTs* (Madrasah Tsanawiyah)\n\n(Ketik angka *1*, *2*, atau tulis langsung *MA* / *MTs*):`
                 });
                 return;
             }
- 
+
             session.data.lembaga = chosenLembaga;
             session.step = 4;
             await sock.sendMessage(jid, {
-                text: `🏫 *Lembaga:* ${session.data.lembaga}\n\n` +
-                      `👉 *Langkah 4 dari 4*\n` +
-                      `Silakan ketik *Alamat Lengkap* Anda saat ini.\n\n` +
-                      `*⚠️ KETENTUAN:*\n` +
-                      `Alamat harus memuat detail *Dusun/Kampung/Blok*, *RT/RW*, serta *Desa*, *Kecamatan*, dan *Kabupaten*.\n\n` +
+                text: `🏫 *Lembaga* : ${session.data.lembaga}\n` +
+                      `──────────────────────\n` +
+                      `*👉 Langkah 4 dari 4*\n` +
+                      `Silakan ketik *Alamat Lengkap* Anda saat ini secara detail.\n\n` +
+                      `*⚠️ KETENTUAN PENULISAN:*\n` +
+                      `Wajib menyertakan detail dusun/kampung, RT/RW, serta Desa, Kecamatan, dan Kabupaten.\n\n` +
                       `*Contoh:*\n` +
                       `_Kp. Babakan RT 02/05 Desa Cadasmekar, Kec. Tegalwaru, Kab. Purwakarta, Jawa Barat_`
             });
             break;
- 
+
         case 4: // Alamat Lengkap & Ekstraksi Wilayah
             await sock.sendMessage(jid, { text: '🔄 _Sedang memproses dan mendeteksi wilayah alamat Anda, mohon tunggu..._' });
             
@@ -1344,7 +1357,7 @@ async function handleRegistrationFlow(jid, cleanMsg, m) {
                     await sock.sendMessage(jid, { text: `${validation.reason}\n\nSilakan tulis kembali alamat lengkap Anda dengan benar:` });
                     return;
                 }
- 
+
                 // Simpan hasil ekstraksi & alamat raw ke object data (field 'alamat' sesuai skema web)
                 session.data.alamat = cleanMsg;
                 session.data.provinsi = capitalizeName(extracted.provinsi);
@@ -1355,27 +1368,26 @@ async function handleRegistrationFlow(jid, cleanMsg, m) {
                 session.step = 5;
                 
                 // Tampilkan Ringkasan & Konfirmasi
-                const summary = `*╭────────────────────────╮*\n` +
-                                `*   📝 RINGKASAN PENDAFTARAN   *\n` +
-                                `*╰────────────────────────╯*\n\n` +
-                                `Silakan periksa kembali data Anda:\n` +
+                const summary = `*📝 RINGKASAN PENDAFTARAN REUNI*\n` +
+                                `──────────────────────\n` +
+                                `Silakan periksa kembali data pendaftaran Anda:\n\n` +
                                 `👤 *Nama*      : ${session.data.nama}\n` +
                                 `🎓 *Angkatan*  : Lulus Tahun ${session.data.angkatan}\n` +
                                 `🏫 *Lembaga*   : ${session.data.lembaga}\n` +
-                                `📞 *No. WA*    : +${session.data.nowa}\n` +
+                                `📞 *WhatsApp*  : +${session.data.nowa}\n` +
                                 `📍 *Alamat*    : ${session.data.alamat}\n` +
-                                `🗺️ *Wilayah*    : Desa ${session.data.desa}, Kec. ${session.data.kecamatan}, Kab. ${session.data.kabupaten}, Prov. ${session.data.provinsi}\n\n` +
+                                `🗺️ *Wilayah*   : Desa ${session.data.desa}, Kec. ${session.data.kecamatan}, Kab. ${session.data.kabupaten}, Prov. ${session.data.provinsi}\n\n` +
                                 `Apakah data di atas sudah benar?\n` +
-                                `👉 Ketik *YA* jika sudah benar dan ingin menyimpan.\n` +
-                                `👉 Ketik *BATAL* untuk membatalkan pendaftaran.`;
+                                `👉 Ketik *YA* jika benar dan ingin menyimpan.\n` +
+                                `👉 Ketik *BATAL* untuk membatalkan.`;
                 await sock.sendMessage(jid, { text: summary });
             } catch (err) {
                 console.error('[WA BOT] Gagal memproses alamat:', err);
                 await sock.sendMessage(jid, { text: '⚠️ Terjadi kesalahan teknis saat mendeteksi alamat Anda. Silakan ketik kembali alamat lengkap Anda:' });
             }
             break;
- 
-        case 5: // Konfirmasi Adir
+
+        case 5: // Konfirmasi Akhir
             if (textUpper === 'YA') {
                 try {
                     const alumniCol = collection(db, 'alumni');
@@ -1389,14 +1401,13 @@ async function handleRegistrationFlow(jid, cleanMsg, m) {
                     }
                     
                     await sock.sendMessage(jid, {
-                        text: `*╭────────────────────────╮*\n` +
-                              `*   🎉 PENDAFTARAN BERHASIL!   *\n` +
-                              `*╰────────────────────────╯*\n\n` +
-                              `Alhamdulillah, data Anda telah disimpan di sistem dengan status *Menunggu Peninjauan*.\n\n` +
-                              `*Langkah Selanjutnya:*\n` +
-                              `Silakan lakukan pembayaran kontribusi iuran reuni melalui menu *keuangan* atau ketik *!iuran* untuk melihat rekening bank / QRIS panitia.\n\n` +
-                              `Ketik *!status* untuk mengecek status pendaftaran Anda secara berkala.\n\n` +
-                              `Terima kasih atas partisipasinya!`
+                        text: `*🎉 PENDAFTARAN BERHASIL! 🎉*\n` +
+                              `──────────────────────\n` +
+                              `Alhamdulillah, data pendaftaran Anda telah berhasil disimpan di sistem.\n\n` +
+                              `📌 *Status Akun:* Menunggu Peninjauan Admin\n\n` +
+                              `*👉 Langkah Selanjutnya:*\n` +
+                              `Silakan lakukan pembayaran iuran/donasi kontribusi reuni. Ketik *!iuran* untuk melihat rekening bank / QRIS resmi panitia.\n\n` +
+                              `Ketik *!status* untuk mengecek status pendaftaran & iuran secara berkala.`
                     });
                     
                     regSessions.delete(jid);
@@ -1472,13 +1483,12 @@ async function handleSaldoCommand(jid) {
         });
         
         const saldo = inC - outC;
-        const msg = `*╭────────────────────────╮*\n` +
-                    `*   📊 SALDO KAS REUNI AL-FATAH  *\n` +
-                    `*╰────────────────────────╯*\n\n` +
+        const msg = `*📊 SALDO KAS REUNI AL-FATAH*\n` +
+                    `──────────────────────\n` +
                     `• *Total Pemasukan*   : ${formatRupiah(inC)}\n` +
                     `• *Total Pengeluaran* : ${formatRupiah(outC)}\n` +
                     `• *Saldo Kas Riil*    : *${formatRupiah(saldo)}*\n\n` +
-                    `_Data di-update secara real-time dari Ledger Keuangan Portal._`;
+                    `_Data disinkronkan secara real-time dari sistem keuangan web._`;
                     
         await sock.sendMessage(jid, { text: msg });
     } catch (err) {
@@ -1528,24 +1538,23 @@ async function handleLaporanCommand(jid) {
             const dateStr = String(t.tanggal).split(',')[0] || '-';
             const tipe = t.status === 'pengeluaran' ? '🔴 Keluar' : '🟢 Masuk';
             const sign = t.status === 'pengeluaran' ? '-' : '+';
-            transMsg += `${idx + 1}. *[${dateStr}]* ${t.keterangan}\n` +
-                        `   _${t.kategori}_ | *${tipe}*: ${sign}${formatRupiah(t.nominal)}\n\n`;
+            transMsg += `🔹 *${idx + 1}. [${dateStr}]* ${t.keterangan}\n` +
+                        `   _${t.kategori}_ | *${tipe}* ${sign}${formatRupiah(t.nominal)}\n\n`;
         });
         
-        const msg = `*╭────────────────────────╮*\n` +
-                    `*  📄 LAPORAN KEUANGAN AL-FATAH  *\n` +
-                    `*╰────────────────────────╯*\n\n` +
-                    `*RINGKASAN DANA:*\n` +
-                    `• Realisasi Pemasukan    : ${formatRupiah(inC)}\n` +
-                    `• Realisasi Pengeluaran  : ${formatRupiah(outC)}\n` +
-                    `• Saldo Kas Riil Saat Ini: *${formatRupiah(saldo)}*\n\n` +
-                    `*5 TRANSAKSI TERAKHIR:*\n` +
-                    `----------------------------------------\n` +
+        const msg = `*📄 LAPORAN RINGKAS KEUANGAN*\n` +
+                    `──────────────────────\n` +
+                    `*💰 RINGKASAN KAS:*\n` +
+                    `• *Total Pemasukan*   : ${formatRupiah(inC)}\n` +
+                    `• *Total Pengeluaran* : ${formatRupiah(outC)}\n` +
+                    `• *Saldo Kas Saat Ini*: *${formatRupiah(saldo)}*\n\n` +
+                    `*📝 5 TRANSAKSI TERAKHIR:*\n` +
+                    `──────────────────────\n` +
                     (transMsg || '_Belum ada transaksi recorded._\n\n') +
-                    `----------------------------------------\n` +
-                    `Untuk melihat laporan resmi PDF/PNG lengkap silakan kunjungi:\n` +
+                    `──────────────────────\n` +
+                    `Untuk detail selengkapnya silakan kunjungi website:\n` +
                     `👉 https://phajar.github.io/Reuni/keuangan.html\n\n` +
-                    `_Pesan otomatis dikirim oleh Bot Portal Alumni PP Al-Fatah_`;
+                    `_Sistem Bot Reuni PP Al-Fatah_`;
                     
         let hasImage = false;
         try {
@@ -1659,14 +1668,13 @@ async function handleIuranCommand(jid) {
                 accountsText = `💳 *BANK MANDIRI*\n• No. Rekening: *1360012345678*\n• Atas Nama: *Bendahara Reuni Al-Fatah*\n\n`;
             }
             
-            iuranMsg = `*╭────────────────────────╮*\n` +
-                       `*    💳 INFO METODE PEMBAYARAN   *\n` +
-                       `*╰────────────────────────╯*\n\n` +
-                       `Halo Rekan Alumni/Panitia, berikut adalah metode pembayaran resmi yang terdaftar di sistem kami:\n\n` +
+            iuranMsg = `*✨ METODE PEMBAYARAN REUNI ✨*\n` +
+                       `──────────────────────\n` +
+                       `Halo Rekan Alumni/Panitia, silakan melakukan transfer/pembayaran melalui salah satu rekening resmi terdaftar:\n\n` +
                        accountsText +
-                       `Setelah melakukan transfer/scan, mohon konfirmasi & unggah bukti transfer Anda melalui link resmi berikut:\n` +
+                       `Setelah melakukan pembayaran, mohon konfirmasi bukti transfer dengan ketik *!konfirmasi [nominal]* (sambil melampirkan foto bukti transfer) atau melalui tautan:\n` +
                        `👉 https://phajar.github.io/Reuni/pembayaran.html\n\n` +
-                       `Terima kasih atas partisipasi dan dukungan Anda!`;
+                       `Terima kasih atas partisipasi Anda!`;
         } else {
             // If custom iuran_info is set, we still try to attach QRIS if it exists in payment_accounts
             try {
@@ -1789,7 +1797,8 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
         
         if (snapEmpty) {
             const displayPhone = isLid ? '' : ` (*+${cleanPhone}*)`;
-            const msgNotRegistered = `*⚠️ NOMOR ANDA BELUM TERDAFTAR ⚠️*\n\n` +
+            const msgNotRegistered = `*⚠️ NOMOR ANDA BELUM TERDAFTAR*\n` +
+                                     `──────────────────────\n` +
                                      `Mohon maaf, nomor WhatsApp Anda${displayPhone} belum terdaftar di database alumni kami.\n\n` +
                                      `Silakan lakukan pendaftaran terlebih dahulu melalui link formulir pendaftaran resmi berikut:\n` +
                                      `👉 https://phajar.github.io/Reuni/pendaftaran.html\n\n` +
@@ -1823,7 +1832,8 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
         }
         
         if (!nominal || isNaN(nominal) || nominal <= 0) {
-            const msgInvalidNominal = `*Format Konfirmasi Donasi salah.*\n\n` +
+            const msgInvalidNominal = `*⚠️ FORMAT KONFIRMASI SALAH*\n` +
+                                      `──────────────────────\n` +
                                       `Silakan gunakan format berikut:\n` +
                                       `👉 *!konfirmasi [nominal]* sambil melampirkan foto struk/bukti transfer.\n\n` +
                                       `*Contoh:* \n` +
@@ -1843,7 +1853,8 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
         }
         
         if (!imageMsg) {
-            const msgNoReceipt = `*⚠️ FOTO BUKTI TRANSFER WAJIB DILAMPIRKAN ⚠️*\n\n` +
+            const msgNoReceipt = `*⚠️ BUKTI TRANSFER WAJIB DILAMPIRKAN*\n` +
+                                 `──────────────────────\n` +
                                  `Mohon maaf *${alumnusData.nama}*, konfirmasi donasi Anda tidak dapat kami proses karena Anda tidak melampirkan foto bukti transfer.\n\n` +
                                  `Silakan lakukan konfirmasi ulang dengan cara mengirimkan/melampirkan foto struk/bukti transfer Anda dan menuliskan caption:\n` +
                                  `👉 *!konfirmasi [nominal]*\n\n` +
@@ -1926,17 +1937,18 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
         }
         
         if (approvalGroupJid && approvalGroupJid.endsWith('@g.us')) {
-            const captionText = `*📢 KONFIRMASI DONASI BARU MASUK 📢*\n\n` +
-                                `Telah diterima konfirmasi donasi dari alumnus berikut:\n\n` +
-                                `• *Nama Pembayar* : ${alumnusData.nama}\n` +
-                                `• *Angkatan*      : ${alumnusData.angkatan || '-'}\n` +
-                                `• *Lembaga*       : ${alumnusData.lembaga || '-'}\n` +
-                                `• *Nominal*       : *${formatRupiah(nominal)}*\n` +
-                                `• *Tanggal*       : ${transactionData.tanggal}\n\n` +
-                                `*ID Transaksi:* \`${docRef.id}\`\n\n` +
-                                `----------------------------------------\n` +
-                                `Reply pesan ini dengan *!setuju* atau *!approve* untuk memverifikasi donasi.\n` +
-                                `Atau kirim pesan: *!setuju ${docRef.id}*`;
+            const captionText = `*📢 KONFIRMASI DONASI BARU MASUK*\n` +
+                                `──────────────────────\n` +
+                                `Telah diterima konfirmasi donasi dari alumnus:\n\n` +
+                                `👤 *Nama Pembayar* : ${alumnusData.nama}\n` +
+                                `🎓 *Angkatan*      : ${alumnusData.angkatan || '-'}\n` +
+                                `🏫 *Lembaga*       : ${alumnusData.lembaga || '-'}\n` +
+                                `💰 *Nominal*       : *${formatRupiah(nominal)}*\n` +
+                                `📅 *Tanggal*       : ${transactionData.tanggal}\n\n` +
+                                `*ID Transaksi:* \`${docRef.id}\`\n` +
+                                `──────────────────────\n` +
+                                `• Reply pesan ini dengan *!setuju* atau *!approve* untuk memverifikasi donasi.\n` +
+                                `• Atau ketik: *!setuju ${docRef.id}*`;
             
             try {
                 if (buktiUrl) {
@@ -1953,11 +1965,12 @@ async function handleKonfirmasiCommand(jid, m, msgText) {
             }
         }
         
-        const msgSuccess = `*✅ KONFIRMASI DONASI BERHASIL 📄*\n\n` +
+        const msgSuccess = `*✅ KONFIRMASI DONASI BERHASIL*\n` +
+                           `──────────────────────\n` +
                            `Halo *${alumnusData.nama}* (Tahun Lulus ${alumnusData.angkatan}),\n` +
                            `Konfirmasi donasi Anda sebesar *${formatRupiah(nominal)}* telah kami terima di sistem.\n\n` +
-                           `• Status: *Menunggu Verifikasi Bendahara*\n` +
-                           `• Bukti Transfer: ${buktiUrl ? 'Terunggah 🟢' : 'Tidak Ada / Kosong ⚠️'}\n\n` +
+                           `• *Status* : Menunggu Verifikasi Bendahara ⏳\n` +
+                           `• *Bukti Transfer* : ${buktiUrl ? 'Terunggah 🟢' : 'Tidak Ada / Kosong ⚠️'}\n\n` +
                            `Mohon tunggu proses verifikasi oleh Bendahara. Anda dapat memantau status secara berkala melalui link berikut:\n` +
                            `👉 https://phajar.github.io/Reuni/cek-status.html\n\n` +
                            `Jazakumullahu khairan katsiran atas partisipasi Anda! 🙏`;
@@ -2087,7 +2100,8 @@ async function handleApproveCommand(jid, m, msgText) {
         }
         
         // Send success message to group
-        const approvalMsg = `*✅ DONASI DISETUJUI VIA WHATSAPP ✅*\n\n` +
+        const approvalMsg = `*✅ DONASI DISETUJUI VIA WHATSAPP*\n` +
+                            `──────────────────────\n` +
                             `Donasi dari *${txData.nama_pembayar}* sebesar *${formatRupiah(txData.nominal)}* telah diverifikasi dan disetujui oleh admin *+${senderNumber}*.\n\n` +
                             `Status di sistem telah diperbarui menjadi *Lunas / Berhasil*.\n` +
                             `Kuitansi digital otomatis dikirimkan ke donatur.`;
@@ -2111,18 +2125,19 @@ async function handleApproveCommand(jid, m, msgText) {
                     const formattedNominal = formatRupiah(txData.nominal);
                     const dateStr = txData.tanggal || new Date().toLocaleString("id-ID");
                     
-                    const receiptMsg = `*BUKTI PEMBAYARAN REUNI AL-FATAH* ✨\n\n` +
+                    const receiptMsg = `*✨ BUKTI PEMBAYARAN REUNI AL-FATAH ✨*\n` +
+                                       `──────────────────────\n` +
                                        `Halo *${alumnusData.nama}* (Angkatan ${alumnusData.angkatan || "-"}),\n\n` +
-                                       `Terima kasih, pembayaran donasi Anda sebesar *${formattedNominal}* telah berhasil diverifikasi dan dicatat oleh Bendahara Reuni Al-Fatah.\n\n` +
+                                       `Terima kasih, pembayaran donasi Anda sebesar *${formattedNominal}* telah berhasil diverifikasi dan dicatat oleh Bendahara.\n\n` +
                                        `*Rincian Transaksi:*\n` +
-                                       `- Kategori: *Donasi*\n` +
-                                       `- Jumlah: *${formattedNominal}*\n` +
-                                       `- Tanggal: *${dateStr}*\n` +
-                                       `- Status: *Lunas / Berhasil*\n\n` +
+                                       `• *Kategori* : Donasi\n` +
+                                       `• *Jumlah*   : *${formattedNominal}*\n` +
+                                       `• *Tanggal*  : ${dateStr}\n` +
+                                       `• *Status*   : Lunas / Berhasil 🟢\n\n` +
                                        `Unduh kuitansi resmi Anda di sini:\n` +
                                        `👉 https://phajar.github.io/Reuni/pembayaran.html?wa=${encodeURIComponent(alumnusData.nowa)}\n\n` +
                                        `Semoga menjadi amal ibadah dan membawa keberkahan bagi kita semua. Sampai jumpa di hari H reuni! 🤝\n\n` +
-                                       `_Pesan ini dikirim otomatis oleh Sistem Reuni Al-Fatah._`;
+                                       `_Sistem Bot Reuni PP Al-Fatah_`;
                                        
                     await sock.sendMessage(donorJid, { text: receiptMsg });
                     console.log(`[WA BOT] Auto-receipt sent to alumnus: ${alumnusData.nowa}`);
@@ -2263,7 +2278,14 @@ async function triggerScheduledReport() {
     
     let template = currentBotConfig.report_template || '';
     if (!template.trim()) {
-        template = `Assalamu'alaikum wr. wb.\n\nBerikut kami lampirkan Laporan Keuangan Reuni Akbar AL-FATAH (Periode {bulan}).\n\nTotal Pemasukan: *{pemasukan}*\nTotal Pengeluaran: *{pengeluaran}*\nSaldo Kas Saat Ini: *{saldo}*\n\nTerima kasih atas transparansi dan dukungan semua pihak.`;
+        template = `*📢 LAPORAN KEUANGAN TERJADWAL*\n` +
+                   `──────────────────────\n` +
+                   `Assalamu'alaikum wr. wb.\n\n` +
+                   `Berikut kami lampirkan Laporan Keuangan Reuni Akbar AL-FATAH (Periode *{bulan}*):\n\n` +
+                   `• *Total Pemasukan*   : {pemasukan}\n` +
+                   `• *Total Pengeluaran* : {pengeluaran}\n` +
+                   `• *Saldo Kas Saat Ini*: *{saldo}*\n\n` +
+                   `Terima kasih atas transparansi dan dukungan semua pihak.`;
     }
     
     let messageText = template
@@ -2273,15 +2295,15 @@ async function triggerScheduledReport() {
         .replace(/{saldo}/g, formatRupiah(saldo));
         
     const latestTrans = listData.slice(-5).reverse();
-    let transMsg = '\n\n*5 TRANSAKSI TERAKHIR:*\n----------------------------------------\n';
+    let transMsg = '\n\n*📝 5 TRANSAKSI TERAKHIR:*\n──────────────────────\n';
     latestTrans.forEach((t, idx) => {
         const dateStr = String(t.tanggal).split(',')[0] || '-';
         const tipe = t.status === 'pengeluaran' ? '🔴 Keluar' : '🟢 Masuk';
         const sign = t.status === 'pengeluaran' ? '-' : '+';
-        transMsg += `${idx + 1}. *[${dateStr}]* ${t.keterangan}\n` +
-                    `   _${t.kategori}_ | *${tipe}*: ${sign}${formatRupiah(t.nominal)}\n`;
+        transMsg += `🔹 *${idx + 1}. [${dateStr}]* ${t.keterangan}\n` +
+                    `   _${t.kategori}_ | *${tipe}*: ${sign}${formatRupiah(t.nominal)}\n\n`;
     });
-    transMsg += '----------------------------------------\n';
+    transMsg += '──────────────────────\n';
     transMsg += `Unduh Laporan Lengkap PDF/PNG:\n👉 https://phajar.github.io/Reuni/keuangan.html\n\n`;
     transMsg += `_Laporan otomatis terjadwal dikirim oleh Bot Reuni Al-Fatah._`;
     
@@ -2325,18 +2347,19 @@ function initAlumniRegistrationListener(db) {
                     
                     const groupJid = currentBotConfig.group_pendataan_jid || currentBotConfig.approval_group_jid;
                     if (groupJid && groupJid.endsWith('@g.us')) {
-                        const message = `*📢 PENDAFTARAN ALUMNI BARU 📢*\n\n` +
+                        const message = `*📢 PENDAFTARAN ALUMNI BARU*\n` +
+                                        `──────────────────────\n` +
                                         `Telah terdaftar alumni baru yang memerlukan persetujuan:\n\n` +
-                                        `• *Nama Lengkap* : ${data.nama}\n` +
-                                        `• *Angkatan*     : ${data.angkatan || '-'}\n` +
-                                        `• *Lembaga*      : ${data.lembaga || '-'}\n` +
-                                        `• *No. WhatsApp* : +${data.nowa || '-'}\n` +
-                                        `• *Alamat*       : ${data.alamat || '-'}\n` +
-                                        `• *Wilayah*      : ${data.desa || '-'}, ${data.kecamatan || '-'}, ${data.kabupaten || '-'}, ${data.provinsi || '-'}\n\n` +
-                                        `*ID Alumni:* \`${alumniId}\`\n\n` +
-                                        `----------------------------------------\n` +
-                                        `Reply pesan ini dengan *!setuju-alumni* atau *!approve-alumni* untuk menyetujui pendaftaran.\n` +
-                                        `Atau kirim pesan: *!setuju-alumni ${alumniId}*`;
+                                        `👤 *Nama Lengkap* : ${data.nama}\n` +
+                                        `🎓 *Angkatan*     : Lulus Tahun ${data.angkatan || '-'}\n` +
+                                        `🏫 *Lembaga*      : ${data.lembaga || '-'}\n` +
+                                        `📞 *No. WhatsApp* : +${data.nowa || '-'}\n` +
+                                        `📍 *Alamat*       : ${data.alamat || '-'}\n` +
+                                        `🗺️ *Wilayah*      : Desa ${data.desa || '-'}, Kec. ${data.kecamatan || '-'}, Kab. ${data.kabupaten || '-'}, Prov. ${data.provinsi || '-'}\n\n` +
+                                        `*ID Alumni:* \`${alumniId}\`\n` +
+                                        `──────────────────────\n` +
+                                        `• Reply pesan ini dengan *!setuju-alumni* atau *!approve-alumni* untuk menyetujui pendaftaran.\n` +
+                                        `• Atau ketik: *!setuju-alumni ${alumniId}*`;
                          
                         try {
                             if (sock && connectionStatus === 'open') {
@@ -2374,12 +2397,13 @@ function initAuditLogListener(db) {
                     const groupJid = currentBotConfig.group_log_jid || currentBotConfig.approval_group_jid;
                     if (groupJid && groupJid.endsWith('@g.us')) {
                         const dateStr = new Date(data.timestamp).toLocaleString('id-ID');
-                        const message = `*🛡️ AUDIT LOG: AKTIVITAS OPERATOR 🛡️*\n\n` +
-                                        `• *Nama Operator* : ${data.operator_name}\n` +
-                                        `• *Email*         : ${data.operator_email}\n` +
-                                        `• *Aksi*          : ${data.action}\n` +
-                                        `• *Detail*        : ${data.details}\n` +
-                                        `• *Waktu*         : ${dateStr}`;
+                        const message = `*🛡️ AUDIT LOG: AKTIVITAS OPERATOR*\n` +
+                                        `──────────────────────\n` +
+                                        `👤 *Nama Operator* : ${data.operator_name}\n` +
+                                        `✉️ *Email*         : ${data.operator_email}\n` +
+                                        `🎬 *Aksi*          : ${data.action}\n` +
+                                        `📝 *Detail*        : ${data.details}\n` +
+                                        `📅 *Waktu*         : ${dateStr}`;
                         
                         try {
                             if (sock && connectionStatus === 'open') {
@@ -2486,7 +2510,8 @@ async function handleApproveAlumniCommand(jid, m, msgText) {
             console.error('[WA BOT] Gagal mengupdate sync_state:', syncErr);
         }
         
-        const approvalMsg = `*✅ PENDAFTARAN ALUMNI DISETUJUI VIA WHATSAPP ✅*\n\n` +
+        const approvalMsg = `*✅ PENDAFTARAN ALUMNI DISETUJUI*\n` +
+                            `──────────────────────\n` +
                             `Pendaftaran alumni *${alumniData.nama}* (Angkatan ${alumniData.angkatan || '-'}) telah disetujui oleh admin *+${senderNumber}*.\n\n` +
                             `Status alumni telah aktif di sistem dan welcome message telah dikirim ke yang bersangkutan.`;
         await sock.sendMessage(jid, { text: approvalMsg });
@@ -2500,12 +2525,14 @@ async function handleApproveAlumniCommand(jid, m, msgText) {
             }
             const alumnusJid = rawWa + '@s.whatsapp.net';
             
-            const welcomeMsg = `*SELAMAT DATANG DI PORTAL ALUMNI PP AL-FATAH* 🎉\n\n` +
-                               `Halo *${alumniData.nama}* (Angkatan ${alumniData.angkatan || '-'}),\n` +
+            const welcomeMsg = `*🎉 SELAMAT DATANG DI PORTAL ALUMNI PP AL-FATAH 🎉*\n` +
+                               `──────────────────────\n` +
+                               `Halo *${alumniData.nama}* (Angkatan ${alumniData.angkatan || '-'}),\n\n` +
                                `Pendaftaran Anda telah disetujui oleh admin. Selamat bergabung!\n\n` +
                                `Sekarang Kakak sudah terdaftar resmi di database Reuni Akbar Ponpes AL-FATAH. Kakak juga dapat berkontribusi/berdonasi untuk menyukseskan acara kita melalui menu keuangan atau tautan berikut:\n` +
                                `👉 https://phajar.github.io/Reuni/pembayaran.html?wa=${encodeURIComponent(alumniData.nowa)}\n\n` +
-                               `Terima kasih dan sampai jumpa di acara Reuni Akbar PP AL-FATAH! 🤝`;
+                               `Terima kasih dan sampai jumpa di acara Reuni Akbar PP AL-FATAH! 🤝\n\n` +
+                               `_Sistem Bot Reuni PP Al-Fatah_`;
                                
             await sock.sendMessage(alumnusJid, { text: welcomeMsg });
             console.log(`[WA BOT] Welcome message sent to alumnus: ${alumniData.nowa}`);
@@ -2581,7 +2608,12 @@ async function handleBackupDbCommand(jid, m) {
             document: fs.readFileSync(tempFilePath),
             mimetype: 'application/json',
             fileName: tempFilename,
-            caption: `📊 *BACKUP DATABASE REUNI PP AL-FATAH*\n\n• Waktu Backup: *${new Date().toLocaleString('id-ID')}*\n• Koleksi Berhasil Di-backup: *${collectionsList.join(', ')}*\n• Triggered by Admin: *+${senderNumber}*`
+            caption: `*📊 BACKUP DATABASE REUNI PP AL-FATAH*\n` +
+                     `──────────────────────\n` +
+                     `• *Waktu Backup* : ${new Date().toLocaleString('id-ID')}\n` +
+                     `• *Koleksi*      : ${collectionsList.join(', ')}\n` +
+                     `• *Operator*     : +${senderNumber}\n\n` +
+                     `_Sistem Bot Reuni PP Al-Fatah_`
         });
         
         console.log(`[BACKUP] Backup file sent successfully.`);
@@ -2610,28 +2642,27 @@ async function handleMenuCommand(jid, m) {
         const adminList = (currentBotConfig.approval_admins || '').split(',').map(s => s.trim().replace(/\D/g, '')).filter(Boolean);
         const isAuthorized = adminList.includes(senderNumber);
         
-        let menuMsg = `*╭────────────────────────╮*\n` +
-                      `*   ✨ MENU UTAMA BOT REUNI ✨   *\n` +
-                      `*╰────────────────────────╯*\n\n` +
+        let menuMsg = `*✨ MENU UTAMA BOT REUNI ✨*\n` +
+                      `──────────────────────\n` +
                       `Halo! Berikut adalah daftar perintah valid yang dapat Anda gunakan pada bot ini:\n\n` +
                       `*🌐 PERINTAH ALUMNI*\n` +
-                      `┌  *daftar* : Mulai pendaftaran alumni mandiri\n` +
-                      `├  *!saldo* : Cek saldo kas riil saat ini\n` +
-                      `├  *!laporan* : Laporan keuangan & 5 transaksi terakhir\n` +
-                      `├  *!iuran* : Cara iuran & QRIS dinamis\n` +
-                      `├  *!konfirmasi [nominal]* : Lapor bukti transfer\n` +
-                      `├  *!status* : Cek status pendaftaran & iuran Anda\n` +
-                      `├  *!menu* : Tampilkan menu ringkas ini\n` +
-                      `└  *!help* : Bantuan detail & penjelasan perintah\n\n`;
+                      `🔹 *daftar* : Mulai pendaftaran alumni mandiri\n` +
+                      `🔹 *!saldo* : Cek saldo kas riil saat ini\n` +
+                      `🔹 *!laporan* : Laporan keuangan & 5 transaksi terakhir\n` +
+                      `🔹 *!iuran* : Cara iuran & QRIS dinamis\n` +
+                      `🔹 *!konfirmasi [nominal]* : Lapor bukti transfer\n` +
+                      `🔹 *!status* : Cek status pendaftaran & iuran Anda\n` +
+                      `🔹 *!menu* : Tampilkan menu ringkas ini\n` +
+                      `🔹 *!help* : Bantuan detail & penjelasan perintah\n\n`;
                       
         if (isAuthorized) {
-            menuMsg += `*🛡️ PERINTAH KHUSUS ADMIN* (Terotorisasi)\n` +
-                       `┌  *!setuju [ID]* : Setujui transaksi donasi\n` +
-                       `├  *!setuju-alumni [ID]* : Setujui alumni baru\n` +
-                       `└  *!backup-db* : Unduh cadangan database JSON\n\n`;
+            menuMsg += `*🛡️ PERINTAH KHUSUS ADMIN*\n` +
+                       `🔸 *!setuju [ID]* : Setujui transaksi donasi\n` +
+                       `🔸 *!setuju-alumni [ID]* : Setujui alumni baru\n` +
+                       `🔸 *!backup-db* : Unduh cadangan database JSON\n\n`;
         }
         
-        menuMsg += `──────────────────────────\n` +
+        menuMsg += `──────────────────────\n` +
                    `Ketik *!help* untuk melihat panduan detail penggunaan setiap perintah.\n` +
                    `_Sistem Bot Reuni Akbar PP AL-FATAH_`;
         
@@ -2656,14 +2687,13 @@ async function handleHelpCommand(jid, m) {
         const adminList = (currentBotConfig.approval_admins || '').split(',').map(s => s.trim().replace(/\D/g, '')).filter(Boolean);
         const isAuthorized = adminList.includes(senderNumber);
         
-        let helpMsg = `*╭────────────────────────╮*\n` +
-                      `*  ✨ PANDUAN PENGGUNAAN BOT ✨  *\n` +
-                      `*╰────────────────────────╯*\n\n` +
+        let helpMsg = `*✨ PANDUAN PENGGUNAAN BOT ✨*\n` +
+                      `──────────────────────\n` +
                       `Berikut adalah panduan lengkap dan contoh penggunaan untuk setiap perintah bot Reuni AL-FATAH:\n\n` +
                       `*🌐 UNTUK ALUMNI*\n\n` +
                       `📝 *daftar*\n` +
                       `Memulai proses pendaftaran mandiri alumni baru secara interaktif langsung melalui chat bot ini.\n\n` +
-                      `📝 *!saldo*\n` +
+                      `💰 *!saldo*\n` +
                       `Menampilkan total pemasukan, pengeluaran, dan saldo kas riil saat ini secara real-time.\n\n` +
                       `📊 *!laporan*\n` +
                       `Mengirimkan gambar infografis laporan keuangan formal resmi lengkap beserta rincian 5 transaksi kas terbaru.\n\n` +
@@ -2678,7 +2708,7 @@ async function handleHelpCommand(jid, m) {
                       `Menampilkan ringkasan seluruh daftar perintah valid.\n\n` +
                       `❓ *!help*\n` +
                       `Menampilkan halaman panduan bantuan ini.\n\n` +
-                      `──────────────────────────\n`;
+                      `──────────────────────\n`;
                       
         if (isAuthorized) {
             helpMsg += `*🛡️ UNTUK ADMIN TEROTORISASI*\n\n` +
@@ -2688,7 +2718,7 @@ async function handleHelpCommand(jid, m) {
                        `Menyetujui pendaftaran alumni baru. (Atau reply/balas pesan notifikasi alumni baru dari bot dengan mengetik *!setuju-alumni*).\n\n` +
                        `💾 *!backup-db*\n` +
                        `Mengunduh cadangan lengkap seluruh koleksi database dalam format JSON.\n\n` +
-                       `──────────────────────────\n`;
+                       `──────────────────────\n`;
         }
         
         helpMsg += `_Sistem Bot Reuni Akbar Pondok Pesantren AL-FATAH_`;
@@ -2742,7 +2772,8 @@ async function handleStatusCommand(jid, m) {
         const snap = await getDocs(q);
         
         if (snap.empty) {
-            const msgNotRegistered = `*⚠️ STATUS PENDAFTARAN ALUMNI ⚠️*\n\n` +
+            const msgNotRegistered = `*⚠️ STATUS PENDAFTARAN ALUMNI*\n` +
+                                     `──────────────────────\n` +
                                      `Nomor WhatsApp Anda (*+${cleanPhone}*) belum terdaftar di sistem reuni.\n\n` +
                                      `Silakan ketik *daftar* untuk mendaftar secara otomatis langsung dari WhatsApp, atau daftar melalui web portal:\n` +
                                      `👉 https://phajar.github.io/Reuni/pendaftaran.html`;
@@ -2782,18 +2813,17 @@ async function handleStatusCommand(jid, m) {
             paymentStatus = `🟡 Menunggu Persetujuan Bendahara (Total: ${formatRupiah(pendingDonasi)})`;
         }
         
-        let textStatus = `*╭────────────────────────╮*\n` +
-                         `*    📊 STATUS PROFILE ALUMNI    *\n` +
-                         `*╰────────────────────────╯*\n\n` +
-                         `👤 *Nama*        : ${alumnusData.nama}\n` +
-                         `🎓 *Angkatan*    : Lulus Tahun ${alumnusData.angkatan}\n` +
-                         `🏫 *Lembaga*     : ${alumnusData.lembaga || '-'}\n` +
-                         `📞 *No. WhatsApp*: +${cleanPhone}\n` +
-                         `📌 *Status Akun* : ${statusLabel}\n` +
-                         `🙋 *Kehadiran*   : ${kehadiranLabel}\n` +
-                         `💳 *Status Iuran* : ${paymentStatus}\n\n` +
-                         `Untuk melakukan konfirmasi pembayaran, silakan transfer ke rekening resmi panitia, lalu kirim bukti transfer dengan ketik *!konfirmasi [nominal]*\n` +
-                         `Contoh: *!konfirmasi 100000*`;
+        let textStatus = `*📊 STATUS PENDAFTARAN & KEUANGAN*\n` +
+                         `──────────────────────\n` +
+                         `👤 *Nama*      : ${alumnusData.nama}\n` +
+                         `🎓 *Angkatan*  : Lulus Tahun ${alumnusData.angkatan}\n` +
+                         `🏫 *Lembaga*   : ${alumnusData.lembaga || '-'}\n` +
+                         `📞 *WhatsApp*  : +${cleanPhone}\n` +
+                         `📌 *Akun*      : ${statusLabel}\n` +
+                         `🙋 *Kehadiran* : ${kehadiranLabel}\n` +
+                         `💳 *Iuran Kas* : ${paymentStatus}\n\n` +
+                         `Untuk konfirmasi pembayaran, silakan kirim foto struk/bukti transfer Anda dengan caption: *!konfirmasi [nominal]*\n` +
+                         `_(Contoh: *!konfirmasi 100000*)_`;
                          
         await sock.sendMessage(jid, { text: textStatus });
     } catch (err) {

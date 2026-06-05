@@ -530,8 +530,28 @@
           return;
         }
 
-        // Susun teks pesan
-        const message = `*PENDAFTARAN ALUMNI REUNI AKBAR AL-FATAH* ✨\n\nHalo *${data.nama}*,\n\nSelamat! Pendaftaran Anda untuk Reuni Akbar Pondok Pesantren AL-FATAH telah berhasil dikirim dan sedang dalam proses peninjauan oleh Panitia.\n\n*Rincian Pendaftaran:*\n- Nama: *${data.nama}*\n- Lembaga: *${data.lembaga || "-"}*\n- Angkatan: *${data.angkatan}*\n- No. WhatsApp: *+${cleanPhone}*\n- Wilayah: *${data.desa || "-"}, ${data.kecamatan || "-"}, ${data.kabupaten || "-"}, ${data.provinsi || "-"}*\n\n---\n\n*INFORMASI DONASI REUNI* 💳\nUntuk menyukseskan acara ini, Kakak dapat menyalurkan donasi/kontribusi sukarela ke rekening resmi panitia:\n- *Bank BJB*\n- Nomor Rekening: *0139190333100*\n- Atas Nama: *REUNI AKBAR AL FATAH*\n\nSetelah melakukan transfer, silakan konfirmasi pembayaran Kakak dengan mengunggah bukti transfer melalui link di bawah ini.\n\n---\n\n*CEK STATUS & KONFIRMASI PEMBAYARAN:*\n👉 https://phajar.github.io/Reuni/pembayaran.html?wa=${cleanPhone}\n\nTerima kasih atas partisipasi dan kontribusi Kakak. Sampai jumpa di reuni akbar! 🤝\n\n_Pesan ini dikirim otomatis oleh Sistem Reuni Al-Fatah._`;
+        const message = `*✨ PENDAFTARAN ALUMNI REUNI AKBAR AL-FATAH ✨*\n` +
+                        `──────────────────────\n` +
+                        `Halo *${data.nama}*,\n\n` +
+                        `Selamat! Pendaftaran Anda untuk Reuni Akbar Pondok Pesantren AL-FATAH telah berhasil dikirim dan sedang dalam proses peninjauan oleh Panitia.\n\n` +
+                        `*Rincian Pendaftaran:*\n` +
+                        `• *Nama*        : ${data.nama}\n` +
+                        `• *Lembaga*     : ${data.lembaga || "-"}\n` +
+                        `• *Angkatan*    : Lulus Tahun ${data.angkatan}\n` +
+                        `• *No. WhatsApp*: +${cleanPhone}\n` +
+                        `• *Wilayah*     : Desa ${data.desa || "-"}, Kec. ${data.kecamatan || "-"}, Kab. ${data.kabupaten || "-"}, Prov. ${data.provinsi || "-"}\n\n` +
+                        `──────────────────────\n\n` +
+                        `*💳 INFORMASI DONASI REUNI*\n` +
+                        `Untuk menyukseskan acara ini, Kakak dapat menyalurkan donasi/kontribusi sukarela ke rekening resmi panitia:\n` +
+                        `• *Bank BJB*\n` +
+                        `• *No. Rekening*: 0139190333100\n` +
+                        `• *Atas Nama*   : REUNI AKBAR AL FATAH\n\n` +
+                        `Setelah melakukan transfer, silakan konfirmasi pembayaran Kakak dengan mengunggah bukti transfer melalui link di bawah ini.\n\n` +
+                        `──────────────────────\n\n` +
+                        `*👉 CEK STATUS & KONFIRMASI PEMBAYARAN:*\n` +
+                        `https://phajar.github.io/Reuni/pembayaran.html?wa=${cleanPhone}\n\n` +
+                        `Terima kasih atas partisipasi dan kontribusi Kakak. Sampai jumpa di reuni akbar! 🤝\n\n` +
+                        `_Sistem Bot Reuni PP Al-Fatah_`;
 
         // 3. Kirim ke REST API Provider yang sesuai
         if (provider === 'fonnte') {
