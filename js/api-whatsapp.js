@@ -1080,40 +1080,9 @@ window.sendLaporanKeuanganWA = async () => {
 };
 
 window.sendReceiptNotification = async (financeData) => {
-    try {
-        const isEnabled = localStorage.getItem("af_wa_receipt_enabled") !== "false";
-        if (!isEnabled) return;
-        if (financeData.status !== "pemasukan" || !financeData.ref_alumni_id) return;
-
-        const alumnus = (window.STATE.rawAlumni || window.STATE.alumni || []).find(a => a.id === financeData.ref_alumni_id);
-        if (!alumnus || !alumnus.nowa) return;
-
-        const formattedNominal = window.formatRupiah(financeData.nominal);
-        const dateStr = financeData.tanggal || new Date().toLocaleString("id-ID");
-        const adminMail = financeData.updated_by || "Bendahara";
-
-        const msg = `*✨ BUKTI PEMBAYARAN REUNI AL-FATAH ✨*\n` +
-                    `──────────────────────\n` +
-                    `Halo *${alumnus.nama}* (Angkatan ${alumnus.angkatan || "-"}),\n\n` +
-                    `Terima kasih, pembayaran Anda telah berhasil dicatat oleh Bendahara.\n\n` +
-                    `*Rincian Transaksi:*\n` +
-                    `• *Kategori* : ${financeData.kategori || "Uang Kas"}\n` +
-                    `• *Jumlah*   : *${formattedNominal}*\n` +
-                    `• *Tanggal*  : ${dateStr}\n` +
-                    `• *Status*   : Lunas / Berhasil 🟢\n` +
-                    `• *Catatan*  : ${financeData.keterangan || "-"}\n` +
-                    `• *Admin*    : ${adminMail}\n\n` +
-                    `Unduh kuitansi resmi Anda di sini:\n` +
-                    `👉 https://phajar.github.io/Reuni/pembayaran.html?wa=${encodeURIComponent(alumnus.nowa)}\n\n` +
-                    `Semoga menjadi amal ibadah dan membawa keberkahan bagi kita semua. Sampai jumpa di hari H reuni! 🤝\n\n` +
-                    `_Sistem Bot Reuni PP Al-Fatah_`;
-
-        const targetNum = window.normalizePhoneNumber(alumnus.nowa);
-        await window.sendWhatsAppInternal(targetNum, msg, null, 'finance');
-        console.log("Kuitansi otomatis berhasil dikirim ke " + targetNum);
-    } catch (e) {
-        console.error("Gagal mengirim kuitansi WA otomatis:", e.message);
-    }
+    // No-op: Kuitansi resmi berupa gambar (PNG) dan teks notifikasi 
+    // dikirimkan secara otomatis dari sisi server menggunakan Firestore listener
+    console.log("[Client WA] sendReceiptNotification bypassed. Handled by server listener.");
 };
 
 // Manajemen Grup WA

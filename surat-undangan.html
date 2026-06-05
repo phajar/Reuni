@@ -1658,16 +1658,54 @@
 
   window.addEventListener('resize', window.initMobileTabs);
 
+  // Auto-fill and auto-generate invitation from URL query parameters
+  function handleUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramNama = urlParams.get('nama');
+    const paramAngkatan = urlParams.get('angkatan');
+    const paramLembaga = urlParams.get('lembaga');
+    
+    if (paramNama) {
+      const recipientName = paramNama.trim();
+      const institutionStr = paramLembaga ? ` (${paramLembaga.trim().toUpperCase()})` : '';
+      const cohortStr = paramAngkatan ? ` Angkatan ${paramAngkatan.trim()}` : '';
+      document.getElementById('penerima').value = `Sdr/i ${recipientName}${institutionStr}${cohortStr}`;
+      
+      let agendaText = 'Silaturahmi akbar, temu kangen';
+      if (paramAngkatan) {
+        agendaText += `, khususnya bersama Alumni Angkatan ${paramAngkatan.trim()}`;
+      }
+      agendaText += ', laporan pertanggungjawaban panitia, dan doa bersama';
+      document.getElementById('agenda-acara').value = agendaText;
+      
+      // Switch to preview tab for mobile if needed, so the user sees the generated invitation immediately
+      if (window.innerWidth < 1024) {
+        if (typeof window.switchMobileTab === 'function') {
+          window.switchMobileTab('preview');
+        }
+      }
+      
+      // Trigger letter generation automatically
+      setTimeout(() => {
+        if (typeof generateSurat === 'function') {
+          generateSurat();
+        }
+      }, 300);
+    }
+  }
+
   // Jalankan inisialisasi koneksi database saat halaman dimuat
   // Firebase SDK sudah dimuat di atas sebelum script block ini
   window.addEventListener('DOMContentLoaded', () => {
     initFirebaseConnection();
     window.initMobileTabs();
+    handleUrlParams();
   });
   // Fallback: jika DOMContentLoaded sudah terlewat
   if (document.readyState !== 'loading') {
     initFirebaseConnection();
     window.initMobileTabs();
+    handleUrlParams();
   }
   </script>
 

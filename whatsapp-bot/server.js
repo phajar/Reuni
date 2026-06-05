@@ -308,6 +308,9 @@ async function connectToWhatsApp() {
             } else if (command === '!status') {
                 console.log(`[WA BOT] Perintah !status dari ${jid}`);
                 await handleStatusCommand(jid, m);
+            } else if (command === '!undangan') {
+                console.log(`[WA BOT] Perintah !undangan dari ${jid}`);
+                await handleUndanganCommand(jid, m);
             }
         } catch (err) {
             console.error('[WA BOT] Gagal memproses pesan masuk:', err);
@@ -383,6 +386,9 @@ async function startServer() {
     
     // 6. Initialize Audit Log Listener
     initAuditLogListener(db);
+    
+    // 7. Initialize Finance Receipt Listener
+    initFinanceReceiptListener(db);
 }
 
 // Start Baileys WhatsApp Connection
@@ -2107,43 +2113,8 @@ async function handleApproveCommand(jid, m, msgText) {
                             `Kuitansi digital otomatis dikirimkan ke donatur.`;
         await sock.sendMessage(jid, { text: approvalMsg });
         
-        // Send auto-receipt to the alumnus/donor
-        if (txData.ref_alumni_id) {
-            const alumnusRef = doc(db, 'alumni', txData.ref_alumni_id);
-            const alumnusSnap = await getDoc(alumnusRef);
-            if (alumnusSnap.exists()) {
-                const alumnusData = alumnusSnap.data();
-                if (alumnusData.nowa) {
-                    // Normalize phone number to send JID
-                    let rawWa = alumnusData.nowa.replace(/\D/g, '');
-                    if (rawWa.startsWith('0')) {
-                        rawWa = '62' + rawWa.slice(1);
-                    } else if (rawWa.startsWith('8')) {
-                        rawWa = '62' + rawWa;
-                    }
-                    const donorJid = rawWa + '@s.whatsapp.net';
-                    const formattedNominal = formatRupiah(txData.nominal);
-                    const dateStr = txData.tanggal || new Date().toLocaleString("id-ID");
-                    
-                    const receiptMsg = `*✨ BUKTI PEMBAYARAN REUNI AL-FATAH ✨*\n` +
-                                       `──────────────────────\n` +
-                                       `Halo *${alumnusData.nama}* (Angkatan ${alumnusData.angkatan || "-"}),\n\n` +
-                                       `Terima kasih, pembayaran donasi Anda sebesar *${formattedNominal}* telah berhasil diverifikasi dan dicatat oleh Bendahara.\n\n` +
-                                       `*Rincian Transaksi:*\n` +
-                                       `• *Kategori* : Donasi\n` +
-                                       `• *Jumlah*   : *${formattedNominal}*\n` +
-                                       `• *Tanggal*  : ${dateStr}\n` +
-                                       `• *Status*   : Lunas / Berhasil 🟢\n\n` +
-                                       `Unduh kuitansi resmi Anda di sini:\n` +
-                                       `👉 https://phajar.github.io/Reuni/pembayaran.html?wa=${encodeURIComponent(alumnusData.nowa)}\n\n` +
-                                       `Semoga menjadi amal ibadah dan membawa keberkahan bagi kita semua. Sampai jumpa di hari H reuni! 🤝\n\n` +
-                                       `_Sistem Bot Reuni PP Al-Fatah_`;
-                                       
-                    await sock.sendMessage(donorJid, { text: receiptMsg });
-                    console.log(`[WA BOT] Auto-receipt sent to alumnus: ${alumnusData.nowa}`);
-                }
-            }
-        }
+        // Note: Auto-receipt generation & transmission is handled automatically by the Firestore listener 'initFinanceReceiptListener'
+        console.log(`[WA BOT] Handled approve command for transaction ${transactionId}. Firestore listener will send the receipt.`);
     } catch (err) {
         console.error('[WA BOT] Gagal memproses persetujuan via WA:', err);
         await sock.sendMessage(jid, { text: '❌ Terjadi kesalahan saat memproses persetujuan donasi.' });
@@ -2652,6 +2623,7 @@ async function handleMenuCommand(jid, m) {
                       `🔹 *!iuran* : Cara iuran & QRIS dinamis\n` +
                       `🔹 *!konfirmasi [nominal]* : Lapor bukti transfer\n` +
                       `🔹 *!status* : Cek status pendaftaran & iuran Anda\n` +
+                      `🔹 *!undangan* : Dapatkan link undangan digital personal\n` +
                       `🔹 *!menu* : Tampilkan menu ringkas ini\n` +
                       `🔹 *!help* : Bantuan detail & penjelasan perintah\n\n`;
                       
@@ -2704,6 +2676,8 @@ async function handleHelpCommand(jid, m) {
                       `👉 Contoh: *!konfirmasi 150000*\n\n` +
                       `📊 *!status*\n` +
                       `Mengecek status akun pendaftaran, kehadiran, dan status/nominal pembayaran iuran donasi Anda.\n\n` +
+                      `✉️ *!undangan*\n` +
+                      `Mendapatkan link surat undangan digital resmi personal Anda.\n\n` +
                       `📋 *!menu*\n` +
                       `Menampilkan ringkasan seluruh daftar perintah valid.\n\n` +
                       `❓ *!help*\n` +
@@ -2829,6 +2803,74 @@ async function handleStatusCommand(jid, m) {
     } catch (err) {
         console.error('[WA BOT] Gagal memproses perintah !status:', err);
         await sock.sendMessage(jid, { text: '⚠️ Terjadi kesalahan saat memeriksa status Anda. Silakan hubungi panitia.' });
+    }
+}
+
+async function handleUndanganCommand(jid, m) {
+    try {
+        let senderJid = '';
+        if (jid && jid.endsWith('@g.us')) {
+            senderJid = m.key.participantPn || m.key.participant || '';
+        } else {
+            senderJid = m.key.senderPn || jid || '';
+        }
+        
+        const senderNumber = senderJid.split('@')[0].split(':')[0].replace(/\D/g, '');
+        if (!senderNumber) {
+            await sock.sendMessage(jid, { text: '⚠️ Gagal mendeteksi nomor WhatsApp Anda.' });
+            return;
+        }
+        
+        function normalizeWA(raw) {
+            if (!raw) return "";
+            let num = raw.replace(/\D/g, '');
+            if (num.startsWith('620')) {
+                num = '62' + num.slice(3);
+            }
+            if (num.startsWith('0')) {
+                num = '62' + num.slice(1);
+            } else if (num.startsWith('8')) {
+                num = '62' + num;
+            }
+            return num;
+        }
+        
+        const cleanPhone = normalizeWA(senderNumber);
+        
+        const phoneFormats = [
+            cleanPhone,
+            '0' + cleanPhone.slice(2),
+            cleanPhone.slice(2)
+        ];
+        
+        const alumniCol = collection(db, 'alumni');
+        const q = query(alumniCol, where('nowa', 'in', phoneFormats));
+        const snap = await getDocs(q);
+        
+        if (snap.empty) {
+            const msgNotRegistered = `*⚠️ AJUKAN UNDANGAN REUNI*\n` +
+                                     `──────────────────────\n` +
+                                     `Nomor WhatsApp Anda (*+${cleanPhone}*) belum terdaftar di sistem alumni.\n\n` +
+                                     `Silakan ketik *daftar* untuk mendaftar terlebih dahulu agar sistem dapat membuat link undangan digital personal untuk Anda.`;
+            await sock.sendMessage(jid, { text: msgNotRegistered });
+            return;
+        }
+        
+        const alumnusData = snap.docs[0].data();
+        const inviteLink = `https://phajar.github.io/Reuni/surat-undangan.html?nama=${encodeURIComponent(alumnusData.nama)}&angkatan=${encodeURIComponent(alumnusData.angkatan)}&lembaga=${encodeURIComponent(alumnusData.lembaga || '')}`;
+        
+        const msg = `*💌 SURAT UNDANGAN DIGITAL PERSONAL*\n` +
+                    `──────────────────────\n` +
+                    `Halo *${alumnusData.nama}* (Angkatan ${alumnusData.angkatan || '-'}),\n\n` +
+                    `Berikut adalah link surat undangan resmi personal Anda untuk menghadiri Reuni Akbar AL-FATAH:\n\n` +
+                    `👉 *${inviteLink}*\n\n` +
+                    `Silakan buka tautan di atas untuk melihat surat resmi formal, mengunduh PDF resmi, atau mencetak surat undangan Anda.\n\n` +
+                    `_Sistem Bot Reuni PP Al-Fatah_`;
+                    
+        await sock.sendMessage(jid, { text: msg });
+    } catch (err) {
+        console.error('[WA BOT] Gagal memproses perintah !undangan:', err);
+        await sock.sendMessage(jid, { text: '⚠️ Terjadi kesalahan saat membuat undangan Anda. Silakan hubungi panitia.' });
     }
 }
 
@@ -2961,4 +3003,223 @@ function generateVisualReportSvg(inC, outC, saldo, transactions, logoBase64 = ''
 </svg>
     `;
     return svg;
+}
+
+function terbilang(nominal) {
+    const bil = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+    let temp = "";
+    if (nominal < 12) {
+        temp = " " + bil[nominal];
+    } else if (nominal < 20) {
+        temp = terbilang(nominal - 10) + " Belas";
+    } else if (nominal < 100) {
+        temp = terbilang(Math.floor(nominal / 10)) + " Puluh" + terbilang(nominal % 10);
+    } else if (nominal < 200) {
+        temp = " Seratus" + terbilang(nominal - 100);
+    } else if (nominal < 1000) {
+        temp = terbilang(Math.floor(nominal / 100)) + " Ratus" + terbilang(nominal % 100);
+    } else if (nominal < 2000) {
+        temp = " Seribu" + terbilang(nominal - 1000);
+    } else if (nominal < 1000000) {
+        temp = terbilang(Math.floor(nominal / 1000)) + " Ribu" + terbilang(nominal % 1000);
+    } else if (nominal < 1000000000) {
+        temp = terbilang(Math.floor(nominal / 1000000)) + " Juta" + terbilang(nominal % 1000000);
+    }
+    return temp.trim();
+}
+
+function generateReceiptSvg(txId, txData, alumnusData, logoBase64 = '') {
+    const nominalVal = Number(txData.nominal) || 0;
+    const terbilangStr = terbilang(nominalVal) + " Rupiah";
+    const dateStr = txData.tanggal || new Date().toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+    });
+    
+    const receiptNo = `K-${txId.substring(0, 8).toUpperCase()}`;
+    
+    const svg = `
+<svg width="650" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0fdf4"/>
+    </linearGradient>
+    <clipPath id="logoClip">
+      <circle cx="65" cy="65" r="28"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background Card -->
+  <rect width="650" height="400" fill="url(#cardGrad)" rx="16" stroke="#16a34a" stroke-width="4"/>
+  <rect x="8" y="8" width="634" height="384" fill="none" stroke="#e2e8f0" stroke-width="2" rx="12"/>
+
+  <!-- Logo and Letterhead -->
+  ${logoBase64 ? `
+  <image href="${logoBase64}" x="37" y="37" width="56" height="56" clip-path="url(#logoClip)" />
+  <circle cx="65" cy="65" r="28" fill="none" stroke="#16a34a" stroke-width="1.5" />
+  ` : `
+  <circle cx="65" cy="65" r="28" fill="#16a34a" opacity="0.1"/>
+  <path d="M 50 70 C 55 65 62 70 65 72 C 68 70 75 65 80 70 L 80 58 C 75 53 68 58 65 60 C 62 58 55 53 50 58 Z" fill="#16a34a"/>
+  `}
+  
+  <text x="110" y="52" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="900" fill="#1e293b" letter-spacing="0.5">REUNI AKBAR PONDOK PESANTREN</text>
+  <text x="110" y="72" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="900" fill="#16a34a" letter-spacing="0.5">AL-FATAH TEGALWARU PURWAKARTA</text>
+  <text x="110" y="88" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="bold" fill="#64748b" font-style="italic">Jl. BBI Cirata Kp. Cilangkap Tegalwaru Purwakarta 41165</text>
+
+  <!-- Divider Line -->
+  <line x1="30" y1="110" x2="620" y2="110" stroke="#16a34a" stroke-width="2"/>
+  <line x1="30" y1="114" x2="620" y2="114" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Receipt Title & Number -->
+  <text x="325" y="142" font-family="'Plus Jakarta Sans', sans-serif" font-size="16" font-weight="900" fill="#1e293b" text-anchor="middle" letter-spacing="1">KUITANSI BUKTI PEMBAYARAN</text>
+  <text x="325" y="160" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" font-weight="bold" fill="#64748b" text-anchor="middle">No. Kuitansi: ${receiptNo}</text>
+
+  <!-- Content Grid -->
+  <g font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#334155">
+    <text x="40" y="200" font-weight="bold">Telah Diterima Dari</text>
+    <text x="180" y="200">:</text>
+    <text x="200" y="200" font-weight="900" fill="#0f172a">${alumnusData.nama}</text>
+    <text x="200" y="216" font-size="10" font-weight="bold" fill="#64748b">Angkatan ${alumnusData.angkatan || '-'} (${alumnusData.lembaga || '-'})</text>
+
+    <text x="40" y="244" font-weight="bold">Uang Sejumlah</text>
+    <text x="180" y="244">:</text>
+    <text x="200" y="244" font-style="italic" font-weight="bold" fill="#15803d"># ${terbilangStr} #</text>
+
+    <text x="40" y="276" font-weight="bold">Untuk Pembayaran</text>
+    <text x="180" y="276">:</text>
+    <text x="200" y="276" font-weight="bold" fill="#1e293b">Kontribusi Donasi Reuni Akbar PP AL-FATAH</text>
+  </g>
+
+  <!-- Nominal Box -->
+  <rect x="40" y="310" width="220" height="48" fill="#16a34a" rx="8"/>
+  <text x="55" y="341" font-family="'Plus Jakarta Sans', sans-serif" font-size="18" font-weight="900" fill="#ffffff">Rp ${formatRupiah(nominalVal).replace('Rp', '').trim()},-</text>
+
+  <!-- Sign / Place / Date -->
+  <text x="480" y="314" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" fill="#64748b" text-anchor="middle">Purwakarta, ${dateStr}</text>
+  <text x="480" y="328" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">Bendahara,</text>
+  
+  <!-- Signature stroke simulation -->
+  <path d="M 440 355 Q 470 330 480 365 T 510 345" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>
+  
+  <line x1="400" y1="366" x2="560" y2="366" stroke="#94a3b8" stroke-width="1"/>
+  <text x="480" y="380" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle">Ahmad Pajar Bahri</text>
+
+  <!-- Seal Badge (Watermark) -->
+  <g transform="translate(560, 140) rotate(15)">
+    <rect x="-40" y="-15" width="80" height="30" fill="none" stroke="#16a34a" stroke-width="2" rx="4" opacity="0.3"/>
+    <text x="0" y="4" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" font-weight="bold" fill="#16a34a" text-anchor="middle" opacity="0.3" letter-spacing="1">LUNAS</text>
+  </g>
+</svg>
+    `;
+    return svg;
+}
+
+async function sendOfficialReceipt(txId, txData) {
+    try {
+        let alumnusData = null;
+        let phone = txData.nowa || '';
+        
+        if (txData.ref_alumni_id) {
+            const alumnusRef = doc(db, 'alumni', txData.ref_alumni_id);
+            const alumnusSnap = await getDoc(alumnusRef);
+            if (alumnusSnap.exists()) {
+                alumnusData = alumnusSnap.data();
+                if (!phone) phone = alumnusData.nowa || '';
+            }
+        }
+        
+        if (!phone) {
+            console.warn(`[WA BOT] No phone number found for transaction ${txId}. Skipping receipt.`);
+            return;
+        }
+        
+        let rawPhone = phone.replace(/\D/g, '');
+        if (rawPhone.startsWith('0')) {
+            rawPhone = '62' + rawPhone.slice(1);
+        } else if (rawPhone.startsWith('8')) {
+            rawPhone = '62' + rawPhone;
+        }
+        const targetJid = rawPhone + '@s.whatsapp.net';
+        
+        if (!alumnusData) {
+            alumnusData = {
+                nama: txData.nama_pembayar || txData.nama || 'Donatur',
+                angkatan: txData.angkatan_pembayar || '-',
+                lembaga: txData.lembaga_pembayar || '-'
+            };
+        }
+        
+        let logoBase64 = '';
+        try {
+            const logoPath = path.join(__dirname, '..', 'img', 'logo.png');
+            if (fs.existsSync(logoPath)) {
+                const logoBuffer = fs.readFileSync(logoPath);
+                logoBase64 = `data:${getMimeType(logoBuffer)};base64,${logoBuffer.toString('base64')}`;
+            }
+        } catch (logoErr) {
+            console.error('[WA BOT] Gagal membaca logo.png:', logoErr.message);
+        }
+        
+        const sharp = require('sharp');
+        const svgString = generateReceiptSvg(txId, txData, alumnusData, logoBase64);
+        const imageBuffer = await sharp(Buffer.from(svgString)).png().toBuffer();
+        
+        const formattedNominal = formatRupiah(txData.nominal);
+        const dateStr = txData.tanggal || new Date().toLocaleString("id-ID");
+        
+        const captionText = `*✨ BUKTI PEMBAYARAN REUNI AL-FATAH ✨*\n` +
+                            `──────────────────────\n` +
+                            `Halo *${alumnusData.nama}* (Angkatan ${alumnusData.angkatan || "-"}),\n\n` +
+                            `Terima kasih, pembayaran donasi Anda sebesar *${formattedNominal}* telah berhasil diverifikasi dan dicatat oleh Bendahara.\n\n` +
+                            `*Rincian Transaksi:*\n` +
+                            `• *Kategori* : ${txData.kategori || "Donasi"}\n` +
+                            `• *Jumlah*   : *${formattedNominal}*\n` +
+                            `• *Tanggal*  : ${dateStr}\n` +
+                            `• *Status*   : Lunas / Berhasil 🟢\n\n` +
+                            `Unduh kuitansi resmi Anda di sini:\n` +
+                            `👉 https://phajar.github.io/Reuni/pembayaran.html?wa=${encodeURIComponent(rawPhone)}\n\n` +
+                            `Semoga menjadi amal ibadah dan membawa keberkahan bagi kita semua. Sampai jumpa di hari H reuni! 🤝\n\n` +
+                            `_Sistem Bot Reuni PP Al-Fatah_`;
+                            
+        await sock.sendMessage(targetJid, {
+            image: imageBuffer,
+            caption: captionText
+        });
+        
+        console.log(`[WA BOT] Official receipt sent to JID: ${targetJid}`);
+        
+        const txRef = doc(db, 'finance', txId);
+        await setDoc(txRef, { receipt_sent: true }, { merge: true });
+        
+    } catch (err) {
+        console.error(`[WA BOT] Failed to send receipt for transaction ${txId}:`, err);
+    }
+}
+
+function initFinanceReceiptListener(db) {
+    console.log('[WA BOT] Initializing real-time listener for finance receipts...');
+    const financeCol = collection(db, 'finance');
+    
+    onSnapshot(financeCol, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+            if (change.type === 'added' || change.type === 'modified') {
+                const data = change.doc.data();
+                const txId = change.doc.id;
+                
+                const isPaid = data.status === 'pemasukan' || data.status === 'approved';
+                const notSent = !data.receipt_sent;
+                const isRecent = (data.created_at && data.created_at >= botStartupTime) || 
+                                 (data.updated_at && data.updated_at >= botStartupTime);
+                                 
+                if (isPaid && notSent && isRecent) {
+                    console.log(`[WA BOT] Triggering receipt for transaction ${txId} (${data.nama_pembayar})`);
+                    await sendOfficialReceipt(txId, data);
+                }
+            }
+        });
+    }, (err) => {
+        console.error('[WA BOT] Error in finance receipts listener:', err);
+    });
 }
