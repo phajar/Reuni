@@ -5,3 +5,4 @@ whatsapp-bot/auth_info/
 scratch/
 whatsapp-bot/test_logo.js
 *.bat
+whatsapp-bot/*.lock

@@ -217,7 +217,7 @@ service cloud.firestore {
       allow read: if true;
       allow create: if isValidFinanceCreate();
       allow update: if isBendahara()
-                    || (request.resource.data.status == 'pemasukan'
+                    || (request.resource.data.status in ['pemasukan', 'approved']
                         && request.resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_keuangan);
       allow delete: if isBendahara();
     }
@@ -252,7 +252,8 @@ service cloud.firestore {
       allow read: if true;
       allow write: if (docId == 'whatsapp_api' && isAuth() && (getRole() == 'creator' || getRole() == 'admin_utama'))
                    || docId == 'sync_state'
-                   || (docId != 'whatsapp_api' && docId != 'sync_state' && isAdminUtama());
+                   || (docId == 'wa_session' && request.resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_keuangan)
+                   || (docId != 'whatsapp_api' && docId != 'sync_state' && docId != 'wa_session' && isAdminUtama());
     }
 
     // --- RUNDOWN ACARA -----------------------------------------------------

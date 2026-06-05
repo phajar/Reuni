@@ -2,6 +2,56 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+
+// --- PREVENT DOUBLE INSTANCE RUNNING ---
+const LOCK_FILE = path.join(__dirname, 'whatsapp-bot.lock');
+if (fs.existsSync(LOCK_FILE)) {
+    try {
+        const pid = parseInt(fs.readFileSync(LOCK_FILE, 'utf8'), 10);
+        if (pid) {
+            try {
+                process.kill(pid, 0);
+                console.error(`\x1b[31m[ERROR] Server WhatsApp Bot sudah berjalan di perangkat ini (PID: ${pid}).\x1b[0m`);
+                console.error(`\x1b[31m[ERROR] Tidak dapat menjalankan dua server sekaligus untuk menghindari bentrok data.\x1b[0m`);
+                process.exit(1);
+            } catch (err) {
+                if (err.code === 'EPERM') {
+                    console.error(`\x1b[31m[ERROR] Server WhatsApp Bot sudah berjalan di perangkat ini (PID: ${pid} - Akses Ditolak).\x1b[0m`);
+                    process.exit(1);
+                }
+                console.log(`[WA BOT] Menghapus file lock usang (PID ${pid} tidak aktif).`);
+            }
+        }
+    } catch (readErr) {
+        console.error('[WA BOT] Gagal membaca file lock:', readErr);
+    }
+}
+
+try {
+    fs.writeFileSync(LOCK_FILE, process.pid.toString(), 'utf8');
+} catch (writeErr) {
+    console.error('[WA BOT] Gagal menulis file lock:', writeErr);
+}
+
+function cleanupLock() {
+    try {
+        if (fs.existsSync(LOCK_FILE)) {
+            const pid = parseInt(fs.readFileSync(LOCK_FILE, 'utf8'), 10);
+            if (pid === process.pid) {
+                fs.unlinkSync(LOCK_FILE);
+                console.log('[WA BOT] File lock berhasil dihapus.');
+            }
+        }
+    } catch (err) {
+        // ignore
+    }
+}
+
+process.on('exit', cleanupLock);
+process.on('SIGINT', () => { cleanupLock(); process.exit(0); });
+process.on('SIGTERM', () => { cleanupLock(); process.exit(0); });
+// ----------------------------------------
+
 const pino = require('pino');
 const dns = require('dns');
 
@@ -76,6 +126,7 @@ async function downloadSession(db) {
         if (docSnap.exists()) {
             const data = docSnap.data();
             for (const [filename, content] of Object.entries(data)) {
+                if (filename === 'bot_token') continue;
                 // Sanitize filename to prevent directory traversal
                 const safeFilename = path.basename(filename);
                 const filePath = path.join(AUTH_DIR, safeFilename);
@@ -107,6 +158,9 @@ async function uploadSession(db) {
         }
         
         if (Object.keys(data).length > 0) {
+            if (waApiConfig && waApiConfig.token_keuangan) {
+                data.bot_token = waApiConfig.token_keuangan;
+            }
             const docRef = doc(db, 'settings', 'wa_session');
             await setDoc(docRef, data);
             console.log('[FIRESTORE] Session uploaded successfully.');
@@ -216,12 +270,17 @@ async function connectToWhatsApp() {
         if (isProcessingQueue) return;
         isProcessingQueue = true;
         
+        let isFirst = true;
         while (messageQueue.length > 0) {
             const { resolve, reject, jid, content, options } = messageQueue.shift();
             try {
-                // Randomized delay between 2000ms and 5000ms
-                const delay = Math.floor(Math.random() * 3000) + 2000;
-                await new Promise(res => setTimeout(res, delay));
+                // If it is the first message in an idle queue, send it immediately.
+                // Subsequent messages in the queue will have a 3000ms (3 seconds) delay.
+                if (!isFirst) {
+                    const delay = 3000;
+                    await new Promise(res => setTimeout(res, delay));
+                }
+                isFirst = false;
                 
                 const res = await originalSendMessage(jid, content, options);
                 resolve(res);
@@ -328,7 +387,7 @@ async function connectToWhatsApp() {
 
         if (connection === 'close') {
             qrCode = null;
-            const error = lastDisconnect.error;
+            const error = lastDisconnect?.error;
             const statusCode = error?.output?.statusCode;
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
             console.log(`Connection closed: ${error?.message || error}. StatusCode: ${statusCode}. Reconnecting: ${shouldReconnect}`);
@@ -344,7 +403,11 @@ async function connectToWhatsApp() {
                 }
                 try {
                     const docRef = doc(db, 'settings', 'wa_session');
-                    await setDoc(docRef, {});
+                    const clearData = {};
+                    if (waApiConfig && waApiConfig.token_keuangan) {
+                        clearData.bot_token = waApiConfig.token_keuangan;
+                    }
+                    await setDoc(docRef, clearData);
                     console.log('Firestore session cleared.');
                 } catch (e) {
                     console.error('Failed to clear Firestore session:', e);
@@ -971,8 +1034,12 @@ app.post('/api/reset', authenticateApiKey, async (req, res) => {
         // 3. Clear Firestore session
         try {
             const docRef = doc(db, 'settings', 'wa_session');
+            const clearData = {};
+            if (waApiConfig && waApiConfig.token_keuangan) {
+                clearData.bot_token = waApiConfig.token_keuangan;
+            }
             await Promise.race([
-                setDoc(docRef, {}),
+                setDoc(docRef, clearData),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore write timeout')), 3000))
             ]);
             console.log('[WA] Firestore session cleared.');

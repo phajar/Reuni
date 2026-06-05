@@ -64,6 +64,13 @@
       --danger-gradient: linear-gradient(135deg, #ef4444, #f43f5e);
     }
     
+    #loading-overlay {
+      z-index: 9000 !important;
+    }
+    #toast-container, #fcm-toast-container, #offline-banner {
+      z-index: 99999 !important;
+    }
+    
     /* KaTeX LaTeX Equations Responsive Fixes */
     .katex-display {
       overflow-x: auto !important;
@@ -714,7 +721,7 @@
 
 
   <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
-<div id="loading-overlay" class="fixed inset-0 z-[500] bg-black/60 backdrop-blur-sm flex items-center justify-center transition-opacity hidden">
+<div id="loading-overlay" class="fixed inset-0 z-[9000] bg-black/60 backdrop-blur-sm flex items-center justify-center transition-opacity hidden">
     <div class="p-8 glass rounded-[2.5rem] flex flex-col items-center shadow-2xl border border-indigo-500/20 modal-enter text-center">
       <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
       

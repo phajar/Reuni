@@ -13,6 +13,13 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Outfit:wght@300;400;600;800&family=Amiri:wght@400;700&display=swap');
 
+    #loading-overlay {
+      z-index: 9000 !important;
+    }
+    #toast-container {
+      z-index: 99999 !important;
+    }
+
     :root {
       --bg: #030712;
       --primary: #6366f1;
@@ -298,7 +305,7 @@
   <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
 
   <!-- Loading Overlay -->
-  <div id="loading-overlay" class="hidden fixed inset-0 z-[500] bg-black/70 backdrop-blur-sm flex items-center justify-center">
+  <div id="loading-overlay" class="hidden fixed inset-0 z-[9000] bg-black/70 backdrop-blur-sm flex items-center justify-center">
     <div class="p-8 glass rounded-[2.5rem] flex flex-col items-center border border-indigo-500/20 modal-enter text-center">
       <div class="relative w-16 h-16 mb-4">
         <div class="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
