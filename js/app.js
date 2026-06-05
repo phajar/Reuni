@@ -4057,8 +4057,6 @@ window.closeReviewAlumniModal = () => {
 
 window.renderRekapWilayah = () => {
   const list = document.getElementById("rekap-list");
-  const role = window.STATE.user ? window.STATE.user.role : "user";
-  const canFin = role === "admin_utama" || role === "creator" || role === "bendahara";
   if (window.filteredRekapData.length === 0)
     return (list.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500 text-xs italic">Tidak ada data.</td></tr>`);
   list.innerHTML = window.filteredRekapData
@@ -4066,7 +4064,19 @@ window.renderRekapWilayah = () => {
       (a) => {
         const lembagaBadge = a.lembaga ? `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${a.lembaga === 'MA' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-pink-500/20 text-pink-400 border border-pink-500/30'}">${a.lembaga}</span>` : '';
         const rowCanFin = window.canUserFinAlumnus(window.STATE.user, a);
-        return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 font-bold">${a.nama}${lembagaBadge}</td><td class="p-5 text-center font-black text-indigo-500">${a.angkatan}</td><td class="p-5 text-[11px] text-slate-500">${a.alamat || "-"}, ${a.desa || "-"}, ${a.kecamatan || "-"}, ${a.kabupaten || "-"}</td><td class="p-5 text-center">${rowCanFin ? `<button onclick="openModalFinance('${encodeURIComponent(JSON.stringify(a)).replace(/'/g, "%27")}')" class="w-8 h-8 text-emerald-500 bg-emerald-500/10 rounded-lg hover:bg-emerald-500 hover:text-white" title="Tambah Donasi"><i class="fas fa-coins text-[10px]"></i></button>` : "-"}</td></tr>`;
+        const rowCanManage = window.canUserManageAlumnus(window.STATE.user, a);
+        const safeStr = encodeURIComponent(JSON.stringify(a)).replace(/'/g, "%27");
+        
+        let btns = [];
+        if (rowCanFin) {
+          btns.push(`<button onclick="openModalFinance('${safeStr}')" class="w-7 h-7 text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white rounded-lg tooltip-custom" data-tooltip="Tambah Donasi"><i class="fas fa-coins text-[10px]"></i></button>`);
+        }
+        if (rowCanManage) {
+          btns.push(`<button onclick="openModalAlumni('${safeStr}')" class="w-7 h-7 text-slate-500 bg-slate-500/10 hover:bg-slate-500 hover:text-white rounded-lg tooltip-custom" data-tooltip="Edit"><i class="fas fa-pen text-[10px]"></i></button>`);
+        }
+        const actionsHtml = btns.length > 0 ? `<div class="flex justify-center gap-1">${btns.join("")}</div>` : "-";
+
+        return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 font-bold">${a.nama}${lembagaBadge}</td><td class="p-5 text-center font-black text-indigo-500">${a.angkatan}</td><td class="p-5 text-[11px] text-slate-500">${a.alamat || "-"}, ${a.desa || "-"}, ${a.kecamatan || "-"}, ${a.kabupaten || "-"}</td><td class="p-5 text-center">${actionsHtml}</td></tr>`;
       }
     )
     .join("");
@@ -5725,18 +5735,42 @@ window.openSettings = () => {
     const kab = document.getElementById("filter-kab").value;
     const kec = document.getElementById("filter-kec").value;
     const des = document.getElementById("filter-desa").value;
+    const searchVal = (document.getElementById("search-wilayah-input")?.value || "").toLowerCase().trim();
+
     if (lvl === "kab") {
       document.getElementById("filter-kec").value = "";
       document.getElementById("filter-desa").value = "";
     } else if (lvl === "kec") {
       document.getElementById("filter-desa").value = "";
     }
-    window.filteredRekapData = window.STATE.alumni.filter(
+
+    let matched = window.STATE.alumni.filter(
       (a) =>
         (!kab || window.isWilayahMatch(a.kabupaten, kab)) &&
         (!kec || window.isWilayahMatch(a.kecamatan, kec)) &&
         (!des || window.isWilayahMatch(a.desa, des)),
     );
+
+    if (searchVal) {
+      matched = matched.filter((a) => {
+        const n = String(a.nama || "").toLowerCase();
+        const ang = String(a.angkatan || "");
+        const wa = String(a.nowa || "");
+        const alm = String(a.alamat || "").toLowerCase();
+        const d = String(a.desa || "").toLowerCase();
+        const k = String(a.kecamatan || "").toLowerCase();
+        const kb = String(a.kabupaten || "").toLowerCase();
+        const fullAddress = `${alm} ${d} ${k} ${kb}`.trim();
+        return (
+          n.includes(searchVal) ||
+          ang.includes(searchVal) ||
+          wa.includes(searchVal) ||
+          fullAddress.includes(searchVal)
+        );
+      });
+    }
+
+    window.filteredRekapData = matched;
     window.renderRekapWilayah();
   };
 

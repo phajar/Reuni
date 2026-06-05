@@ -2017,7 +2017,11 @@
       </div>
 
       <div id="tab-rekap" class="tab-content hidden space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div class="relative">
+                  <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                  <input type="text" id="search-wilayah-input" oninput="applyWilayahFilter()" class="input-field pl-9 text-xs" placeholder="Cari nama/angkatan/alamat..." />
+              </div>
               <select id="filter-kab" onchange="applyWilayahFilter('kab')" class="input-field"><option value="">Semua Kabupaten</option></select>
               <select id="filter-kec" onchange="applyWilayahFilter('kec')" class="input-field"><option value="">Semua Kecamatan</option></select>
               <select id="filter-desa" onchange="applyWilayahFilter('desa')" class="input-field"><option value="">Semua Desa</option></select>
