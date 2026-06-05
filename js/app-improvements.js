@@ -259,7 +259,25 @@ window._doExportExcel = () => {
     XLSX.utils.book_append_sheet(wb, ws2, 'Ringkasan Angkatan');
     const tgl = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
     
-    const fileName = isRekapTab ? `Data_Alumni_Wilayah_${tgl}.xlsx` : `Data_Alumni_Reuni_${tgl}.xlsx`;
+    let fileName = `Data_Alumni_Reuni_${tgl}.xlsx`;
+    if (isRekapTab) {
+      const kab = document.getElementById("filter-kab")?.value || "";
+      const kec = document.getElementById("filter-kec")?.value || "";
+      const des = document.getElementById("filter-desa")?.value || "";
+      const searchVal = document.getElementById("search-wilayah-input")?.value || "";
+      
+      let suffix = "";
+      if (kab) suffix += `_${kab}`;
+      if (kec) suffix += `_${kec}`;
+      if (des) suffix += `_${des}`;
+      if (searchVal) suffix += `_Cari_${searchVal}`;
+      
+      // Bersihkan karakter non-alphanumeric agar aman untuk nama file
+      suffix = suffix.replace(/[^a-zA-Z0-9_\-\s]/g, "").trim().replace(/\s+/g, "_");
+      
+      fileName = suffix ? `Data_Alumni_Wilayah${suffix}_${tgl}.xlsx` : `Data_Alumni_Wilayah_${tgl}.xlsx`;
+    }
+    
     XLSX.writeFile(wb, fileName);
     window.notify(`✅ ${dataToExport.length} alumni berhasil diekspor ke Excel!`, 'success');
   } catch (err) {

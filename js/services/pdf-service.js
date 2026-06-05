@@ -466,7 +466,23 @@
     
     drawCommitteeSignatures(doc, finalY, "data");
 
-    const pdfFileName = isRekapTab ? "Laporan_Alumni_Wilayah.pdf" : "Laporan_Alumni.pdf";
+    let pdfFileName = "Laporan_Alumni.pdf";
+    if (isRekapTab) {
+      const kab = document.getElementById("filter-kab")?.value || "";
+      const kec = document.getElementById("filter-kec")?.value || "";
+      const des = document.getElementById("filter-desa")?.value || "";
+      const searchVal = document.getElementById("search-wilayah-input")?.value || "";
+      
+      let suffix = "";
+      if (kab) suffix += `_${kab}`;
+      if (kec) suffix += `_${kec}`;
+      if (des) suffix += `_${des}`;
+      if (searchVal) suffix += `_Cari_${searchVal}`;
+      
+      suffix = suffix.replace(/[^a-zA-Z0-9_\-\s]/g, "").trim().replace(/\s+/g, "_");
+      
+      pdfFileName = suffix ? `Laporan_Alumni_Wilayah${suffix}.pdf` : "Laporan_Alumni_Wilayah.pdf";
+    }
     await window.savePDF(doc, pdfFileName);
     window.closeModal("modal-export");
     } catch (err) {

@@ -5792,6 +5792,18 @@ window.openSettings = () => {
     window.renderRekapWilayah();
   };
 
+  window.resetWilayahFilters = () => {
+    const searchInput = document.getElementById("search-wilayah-input");
+    if (searchInput) searchInput.value = "";
+    const kab = document.getElementById("filter-kab");
+    if (kab) kab.value = "";
+    const kec = document.getElementById("filter-kec");
+    if (kec) kec.value = "";
+    const des = document.getElementById("filter-desa");
+    if (des) des.value = "";
+    window.applyWilayahFilter();
+  };
+
   let searchTimeout = null;
   window.searchAlumni = (val) => {
     if (searchTimeout) clearTimeout(searchTimeout);
