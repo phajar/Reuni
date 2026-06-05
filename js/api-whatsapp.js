@@ -1194,15 +1194,21 @@ window.loadWaGroups = async () => {
                 }).join('');
         }
 
-        // Populate select-wa-approval-group-auto dropdown
+        // Populate select-wa-approval-group-auto, select-wa-group-pendataan-auto, and select-wa-group-log-auto dropdowns
+        const groupsOnly = localGroups.filter(g => (g.jid || '').endsWith('@g.us'));
+        const groupOptionsHtml = '<option value="">-- Pilih Grup --</option>' +
+            groupsOnly.map(g => {
+                return `<option value="${g.jid}">${g.nama_grup || g.name || g.jid}</option>`;
+            }).join('');
+
         const approvalAutoSelect = document.getElementById("select-wa-approval-group-auto");
-        if (approvalAutoSelect) {
-            const groupsOnly = localGroups.filter(g => (g.jid || '').endsWith('@g.us'));
-            approvalAutoSelect.innerHTML = '<option value="">-- Pilih Grup --</option>' +
-                groupsOnly.map(g => {
-                    return `<option value="${g.jid}">${g.nama_grup || g.name || g.jid}</option>`;
-                }).join('');
-        }
+        if (approvalAutoSelect) approvalAutoSelect.innerHTML = groupOptionsHtml;
+
+        const pendataanAutoSelect = document.getElementById("select-wa-group-pendataan-auto");
+        if (pendataanAutoSelect) pendataanAutoSelect.innerHTML = groupOptionsHtml;
+
+        const logAutoSelect = document.getElementById("select-wa-group-log-auto");
+        if (logAutoSelect) logAutoSelect.innerHTML = groupOptionsHtml;
     } catch(err) { console.error("Gagal load WA Groups", err); }
 };
 

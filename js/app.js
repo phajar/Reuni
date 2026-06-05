@@ -230,6 +230,39 @@ window.populateEventSettingsForm = () => {
   }
 };
 
+window.switchWaModeTab = (mode) => {
+  const btnLocal = document.getElementById('btn-wa-mode-local');
+  const btnCloud = document.getElementById('btn-wa-mode-cloud');
+  const panelLocal = document.getElementById('wa-nodejs-container');
+  const panelCloud = document.getElementById('wa-web-api-container');
+
+  if (mode === 'local') {
+    if (btnLocal) {
+      btnLocal.className = "flex-1 py-2.5 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all bg-indigo-600/30 text-indigo-400 border border-indigo-500/20";
+    }
+    if (btnCloud) {
+      btnCloud.className = "flex-1 py-2.5 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all text-slate-400 hover:text-white border border-transparent";
+    }
+    if (panelLocal) {
+      panelLocal.classList.remove('hidden');
+      panelLocal.classList.add('grid');
+    }
+    if (panelCloud) panelCloud.classList.add('hidden');
+  } else {
+    if (btnLocal) {
+      btnLocal.className = "flex-1 py-2.5 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all text-slate-400 hover:text-white border border-transparent";
+    }
+    if (btnCloud) {
+      btnCloud.className = "flex-1 py-2.5 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all bg-indigo-600/30 text-indigo-400 border border-indigo-500/20";
+    }
+    if (panelLocal) {
+      panelLocal.classList.add('hidden');
+      panelLocal.classList.remove('grid');
+    }
+    if (panelCloud) panelCloud.classList.remove('hidden');
+  }
+};
+
 window.switchSettingsSubTab = (subTabName) => {
   const subContents = document.querySelectorAll(".settings-sub-content");
   subContents.forEach(el => {
@@ -951,20 +984,26 @@ auth.onAuthStateChanged(async (user) => {
     showElement("btn-wa-groups", canWA);
     
     // Toggle layout di dalam tab-whatsapp
-    showElement("wa-nodejs-container", isNative);
+    if (isNative) {
+        // Force local bot on native app
+        window.switchWaModeTab('local');
+        showElement('btn-wa-mode-local', false);
+        showElement('btn-wa-mode-cloud', false);
+    } else {
+        // Let the user choose on web browser
+        showElement('btn-wa-mode-local', true);
+        showElement('btn-wa-mode-cloud', true);
+        // Default to local if local url exists
+        const hasLocalUrl = document.getElementById("set-wa-local-url") && document.getElementById("set-wa-local-url").value.trim() !== "";
+        window.switchWaModeTab(hasLocalUrl ? 'local' : 'cloud');
+    }
     showElement("wa-status-chips", true);
-    showElement("wa-web-api-container", !isNative);
     
     const headerTitle = document.getElementById("wa-header-title");
     const headerDesc = document.getElementById("wa-header-desc");
     if (headerTitle && headerDesc) {
-        if (isNative) {
-            headerTitle.innerText = "WhatsApp Server";
-            headerDesc.innerText = "Manajemen Koneksi Bot Server";
-        } else {
-            headerTitle.innerText = "WhatsApp API Gateway";
-            headerDesc.innerText = "Pengaturan & Sinkronisasi API WA";
-        }
+        headerTitle.innerText = "WhatsApp Center";
+        headerDesc.innerText = "Manajemen Bot Server & API Gateway";
     }
 
     // 4. Logistik

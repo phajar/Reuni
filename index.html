@@ -2306,6 +2306,16 @@
           </div>
         </div>
 
+        <!-- Mode Switcher (Local Bot vs Cloud API) -->
+        <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 gap-1 max-w-sm">
+          <button id="btn-wa-mode-local" onclick="window.switchWaModeTab('local')" class="flex-1 py-2.5 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all bg-indigo-600/30 text-indigo-400 border border-indigo-500/20">
+            <i class="fas fa-server mr-1"></i> Local Bot Server
+          </button>
+          <button id="btn-wa-mode-cloud" onclick="window.switchWaModeTab('cloud')" class="flex-1 py-2.5 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all text-slate-400 hover:text-white border border-transparent">
+            <i class="fas fa-cloud mr-1"></i> Cloud API Gateway
+          </button>
+        </div>
+
         <div id="wa-nodejs-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           <!-- Left Column: Manajemen & Konfigurasi Bot -->
@@ -2936,7 +2946,7 @@
           </div>
           
           <!-- Navigasi Sub-Tab Pengaturan (Kiri/Atas) -->
-          <div class="w-full lg:w-64 flex-shrink-0 flex flex-col gap-2 hidden">
+          <div class="hidden lg:flex flex-col w-full lg:w-64 flex-shrink-0 gap-2">
             <div class="premium-card p-3 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible custom-scrollbar select-none z-10">
               
               <button onclick="window.switchSettingsSubTab('profile')" id="subbtn-settings-profile" class="settings-sub-btn active flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal">
