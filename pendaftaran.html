@@ -589,15 +589,26 @@
           console.log('[WA] Response StarSender:', resData);
         } else if (provider === 'custom') {
           let serverUrl = token.trim();
+          let apiKey = '';
+          if (serverUrl.includes('|')) {
+            const parts = serverUrl.split('|');
+            serverUrl = parts[0].trim();
+            apiKey = parts[1].trim();
+          }
           if (serverUrl.endsWith('/')) {
             serverUrl = serverUrl.slice(0, -1);
           }
           console.log(`[WA] Mengirim via Custom Server ${serverUrl} ke ${cleanPhone}`);
+          const customHeaders = {
+            'Content-Type': 'application/json',
+            'ngrok-skip-browser-warning': 'true'
+          };
+          if (apiKey) {
+            customHeaders['Authorization'] = `Bearer ${apiKey}`;
+          }
           const response = await fetch(`${serverUrl}/send-message`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
+            headers: customHeaders,
             body: JSON.stringify({
               phone: cleanPhone,
               message: message

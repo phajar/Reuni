@@ -231,6 +231,12 @@ window.requestWaPairing = async () => {
         }
         
         let cleanLocalUrl = localUrl;
+        let localApiKey = '';
+        if (cleanLocalUrl.includes('|')) {
+            const parts = cleanLocalUrl.split('|');
+            cleanLocalUrl = parts[0].trim();
+            localApiKey = parts[1].trim();
+        }
         if (cleanLocalUrl.endsWith('/')) {
             cleanLocalUrl = cleanLocalUrl.slice(0, -1);
         }
@@ -239,11 +245,16 @@ window.requestWaPairing = async () => {
         window.notify('Mengirim permintaan kode tautan ke nomor ' + phone + '...', 'warning');
         
         try {
+            const headers = {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            };
+            if (localApiKey) {
+                headers['Authorization'] = `Bearer ${localApiKey}`;
+            }
             const res = await fetch(`${cleanLocalUrl}/api/pair`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: headers,
                 body: JSON.stringify({ phone: phone })
             });
             const data = await res.json();
@@ -359,6 +370,12 @@ window.sendWhatsAppInternal = async (target, message, fileUrl = null, roleName =
         let sentViaLocal = false;
         if (localUrl) {
             let cleanLocalUrl = localUrl;
+            let localApiKey = '';
+            if (cleanLocalUrl.includes('|')) {
+                const parts = cleanLocalUrl.split('|');
+                cleanLocalUrl = parts[0].trim();
+                localApiKey = parts[1].trim();
+            }
             if (cleanLocalUrl.endsWith('/')) {
                 cleanLocalUrl = cleanLocalUrl.slice(0, -1);
             }
@@ -369,7 +386,14 @@ window.sendWhatsAppInternal = async (target, message, fileUrl = null, roleName =
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 detik timeout
                 
-                const statusRes = await fetch(`${cleanLocalUrl}/api/status`, { signal: controller.signal });
+                const statusHeaders = { 'ngrok-skip-browser-warning': 'true' };
+                if (localApiKey) {
+                    statusHeaders['Authorization'] = `Bearer ${localApiKey}`;
+                }
+                const statusRes = await fetch(`${cleanLocalUrl}/api/status`, { 
+                    headers: statusHeaders,
+                    signal: controller.signal 
+                });
                 clearTimeout(timeoutId);
                 
                 const statusData = await statusRes.json();
@@ -393,9 +417,16 @@ window.sendWhatsAppInternal = async (target, message, fileUrl = null, roleName =
                         }
                     }
                     
+                    const sendHeaders = { 
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    };
+                    if (localApiKey) {
+                        sendHeaders['Authorization'] = `Bearer ${localApiKey}`;
+                    }
                     const sendRes = await fetch(`${cleanLocalUrl}/send-message`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: sendHeaders,
                         body: JSON.stringify({
                             phone: cleanPhone,
                             message: message,
@@ -447,6 +478,12 @@ window.sendWhatsAppInternal = async (target, message, fileUrl = null, roleName =
         
         if (provider === 'custom') {
             let serverUrl = token.trim();
+            let apiKey = '';
+            if (serverUrl.includes('|')) {
+                const parts = serverUrl.split('|');
+                serverUrl = parts[0].trim();
+                apiKey = parts[1].trim();
+            }
             if (!serverUrl) {
                 console.error('[WA] URL Server Custom / Hugging Face Kosong!');
                 return false;
@@ -456,14 +493,21 @@ window.sendWhatsAppInternal = async (target, message, fileUrl = null, roleName =
             }
             
             console.log(`[WA] Mengirim ke ${serverUrl}/send-message untuk target ${cleanPhone}`);
+            const customHeaders = {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            };
+            if (apiKey) {
+                customHeaders['Authorization'] = `Bearer ${apiKey}`;
+            }
             const response = await fetch(`${serverUrl}/send-message`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: customHeaders,
                 body: JSON.stringify({
                     phone: cleanPhone,
-                    message: message
+                    message: message,
+                    fileUrl: fileUrl,
+                    fileType: fileType
                 })
             });
             const resData = await response.json();
@@ -881,10 +925,27 @@ window.sendLaporanKeuanganWA = async () => {
         let isLocalActive = false;
         if (localUrl) {
             try {
-                let cleanLocalUrl = localUrl.endsWith('/') ? localUrl.slice(0, -1) : localUrl;
+                let cleanLocalUrl = localUrl;
+                let localApiKey = '';
+                if (cleanLocalUrl.includes('|')) {
+                    const parts = cleanLocalUrl.split('|');
+                    cleanLocalUrl = parts[0].trim();
+                    localApiKey = parts[1].trim();
+                }
+                if (cleanLocalUrl.endsWith('/')) {
+                    cleanLocalUrl = cleanLocalUrl.slice(0, -1);
+                }
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 2000);
-                const statusRes = await fetch(`${cleanLocalUrl}/api/status`, { signal: controller.signal });
+                
+                const statusHeaders = { 'ngrok-skip-browser-warning': 'true' };
+                if (localApiKey) {
+                    statusHeaders['Authorization'] = `Bearer ${localApiKey}`;
+                }
+                const statusRes = await fetch(`${cleanLocalUrl}/api/status`, { 
+                    headers: statusHeaders,
+                    signal: controller.signal 
+                });
                 clearTimeout(timeoutId);
                 const statusData = await statusRes.json();
                 if (statusData && statusData.status === 'open') {
@@ -1233,11 +1294,21 @@ window.fetchGroupsFromWA = async () => {
         // Priority 1: WhatsApp Local API
         if (localUrl) {
             let cleanLocalUrl = localUrl;
+            let localApiKey = '';
+            if (cleanLocalUrl.includes('|')) {
+                const parts = cleanLocalUrl.split('|');
+                cleanLocalUrl = parts[0].trim();
+                localApiKey = parts[1].trim();
+            }
             if (cleanLocalUrl.endsWith('/')) {
                 cleanLocalUrl = cleanLocalUrl.slice(0, -1);
             }
             console.log('[WA] Mengambil daftar grup dari server lokal...');
-            const response = await fetch(`${cleanLocalUrl}/api/groups`);
+            const headers = { 'ngrok-skip-browser-warning': 'true' };
+            if (localApiKey) {
+                headers['Authorization'] = `Bearer ${localApiKey}`;
+            }
+            const response = await fetch(`${cleanLocalUrl}/api/groups`, { headers });
             const resData = await response.json();
             if (resData.success) {
                 const groups = (resData.groups || []).map(g => ({
@@ -1322,12 +1393,22 @@ window.fetchChannelsFromWA = async () => {
         }
 
         let cleanLocalUrl = localUrl;
+        let localApiKey = '';
+        if (cleanLocalUrl.includes('|')) {
+            const parts = cleanLocalUrl.split('|');
+            cleanLocalUrl = parts[0].trim();
+            localApiKey = parts[1].trim();
+        }
         if (cleanLocalUrl.endsWith('/')) {
             cleanLocalUrl = cleanLocalUrl.slice(0, -1);
         }
         
         console.log('[WA] Mengambil daftar channel dari server lokal...');
-        const response = await fetch(`${cleanLocalUrl}/api/channels`);
+        const headers = { 'ngrok-skip-browser-warning': 'true' };
+        if (localApiKey) {
+            headers['Authorization'] = `Bearer ${localApiKey}`;
+        }
+        const response = await fetch(`${cleanLocalUrl}/api/channels`, { headers });
         const resData = await response.json();
         
         if (resData.success) {
@@ -2475,11 +2556,24 @@ window.checkLocalWaStatus = async () => {
         const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5 seconds timeout
 
         let cleanLocalUrl = localUrl;
+        let localApiKey = '';
+        if (cleanLocalUrl.includes('|')) {
+            const parts = cleanLocalUrl.split('|');
+            cleanLocalUrl = parts[0].trim();
+            localApiKey = parts[1].trim();
+        }
         if (cleanLocalUrl.endsWith('/')) {
             cleanLocalUrl = cleanLocalUrl.slice(0, -1);
         }
 
-        const res = await fetch(`${cleanLocalUrl}/api/status`, { signal: controller.signal });
+        const headers = { 'ngrok-skip-browser-warning': 'true' };
+        if (localApiKey) {
+            headers['Authorization'] = `Bearer ${localApiKey}`;
+        }
+        const res = await fetch(`${cleanLocalUrl}/api/status`, { 
+            headers: headers,
+            signal: controller.signal 
+        });
         clearTimeout(timeoutId);
 
         const data = await res.json();
