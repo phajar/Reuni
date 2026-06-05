@@ -4057,6 +4057,24 @@ window.closeReviewAlumniModal = () => {
 
 window.renderRekapWilayah = () => {
   const list = document.getElementById("rekap-list");
+
+  // Update count indicator
+  const countEl = document.getElementById("wilayah-filter-count");
+  if (countEl) {
+    const total = window.filteredRekapData.length;
+    const totalAll = window.STATE.alumni ? window.STATE.alumni.length : 0;
+    const kab = document.getElementById("filter-kab")?.value || "";
+    const kec = document.getElementById("filter-kec")?.value || "";
+    const des = document.getElementById("filter-desa")?.value || "";
+    const searchVal = document.getElementById("search-wilayah-input")?.value || "";
+    const isFiltered = kab || kec || des || searchVal;
+    if (isFiltered) {
+      countEl.textContent = `${total} dari ${totalAll} alumni ditemukan`;
+    } else {
+      countEl.textContent = `Total: ${total} alumni`;
+    }
+  }
+
   if (window.filteredRekapData.length === 0)
     return (list.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500 text-xs italic">Tidak ada data.</td></tr>`);
   list.innerHTML = window.filteredRekapData
