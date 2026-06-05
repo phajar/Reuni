@@ -2636,14 +2636,34 @@
                     <i class="fas fa-user-check text-xs"></i> Verifikasi Donasi via WhatsApp
                   </h5>
                   <div>
-                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">JID Grup Persetujuan (Approval)</label>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">JID Grup Keuangan / Persetujuan Donasi</label>
                     <div class="flex gap-2 mt-1">
                       <input type="text" id="set-wa-approval-group-jid" class="input-field py-2.5 text-xs bg-black/40 border border-white/10 text-slate-200 flex-1" placeholder="120363xxxxxx@g.us" />
                       <select id="select-wa-approval-group-auto" onchange="if(this.value) { document.getElementById('set-wa-approval-group-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[180px]">
                         <option value="">-- Pilih Grup --</option>
                       </select>
                     </div>
-                    <p class="text-[8px] text-slate-500 mt-1 ml-1">Grup tempat bot meneruskan konfirmasi donasi baru untuk disetujui admin. (Tips: Sinkronkan grup WhatsApp di kolom kanan agar grup muncul di pilihan otomatis).</p>
+                    <p class="text-[8px] text-slate-500 mt-1 ml-1">Grup tempat bot meneruskan konfirmasi donasi baru untuk disetujui admin.</p>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">JID Grup Pendataan Alumni</label>
+                    <div class="flex gap-2 mt-1">
+                      <input type="text" id="set-wa-group-pendataan-jid" class="input-field py-2.5 text-xs bg-black/40 border border-white/10 text-slate-200 flex-1" placeholder="120363xxxxxx@g.us" />
+                      <select id="select-wa-group-pendataan-auto" onchange="if(this.value) { document.getElementById('set-wa-group-pendataan-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[180px]">
+                        <option value="">-- Pilih Grup --</option>
+                      </select>
+                    </div>
+                    <p class="text-[8px] text-slate-500 mt-1 ml-1">Grup tempat bot meneruskan notifikasi pendaftaran alumni baru.</p>
+                  </div>
+                  <div>
+                    <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">JID Grup Log / Audit Aktivitas</label>
+                    <div class="flex gap-2 mt-1">
+                      <input type="text" id="set-wa-group-log-jid" class="input-field py-2.5 text-xs bg-black/40 border border-white/10 text-slate-200 flex-1" placeholder="120363xxxxxx@g.us" />
+                      <select id="select-wa-group-log-auto" onchange="if(this.value) { document.getElementById('set-wa-group-log-jid').value = this.value; }" class="input-field py-2.5 text-xs bg-[#0e1225] border border-white/10 text-slate-200 w-auto max-w-[180px]">
+                        <option value="">-- Pilih Grup --</option>
+                      </select>
+                    </div>
+                    <p class="text-[8px] text-slate-500 mt-1 ml-1">Grup tempat bot meneruskan log aktivitas sistem (penghapusan, perubahan data alumni, dll).</p>
                   </div>
                   <div>
                     <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Nomor WA Admin Penyaring (Koma-Separated)</label>

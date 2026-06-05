@@ -8458,6 +8458,8 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
       const reportTemplate = document.getElementById("set-wa-report-template").value;
       const iuranInfo = document.getElementById("set-wa-iuran-info").value;
       const approvalGroupJid = document.getElementById("set-wa-approval-group-jid") ? document.getElementById("set-wa-approval-group-jid").value.trim() : "";
+      const groupPendataanJid = document.getElementById("set-wa-group-pendataan-jid") ? document.getElementById("set-wa-group-pendataan-jid").value.trim() : "";
+      const groupLogJid = document.getElementById("set-wa-group-log-jid") ? document.getElementById("set-wa-group-log-jid").value.trim() : "";
       const approvalAdmins = document.getElementById("set-wa-approval-admins") ? document.getElementById("set-wa-approval-admins").value.trim() : "";
       
       const scheduleChecked = document.querySelectorAll('input[name="wa-schedule-target-check"]:checked');
@@ -8471,6 +8473,8 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
         iuran_info: iuranInfo,
         schedule_targets: JSON.stringify(scheduleTargets),
         approval_group_jid: approvalGroupJid,
+        group_pendataan_jid: groupPendataanJid,
+        group_log_jid: groupLogJid,
         approval_admins: approvalAdmins
       };
       

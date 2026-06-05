@@ -2393,6 +2393,10 @@ window.openWASettingsWeb = async () => {
                 document.getElementById("set-wa-iuran-info").value = botConfig.iuran_info || "";
             if (document.getElementById("set-wa-approval-group-jid"))
                 document.getElementById("set-wa-approval-group-jid").value = botConfig.approval_group_jid || "";
+            if (document.getElementById("set-wa-group-pendataan-jid"))
+                document.getElementById("set-wa-group-pendataan-jid").value = botConfig.group_pendataan_jid || "";
+            if (document.getElementById("set-wa-group-log-jid"))
+                document.getElementById("set-wa-group-log-jid").value = botConfig.group_log_jid || "";
             if (document.getElementById("set-wa-approval-admins"))
                 document.getElementById("set-wa-approval-admins").value = botConfig.approval_admins || "";
             
@@ -2408,16 +2412,22 @@ window.openWASettingsWeb = async () => {
                     }).join('');
             }
 
-            // Populate select-wa-approval-group-auto dropdown from wa_registered_groups
+            // Populate all group dropdown selectors from wa_registered_groups
+            const registeredGroups = JSON.parse(localStorage.getItem('wa_registered_groups')) || [];
+            const groupsOnly = registeredGroups.filter(g => (g.jid || '').endsWith('@g.us'));
+            const groupOptionsHtml = '<option value="">-- Pilih Grup --</option>' +
+                groupsOnly.map(g => {
+                    return `<option value="${g.jid}">${g.nama_grup || g.name || g.jid}</option>`;
+                }).join('');
+
             const approvalAutoSelect = document.getElementById("select-wa-approval-group-auto");
-            if (approvalAutoSelect) {
-                const registeredGroups = JSON.parse(localStorage.getItem('wa_registered_groups')) || [];
-                const groupsOnly = registeredGroups.filter(g => (g.jid || '').endsWith('@g.us'));
-                approvalAutoSelect.innerHTML = '<option value="">-- Pilih Grup --</option>' +
-                    groupsOnly.map(g => {
-                        return `<option value="${g.jid}">${g.nama_grup || g.name || g.jid}</option>`;
-                    }).join('');
-            }
+            if (approvalAutoSelect) approvalAutoSelect.innerHTML = groupOptionsHtml;
+
+            const pendataanAutoSelect = document.getElementById("select-wa-group-pendataan-auto");
+            if (pendataanAutoSelect) pendataanAutoSelect.innerHTML = groupOptionsHtml;
+
+            const logAutoSelect = document.getElementById("select-wa-group-log-auto");
+            if (logAutoSelect) logAutoSelect.innerHTML = groupOptionsHtml;
         }
         if (typeof window.renderWASettingsGroups === "function") {
             window.renderWASettingsGroups();
