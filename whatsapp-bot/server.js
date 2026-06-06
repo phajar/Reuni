@@ -307,7 +307,10 @@ async function connectToWhatsApp() {
     sock.ev.on('messages.upsert', async (chatUpdate) => {
         try {
             const m = chatUpdate.messages[0];
-            if (!m.message) return;
+            if (m) {
+                console.log(`[WA BOT] Pesan masuk terdeteksi: JID=${m.key.remoteJid}, dariSaya=${m.key.fromMe}, tipePesan=${m.message ? Object.keys(m.message)[0] : 'tidak_ada'}`);
+            }
+            if (!m || !m.message) return;
             if (m.key.fromMe) return; // Abaikan pesan dari bot sendiri
             
             const jid = m.key.remoteJid;

@@ -1499,6 +1499,7 @@
         <button onclick="showTab('panitia')" id="btn-panitia" class="nav-btn"><i class="fas fa-id-badge text-base w-5 text-center"></i> Panitia</button>
         <button onclick="showTab('guestbook')" id="btn-guestbook" class="nav-btn"><i class="fas fa-book-open text-base w-5 text-center"></i> Buku Tamu</button>
         <button onclick="showTab('rekap')" id="btn-rekap" class="nav-btn"><i class="fas fa-map-marked-alt text-base w-5 text-center"></i> Wilayah</button>
+        <button onclick="showTab('surat')" id="btn-surat" class="nav-btn hidden"><i class="fas fa-envelope text-base w-5 text-center"></i> Distribusi Surat</button>
         <button onclick="showTab('tugas')" id="btn-tugas" class="nav-btn relative"><i class="fas fa-tasks text-base w-5 text-center"></i> Tugas Panitia<span id="badge-tugas" class="hidden absolute right-4 w-4 h-4 bg-amber-500 rounded-full text-[8px] flex items-center justify-center text-white">0</span></button>
         <a href="surat-undangan.html" class="nav-btn text-purple-400 flex items-center gap-2 w-full text-left"><i class="fas fa-envelope-open-text text-base w-5 text-center"></i> AI Surat Undangan</a>
         <span id="heading-integrasi" class="hidden"></span>
@@ -2052,6 +2053,59 @@
                             <td class="p-5"><div class="skeleton h-4 w-32 rounded"></div></td>
                             <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
                             <td class="p-5"><div class="skeleton h-3.5 w-36 rounded"></div></td>
+                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+              </div>
+          </div>
+      </div>
+
+      <!-- TAB DISTRIBUSI SURAT -->
+      <div id="tab-surat" class="tab-content hidden space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div class="relative">
+                  <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                  <input type="text" id="search-surat-input" oninput="applySuratFilter()" class="input-field pl-9 text-xs" placeholder="Cari nama/angkatan/alamat..." />
+              </div>
+              <select id="filter-surat-kab" onchange="applySuratFilter('kab')" class="input-field text-xs"><option value="">Semua Kabupaten</option></select>
+              <select id="filter-surat-kec" onchange="applySuratFilter('kec')" class="input-field text-xs"><option value="">Semua Kecamatan</option></select>
+              <select id="filter-surat-desa" onchange="applySuratFilter('desa')" class="input-field text-xs"><option value="">Semua Desa</option></select>
+              <select id="filter-surat-status" onchange="applySuratFilter()" class="input-field text-xs">
+                  <option value="">Semua Status Surat</option>
+                  <option value="belum">Belum Diterima</option>
+                  <option value="sudah">Sudah Diterima</option>
+              </select>
+          </div>
+          <div class="flex justify-between items-center px-1">
+              <span id="surat-filter-count" class="text-[10px] font-bold text-indigo-400"></span>
+          </div>
+          <div class="table-container">
+              <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-left modern-table">
+                    <thead>
+                        <tr>
+                            <th class="p-5">Nama Alumni</th>
+                            <th class="p-5 text-center">Tahun Lulus</th>
+                            <th class="p-5">Alamat Lengkap</th>
+                            <th class="p-5 text-center">Status Surat</th>
+                            <th class="p-5 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="surat-list" class="divide-y divide-white/5 text-sm">
+                        <!-- Skeleton Loading rows -->
+                        <tr>
+                            <td class="p-5"><div class="skeleton h-4 w-28 rounded"></div></td>
+                            <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
+                            <td class="p-5"><div class="skeleton h-3.5 w-44 rounded"></div></td>
+                            <td class="p-5 text-center"><div class="skeleton h-5 w-20 rounded-full mx-auto"></div></td>
+                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                        </tr>
+                        <tr>
+                            <td class="p-5"><div class="skeleton h-4 w-32 rounded"></div></td>
+                            <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
+                            <td class="p-5"><div class="skeleton h-3.5 w-36 rounded"></div></td>
+                            <td class="p-5 text-center"><div class="skeleton h-5 w-20 rounded-full mx-auto"></div></td>
                             <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
                         </tr>
                     </tbody>
@@ -3928,6 +3982,10 @@
           <div onclick="window.switchMobileTab('rekap')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
             <i class="fas fa-map-marked-alt text-teal-400 text-sm mb-1"></i>
             <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Wilayah</span>
+          </div>
+          <div id="btn-mobile-surat" onclick="window.switchMobileTab('surat')" class="hidden flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
+            <i class="fas fa-envelope text-indigo-400 text-sm mb-1"></i>
+            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Surat</span>
           </div>
           <a href="surat-undangan.html" class="flex flex-col items-center justify-center p-3 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center min-h-[72px]" style="text-decoration: none;">
             <i class="fas fa-envelope-open-text text-purple-400 text-sm mb-1"></i>

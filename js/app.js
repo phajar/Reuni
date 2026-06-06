@@ -618,6 +618,7 @@ window.showTab = (tabId) => {
   const titleDict = {
     home: "Beranda",
     alumni: "Data Alumni",
+    surat: "Distribusi Surat",
     panitia: "Kepanitiaan",
     rundown: "Jadwal Acara",
     rab: "RAB & Anggaran",
@@ -1021,6 +1022,11 @@ auth.onAuthStateChanged(async (user) => {
     showElement("btn-panitia", isPanitia);
     showElement("btn-mobile-panitia", isPanitia);
 
+    // 5.5. Distribusi Surat (Letter Distribution)
+    const canSurat = ["creator", "admin_utama", "sekretaris", "bendahara", "ketua", "koordinator_wilayah", "korwil_kabupaten", "korwil_kecamatan", "korwil_desa"].includes(r);
+    showElement("btn-surat", canSurat);
+    showElement("btn-mobile-surat", canSurat);
+
     // 6. Sembunyikan Header Kategori Sidebar jika tidak ada tombol di bawahnya
     // Kategori Keuangan & Aset
     const hasKeuanganItems = canFinance || canLogistik;
@@ -1109,6 +1115,7 @@ window.processCombinedData = () => {
     if (!searchInput || !searchInput.value)
       window.filteredAlumniData = [...window.STATE.alumni];
     window.filteredRekapData = [...window.STATE.alumni];
+    window.filteredSuratData = window.STATE.alumni.filter(a => window.canUserManageAlumnus(window.STATE.user, a));
     // Isi dropdown filter angkatan & kabupaten & provinsi secara dinamis
     if (typeof window.populateAlumniFilters === "function") window.populateAlumniFilters();
     if (typeof window.populateKabupatenFilter === "function") window.populateKabupatenFilter();
@@ -1125,6 +1132,11 @@ window.processCombinedData = () => {
 
     try {
       window.updateFilterOptions();
+    } catch (e) {}
+    try {
+      if (typeof window.applySuratFilter === "function") {
+        window.applySuratFilter();
+      }
     } catch (e) {}
     try {
       if (typeof window.applyAlumniFilters === "function") {
@@ -1273,6 +1285,9 @@ window.renderAllTabs = () => {
   } catch (e) {}
   try {
     window.renderGuestbookTable();
+  } catch (e) {}
+  try {
+    window.renderDistribusiSurat();
   } catch (e) {}
 
   if (typeof window.updateBadges === "function") {
@@ -5744,6 +5759,21 @@ window.openSettings = () => {
     );
     pop(
       "filter-desa",
+      uniqueNormalized(window.STATE.alumni.map((a) => a.desa || "")),
+      "Semua Desa",
+    );
+    pop(
+      "filter-surat-kab",
+      uniqueNormalized(window.STATE.alumni.map((a) => a.kabupaten || "")),
+      "Semua Kabupaten",
+    );
+    pop(
+      "filter-surat-kec",
+      uniqueNormalized(window.STATE.alumni.map((a) => a.kecamatan || "")),
+      "Semua Kecamatan",
+    );
+    pop(
+      "filter-surat-desa",
       uniqueNormalized(window.STATE.alumni.map((a) => a.desa || "")),
       "Semua Desa",
     );
@@ -12184,3 +12214,204 @@ window.executeAlumniDeletion = async (deletedId, targetKeepId = "") => {
 };
 
 // ============================================================
+// 7. DISTRIBUSI SURAT (LETTER DISTRIBUTION)
+// ============================================================
+
+window.applySuratFilter = (lvl) => {
+    const kab = document.getElementById("filter-surat-kab")?.value || "";
+    const kec = document.getElementById("filter-surat-kec")?.value || "";
+    const des = document.getElementById("filter-surat-desa")?.value || "";
+    const status = document.getElementById("filter-surat-status")?.value || "";
+    const searchVal = (document.getElementById("search-surat-input")?.value || "").toLowerCase().trim();
+
+    if (lvl === "kab") {
+      const kecEl = document.getElementById("filter-surat-kec");
+      if (kecEl) kecEl.value = "";
+      const desEl = document.getElementById("filter-surat-desa");
+      if (desEl) desEl.value = "";
+    } else if (lvl === "kec") {
+      const desEl = document.getElementById("filter-surat-desa");
+      if (desEl) desEl.value = "";
+    }
+
+    let matched = window.STATE.alumni.filter(a => window.canUserManageAlumnus(window.STATE.user, a));
+
+    // Filter by Kabupaten, Kecamatan, Desa
+    if (kab) {
+      matched = matched.filter(a => window.isWilayahMatch(a.kabupaten, kab));
+    }
+    if (kec) {
+      matched = matched.filter(a => window.isWilayahMatch(a.kecamatan, kec));
+    }
+    if (des) {
+      matched = matched.filter(a => window.isWilayahMatch(a.desa, des));
+    }
+
+    // Filter by Status Surat
+    if (status === "sudah") {
+      matched = matched.filter(a => a.status_surat === "sudah");
+    } else if (status === "belum") {
+      matched = matched.filter(a => a.status_surat !== "sudah");
+    }
+
+    // Filter by search searchVal
+    if (searchVal) {
+      matched = matched.filter(a => {
+        const n = String(a.nama || "").toLowerCase();
+        const ang = String(a.angkatan || "");
+        const wa = String(a.nowa || "");
+        const alm = String(a.alamat || "").toLowerCase();
+        const d = String(a.desa || "").toLowerCase();
+        const k = String(a.kecamatan || "").toLowerCase();
+        const kb = String(a.kabupaten || "").toLowerCase();
+        const fullAddress = `${alm} ${d} ${k} ${kb}`.trim();
+        return (
+          n.includes(searchVal) ||
+          ang.includes(searchVal) ||
+          wa.includes(searchVal) ||
+          fullAddress.includes(searchVal)
+        );
+      });
+    }
+
+    window.filteredSuratData = matched;
+
+    // Show filter stats
+    const countEl = document.getElementById("surat-filter-count");
+    if (countEl) {
+      const total = matched.length;
+      const sudahCount = matched.filter(a => a.status_surat === "sudah").length;
+      const belumCount = total - sudahCount;
+      countEl.innerHTML = `Total: <strong>${total}</strong> | Sudah Diterima: <strong>${sudahCount}</strong> | Belum Diterima: <strong>${belumCount}</strong>`;
+    }
+
+    window.renderDistribusiSurat();
+};
+
+window.renderDistribusiSurat = () => {
+    const listEl = document.getElementById("surat-list");
+    if (!listEl) return;
+
+    if (!window.filteredSuratData || window.filteredSuratData.length === 0) {
+      listEl.innerHTML = `
+        <tr>
+          <td colspan="5" class="p-8 text-center text-slate-400">
+            <i class="fas fa-envelope-open text-3xl mb-2 block opacity-50"></i>
+            Tidak ada data alumni untuk kriteria ini
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = window.filteredSuratData.map((a) => {
+      const statusSurat = a.status_surat === "sudah";
+      const statusBadge = statusSurat 
+        ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <i class="fas fa-check text-[10px]"></i> Sudah Diterima
+           </span>`
+        : `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <i class="fas fa-times text-[10px]"></i> Belum Diterima
+           </span>`;
+
+      const toggleText = statusSurat ? "Tandai Belum Diterima" : "Tandai Sudah Diterima";
+      const toggleIcon = statusSurat ? "fa-undo text-amber-400" : "fa-check text-emerald-400";
+      const toggleColor = statusSurat ? "hover:bg-amber-500/10 border-amber-500/20" : "hover:bg-emerald-500/10 border-emerald-500/20";
+      const toggleActionVal = statusSurat ? "belum" : "sudah";
+
+      const addressStr = [a.alamat, a.desa, a.kecamatan, a.kabupaten].filter(Boolean).join(", ");
+      const safeStr = encodeURIComponent(JSON.stringify(a)).replace(/'/g, "%27");
+
+      return `
+        <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/5">
+          <td class="p-4 font-semibold text-slate-200">
+            <div>${window.escapeHtml(a.nama)}</div>
+            <div class="text-[10px] font-normal text-slate-400 mt-0.5">Angkatan ${window.escapeHtml(a.angkatan)} (${window.escapeHtml(a.lembaga || '-')})</div>
+          </td>
+          <td class="p-4 text-xs text-slate-300 max-w-xs truncate font-medium" title="${window.escapeHtml(addressStr)}">
+            ${window.escapeHtml(addressStr)}
+          </td>
+          <td class="p-4 text-xs text-slate-300">
+            ${a.nowa ? `<a href="https://wa.me/${window.normalizeAlumniWA(a.nowa)}" target="_blank" class="text-indigo-400 hover:underline"><i class="fab fa-whatsapp"></i> ${window.escapeHtml(a.nowa)}</a>` : '-'}
+          </td>
+          <td class="p-4 text-center">
+            ${statusBadge}
+          </td>
+          <td class="p-4">
+            <div class="flex items-center justify-center gap-2">
+              <button onclick="window.updateStatusSurat('${a.id}', '${toggleActionVal}', '${window.escapeHtml(a.nama)}')" 
+                      title="${toggleText}" 
+                      class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 border ${toggleColor} transition-all">
+                <i class="fas ${toggleIcon}"></i>
+              </button>
+              <button onclick="window.openModalAlumni('${safeStr}')" 
+                      title="Edit Profil Lengkap" 
+                      class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-indigo-400 transition-all">
+                <i class="fas fa-pencil-alt"></i>
+              </button>
+              <button onclick="window.openModalFinance('${safeStr}')" 
+                      title="Input Donasi" 
+                      class="flex items-center justify-center w-8 h-8 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 text-emerald-400 transition-all">
+                <i class="fas fa-coins"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+};
+
+window.updateStatusSurat = async (id, status, nama) => {
+  try {
+    const user = window.STATE.user;
+    if (!user) {
+      window.notify("Sesi habis, silakan login kembali.", "error");
+      return;
+    }
+
+    const a = window.STATE.rawAlumni.find(x => x.id === id);
+    if (!a) {
+      window.notify("Alumni tidak ditemukan.", "error");
+      return;
+    }
+
+    if (!window.canUserManageAlumnus(user, a)) {
+      window.notify("Anda tidak memiliki wewenang untuk wilayah ini.", "error");
+      return;
+    }
+
+    const confirmMsg = status === "sudah" 
+      ? `Apakah Anda yakin ingin menandai surat untuk ${nama} telah DITERIMA?`
+      : `Apakah Anda yakin ingin membatalkan tanda terima surat untuk ${nama}?`;
+
+    const ok = await window.showConfirm({
+      title: 'Ubah Status Surat?',
+      message: confirmMsg,
+      confirmText: 'Ya, Ubah',
+      cancelText: 'Batal'
+    });
+    if (!ok) return;
+
+    window.toggleLoading(true, "Memperbarui status...");
+
+    // Write to Firestore
+    await db.collection("alumni").doc(id).update({
+      status_surat: status
+    });
+
+    // Log activity
+    await window.logActivity("surat_status_update", `Mengubah status distribusi surat ${nama} (Angkatan ${a.angkatan || ''}) menjadi ${status === 'sudah' ? 'Sudah Diterima' : 'Belum Diterima'}`);
+
+    // Increment sync version to sync across clients
+    await window.incrementSyncVersion('alumni');
+
+    window.notify("Status surat berhasil diperbarui!", "success");
+
+  } catch (error) {
+    console.error("Gagal mengubah status surat:", error);
+    window.notify("Gagal memperbarui status surat.", "error");
+  } finally {
+    window.toggleLoading(false);
+  }
+};
+
