@@ -1486,19 +1486,17 @@
         
         <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-2 mb-2 px-4">Menu Utama</span>
         <button onclick="showTab('home')" id="btn-home" class="nav-btn active"><i class="fas fa-th-large text-base w-5 text-center"></i> Beranda</button>
-        <button onclick="showTab('alumni')" id="btn-alumni" class="nav-btn"><i class="fas fa-users text-base w-5 text-center"></i> Alumni</button>
-        <button onclick="showTab('requests')" id="btn-requests" class="nav-btn relative"><i class="fas fa-user-check text-base w-5 text-center"></i> Verifikasi<span id="badge-requests" class="hidden absolute right-4 w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white">0</span></button>
+        <button onclick="showTab('alumni')" id="btn-alumni" class="nav-btn relative"><i class="fas fa-users text-base w-5 text-center"></i> Alumni<span id="badge-alumni" class="hidden absolute right-4 w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span></button>
 
         <span id="heading-keuangan" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Keuangan & Aset</span>
         <button onclick="showTab('finance')" id="btn-finance" class="nav-btn"><i class="fas fa-wallet text-base w-5 text-center"></i> Keuangan</button>
         <button onclick="showTab('logistik')" id="btn-logistik" class="nav-btn"><i class="fas fa-box-open text-base w-5 text-center"></i> Logistik</button>
 
         <span id="heading-acara" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Acara & Laporan</span>
-        <button onclick="showTab('rundown')" id="btn-rundown" class="nav-btn"><i class="fas fa-list-ol text-base w-5 text-center"></i> Rundown</button>
-        <button onclick="showTab('panitia')" id="btn-panitia" class="nav-btn"><i class="fas fa-id-badge text-base w-5 text-center"></i> Panitia</button>
+        <button onclick="showTab('panitia')" id="btn-panitia" class="nav-btn"><i class="fas fa-id-badge text-base w-5 text-center"></i> Kepanitiaan & Rundown</button>
         <button onclick="showTab('guestbook')" id="btn-guestbook" class="nav-btn"><i class="fas fa-book-open text-base w-5 text-center"></i> Buku Tamu</button>
         <button onclick="showTab('rekap')" id="btn-rekap" class="nav-btn"><i class="fas fa-map-marked-alt text-base w-5 text-center"></i> Wilayah & Surat</button>
-        <button onclick="showTab('tugas')" id="btn-tugas" class="nav-btn relative"><i class="fas fa-tasks text-base w-5 text-center"></i> Tugas Panitia<span id="badge-tugas" class="hidden absolute right-4 w-4 h-4 bg-amber-500 rounded-full text-[8px] flex items-center justify-center text-white">0</span></button>
+        <button onclick="showTab('tugas')" id="btn-tugas" class="nav-btn relative"><i class="fas fa-tasks text-base w-5 text-center"></i> Tugas Panitia<span id="badge-tugas" class="hidden absolute right-4 w-4 h-4 bg-amber-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span></button>
         <a href="surat-undangan.html" class="nav-btn text-purple-400 flex items-center gap-2 w-full text-left"><i class="fas fa-envelope-open-text text-base w-5 text-center"></i> AI Surat Undangan</a>
         <span id="heading-integrasi" class="hidden"></span>
         <span id="heading-sistem" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Sistem & Integrasi</span>
@@ -1742,244 +1740,314 @@
           </div>
       </div>
 
-      <div id="tab-alumni" class="tab-content hidden space-y-4">
-        <!-- Dashboard Metrics (Opsi 3) -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="premium-card p-6 flex items-center justify-between">
-                <div>
-                    <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Alumni</h4>
-                    <p id="metric-total-alumni" class="stat-value text-indigo-400 mt-1">0</p>
-                </div>
-                <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-xl shadow-lg border border-indigo-500/20">
-                    <i class="fas fa-users"></i>
-                </div>
-            </div>
-            <div class="premium-card p-6 flex items-center justify-between">
-                <div>
-                    <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Distribusi Lembaga</h4>
-                    <p id="metric-distribusi-lembaga" class="stat-value text-pink-400 mt-1">0 MA | 0 MTs</p>
-                </div>
-                <div class="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center text-pink-400 text-xl shadow-lg border border-pink-500/20">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-            </div>
-            <div class="premium-card p-6 flex items-center justify-between">
-                <div>
-                    <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Wilayah Teraktif</h4>
-                    <p id="metric-wilayah-aktif" class="stat-value text-amber-400 mt-1">-</p>
-                </div>
-                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-400 text-xl shadow-lg border border-amber-500/20">
-                    <i class="fas fa-map-marker-alt"></i>
-                </div>
-            </div>
-            <div class="premium-card p-6 flex items-center justify-between">
-                <div>
-                    <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Dana Masuk</h4>
-                    <p id="metric-total-donasi" class="stat-value text-emerald-400 mt-1">Rp 0</p>
-                </div>
-                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xl shadow-lg border border-emerald-500/20">
-                    <i class="fas fa-hand-holding-usd"></i>
-                </div>
-            </div>
-        </div>
+      <div id="tab-alumni" class="tab-content hidden space-y-6">
+          <!-- Sub-Tab Navigation for Alumni Hub -->
+          <div class="flex border-b border-white/10 gap-6 px-1">
+              <button id="subbtn-alumni-list" onclick="window.switchAlumniSubTab('list')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-indigo-500 text-white transition-all">
+                  <i class="fas fa-users mr-1.5 text-indigo-400"></i> Daftar Alumni
+              </button>
+              <button id="subbtn-alumni-verify" onclick="window.switchAlumniSubTab('verify')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-transparent text-slate-400 hover:text-white transition-all relative">
+                  <i class="fas fa-user-check mr-1.5 text-emerald-400"></i> Verifikasi Pendaftaran
+                  <span id="badge-subtab-alumni-verify" class="hidden ml-1.5 px-1.5 py-0.5 bg-red-500 text-white rounded-full text-[8px] font-bold">0</span>
+              </button>
+          </div>
 
-        <div class="flex flex-col lg:flex-row justify-between gap-4">
-            <div class="flex flex-wrap gap-2">
-                <button onclick="openModalAlumni()" class="btn-md3 btn-md3-primary"><i class="fas fa-plus"></i> Tambah Manual</button>
-                <button onclick="document.getElementById('modal-import-guide').classList.remove('hidden')" class="btn-md3 btn-md3-tonal" title="Import Data (Excel/CSV)"><i class="fas fa-upload"></i> Import Data</button>
-                <button id="btn-cek-duplikat" onclick="showDuplicates()" class="btn-md3 btn-md3-fuchsia-tonal" title="Pindai Data Kembar"><i class="fas fa-copy"></i> Cek Duplikat</button>
-                <button id="btn-bulk-delete" onclick="handleBulkDelete()" class="hidden btn-md3 btn-md3-danger"><i class="fas fa-trash-alt"></i> Hapus Terpilih (<span id="bulk-delete-count">0</span>)</button>
-                <button id="btn-bulk-edit" onclick="window.openBulkEditModal()" class="hidden btn-md3 btn-md3-primary" title="Ubah data terpilih secara massal">
-                    <i class="fas fa-edit"></i> Edit Terpilih (<span id="bulk-edit-count">0</span>)
-                </button>
-                <button id="btn-broadcast-alumni" onclick="window.openModalBroadcast(true)" class="btn-md3 btn-md3-emerald hidden">
-                    <i class="fas fa-bullhorn"></i> Broadcast Pesan
-                </button>
-                <!-- FITUR 7: Export Buttons -->
-                <div class="relative">
-                  <button onclick="window.toggleExportDropdown(event)" class="btn-md3 btn-md3-outlined flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300">
-                    <i class="fas fa-download"></i>
-                    <span>Export</span>
-                    <i class="fas fa-chevron-down text-[9px]"></i>
-                  </button>
-                  <div id="export-dropdown-menu" class="hidden absolute left-0 top-full mt-1 flex-col bg-[#0e1225] border border-white/10 rounded-xl shadow-2xl z-50 min-w-[160px] overflow-hidden py-1">
-                    <button onclick="window.exportAlumniExcel()" class="px-4 py-2.5 text-xs font-bold text-left hover:bg-white/5 text-emerald-400 flex items-center gap-2">
-                      <i class="fas fa-file-excel"></i> Export Excel
-                    </button>
-                    <button onclick="window.exportAlumniPDF()" class="px-4 py-2.5 text-xs font-bold text-left hover:bg-white/5 text-red-400 flex items-center gap-2">
-                      <i class="fas fa-file-pdf"></i> Export PDF
-                    </button>
+          <!-- Sub-Tab Content 1: Daftar Alumni -->
+          <div id="subtab-alumni-list" class="space-y-4">
+              <!-- Dashboard Metrics (Opsi 3) -->
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <div class="premium-card p-6 flex items-center justify-between">
+                      <div>
+                          <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Alumni</h4>
+                          <p id="metric-total-alumni" class="stat-value text-indigo-400 mt-1">0</p>
+                      </div>
+                      <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-xl shadow-lg border border-indigo-500/20">
+                          <i class="fas fa-users"></i>
+                      </div>
                   </div>
-                </div>
-            </div>
-            <div class="relative flex-1 max-w-md w-full">
-              <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-              <input type="text" id="search-alumni-input" onkeyup="searchAlumni(this.value)" placeholder="Cari Nama/Tahun Lulus..." class="input-field pl-10" />
-            </div>
-        </div>
-        <!-- Filter Row -->
-        <div class="flex flex-wrap gap-2 items-center">
-          <select id="filter-alumni-angkatan" onchange="window.applyAlumniFilters()" class="input-field text-xs py-2 flex-1 min-w-[120px]">
-            <option value="">Semua Tahun Lulus</option>
-          </select>
-          <!-- Filter Lembaga -->
-          <select id="filter-lembaga" onchange="window.applyAlumniFilters()" class="input-field text-xs py-2 flex-1 min-w-[120px]">
-            <option value="">Semua Lembaga</option>
-            <option value="MA">MA</option>
-            <option value="MTs">MTs</option>
-            <option value="tanpa_lembaga">Tanpa Lembaga</option>
-          </select>
-          <!-- Filter Provinsi (baru) -->
-          <select id="filter-provinsi" onchange="window.onFilterProvinsiChange()" class="input-field text-xs py-2 flex-1 min-w-[140px]">
-            <option value="">Semua Provinsi</option>
-          </select>
-          <!-- Filter Kabupaten (Opsi 2) -->
-          <select id="filter-kabupaten" onchange="window.applyAlumniFilters()" class="input-field text-xs py-2 flex-1 min-w-[150px]">
-            <option value="">Semua Kabupaten</option>
-          </select>
-          <!-- Filter Kelengkapan Data -->
-          <select id="filter-kelengkapan" onchange="window.applyAlumniFilters()" class="input-field text-xs py-2 flex-1 min-w-[150px]">
-            <option value="">Semua Kelengkapan</option>
-            <option value="lengkap">Data Lengkap</option>
-            <option value="belum_lengkap">Belum Lengkap</option>
-          </select>
-          <button onclick="window.resetAlumniFilters()" class="btn-md3 btn-md3-outlined">
-            <i class="fas fa-times"></i> Reset
-          </button>
-          <span id="alumni-filter-count" class="text-[10px] font-bold text-indigo-400 hidden"></span>
-        </div>
-        <div class="table-container">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left modern-table">
-                    <thead>
-                        <tr>
-                            <th id="th-checkbox-alumni" class="p-5 w-10 text-center"><input type="checkbox" id="select-all-alumni" onchange="toggleSelectAllAlumni(this)" class="w-4 h-4 rounded border-white/10 bg-black/20 text-indigo-500 focus:ring-indigo-500 cursor-pointer"></th>
-                            <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortAlumni('nama')">Profil <i id="sort-alm-nama" class="fas fa-sort sort-icon ml-1"></i></th>
-                            <th class="p-5 text-center cursor-pointer hover:text-indigo-400" onclick="sortAlumni('angkatan')">Tahun Lulus <i id="sort-alm-angkatan" class="fas fa-sort sort-icon ml-1"></i></th>
-                            <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortAlumni('kabupaten')">Lokasi <i id="sort-alm-kabupaten" class="fas fa-sort sort-icon ml-1"></i></th>
-                            <th class="p-5 text-center cursor-pointer hover:text-indigo-400" onclick="sortAlumni('totalDonasi')">Donasi <i id="sort-alm-totalDonasi" class="fas fa-sort sort-icon ml-1"></i></th>
-                            <th class="p-5 text-center whitespace-nowrap">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="alumni-list" class="divide-y divide-white/5 text-sm">
-                        <!-- Skeleton Loading rows -->
-                        <tr>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-4 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-28 mb-2 rounded"></div><div class="skeleton h-3 w-20 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-24 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-16 mb-1 rounded"></div><div class="skeleton h-3 w-10 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                        <tr>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-4 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-32 mb-2 rounded"></div><div class="skeleton h-3 w-16 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-20 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-12 mb-1 rounded"></div><div class="skeleton h-3 w-10 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                        <tr>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-4 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-24 mb-2 rounded"></div><div class="skeleton h-3 w-24 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-28 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-20 mb-1 rounded"></div><div class="skeleton h-3 w-10 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="flex justify-between items-center mt-4 px-2">
-            <span id="page-info" class="text-[10px] text-slate-400 font-bold uppercase">Halaman 1</span>
-            <div class="flex gap-2">
-                <button onclick="changePage(-1)" class="glass px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/10 text-slate-300 shadow-sm">&lt; Prev</button>
-                <button onclick="changePage(1)" class="glass px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/10 text-slate-300 shadow-sm">Next &gt;</button>
-            </div>
-        </div>
+                  <div class="premium-card p-6 flex items-center justify-between">
+                      <div>
+                          <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Distribusi Lembaga</h4>
+                          <p id="metric-distribusi-lembaga" class="stat-value text-pink-400 mt-1">0 MA | 0 MTs</p>
+                      </div>
+                      <div class="w-12 h-12 rounded-2xl bg-pink-500/10 flex items-center justify-center text-pink-400 text-xl shadow-lg border border-pink-500/20">
+                          <i class="fas fa-graduation-cap"></i>
+                      </div>
+                  </div>
+                  <div class="premium-card p-6 flex items-center justify-between">
+                      <div>
+                          <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Wilayah Teraktif</h4>
+                          <p id="metric-wilayah-aktif" class="stat-value text-amber-400 mt-1">-</p>
+                      </div>
+                      <div class="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-400 text-xl shadow-lg border border-amber-500/20">
+                          <i class="fas fa-map-marker-alt"></i>
+                      </div>
+                  </div>
+                  <div class="premium-card p-6 flex items-center justify-between">
+                      <div>
+                          <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Dana Masuk</h4>
+                          <p id="metric-total-donasi" class="stat-value text-emerald-400 mt-1">Rp 0</p>
+                      </div>
+                      <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xl shadow-lg border border-emerald-500/20">
+                          <i class="fas fa-hand-holding-usd"></i>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="flex flex-col lg:flex-row justify-between gap-4">
+                  <div class="flex flex-wrap gap-2">
+                      <button onclick="openModalAlumni()" class="btn-md3 btn-md3-primary"><i class="fas fa-plus"></i> Tambah Manual</button>
+                      <button onclick="document.getElementById('modal-import-guide').classList.remove('hidden')" class="btn-md3 btn-md3-tonal" title="Import Data (Excel/CSV)"><i class="fas fa-upload"></i> Import Data</button>
+                      <button id="btn-cek-duplikat" onclick="showDuplicates()" class="btn-md3 btn-md3-fuchsia-tonal" title="Pindai Data Kembar"><i class="fas fa-copy"></i> Cek Duplikat</button>
+                      <button id="btn-bulk-delete" onclick="handleBulkDelete()" class="hidden btn-md3 btn-md3-danger"><i class="fas fa-trash-alt"></i> Hapus Terpilih (<span id="bulk-delete-count">0</span>)</button>
+                      <button id="btn-bulk-edit" onclick="window.openBulkEditModal()" class="hidden btn-md3 btn-md3-primary" title="Ubah data terpilih secara massal">
+                          <i class="fas fa-edit"></i> Edit Terpilih (<span id="bulk-edit-count">0</span>)
+                      </button>
+                      <button id="btn-broadcast-alumni" onclick="window.openModalBroadcast(true)" class="btn-md3 btn-md3-emerald hidden">
+                          <i class="fas fa-bullhorn"></i> Broadcast Pesan
+                      </button>
+                      <div class="relative">
+                        <button onclick="window.toggleExportDropdown(event)" class="btn-md3 btn-md3-outlined flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300">
+                          <i class="fas fa-download"></i>
+                          <span>Export</span>
+                          <i class="fas fa-chevron-down text-[9px]"></i>
+                        </button>
+                        <div id="export-dropdown-menu" class="hidden absolute left-0 top-full mt-1 flex-col bg-[#0e1225] border border-white/10 rounded-xl shadow-2xl z-50 min-w-[160px] overflow-hidden py-1">
+                          <button onclick="window.exportAlumniExcel()" class="px-4 py-2.5 text-xs font-bold text-left hover:bg-white/5 text-emerald-400 flex items-center gap-2">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                          </button>
+                          <button onclick="window.exportAlumniPDF()" class="px-4 py-2.5 text-xs font-bold text-left hover:bg-white/5 text-red-400 flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                          </button>
+                        </div>
+                      </div>
+                  </div>
+                  <div class="relative flex-1 max-w-md w-full">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="search-alumni-input" onkeyup="searchAlumni(this.value)" placeholder="Cari Nama/Tahun Lulus..." class="input-field pl-10" />
+                  </div>
+              </div>
+              <!-- Filter Row -->
+              <div class="flex flex-wrap gap-2 items-center">
+                <select id="filter-alumni-angkatan" onchange="window.applyAlumniFilters()" class="input-field text-xs py-2 flex-1 min-w-[120px]">
+                  <option value="">Semua Tahun Lulus</option>
+                </select>
+                <select id="filter-lembaga" onchange="window.applyAlumniFilters()" class="input-field text-xs py-2 flex-1 min-w-[120px]">
+                  <option value="">Semua Lembaga</option>
+                  <option value="MA">MA</option>
+                  <option value="MTs">MTs</option>
+                  <option value="tanpa_lembaga">Tanpa Lembaga</option>
+                </select>
+                <select id="filter-provinsi" onchange="window.onFilterProvinsiChange()" class="input-field text-xs py-2 flex-1 min-w-[140px]">
+                  <option value="">Semua Provinsi</option>
+                </select>
+                <select id="filter-kabupaten" onchange="window.applyAlumniFilters()" class="input-field text-xs py-2 flex-1 min-w-[150px]">
+                  <option value="">Semua Kabupaten</option>
+                </select>
+                <select id="filter-kelengkapan" onchange="window.applyAlumniFilters()" class="input-field text-xs py-2 flex-1 min-w-[150px]">
+                  <option value="">Semua Kelengkapan</option>
+                  <option value="lengkap">Data Lengkap</option>
+                  <option value="belum_lengkap">Belum Lengkap</option>
+                </select>
+                <button onclick="window.resetAlumniFilters()" class="btn-md3 btn-md3-outlined">
+                  <i class="fas fa-times"></i> Reset
+                </button>
+                <span id="alumni-filter-count" class="text-[10px] font-bold text-indigo-400 hidden"></span>
+              </div>
+              <div class="table-container">
+                  <div class="overflow-x-auto custom-scrollbar">
+                      <table class="w-full text-left modern-table">
+                          <thead>
+                              <tr>
+                                  <th id="th-checkbox-alumni" class="p-5 w-10 text-center"><input type="checkbox" id="select-all-alumni" onchange="toggleSelectAllAlumni(this)" class="w-4 h-4 rounded border-white/10 bg-black/20 text-indigo-500 focus:ring-indigo-500 cursor-pointer"></th>
+                                  <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortAlumni('nama')">Profil <i id="sort-alm-nama" class="fas fa-sort sort-icon ml-1"></i></th>
+                                  <th class="p-5 text-center cursor-pointer hover:text-indigo-400" onclick="sortAlumni('angkatan')">Tahun Lulus <i id="sort-alm-angkatan" class="fas fa-sort sort-icon ml-1"></i></th>
+                                  <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortAlumni('kabupaten')">Lokasi <i id="sort-alm-kabupaten" class="fas fa-sort sort-icon ml-1"></i></th>
+                                  <th class="p-5 text-center cursor-pointer hover:text-indigo-400" onclick="sortAlumni('totalDonasi')">Donasi <i id="sort-alm-totalDonasi" class="fas fa-sort sort-icon ml-1"></i></th>
+                                  <th class="p-5 text-center whitespace-nowrap">Aksi</th>
+                              </tr>
+                          </thead>
+                          <tbody id="alumni-list" class="divide-y divide-white/5 text-sm">
+                              <!-- Skeleton Loading rows -->
+                              <tr>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-4 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-4 w-28 mb-2 rounded"></div><div class="skeleton h-3 w-20 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-3.5 w-24 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-16 mb-1 rounded"></div><div class="skeleton h-3 w-10 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="flex justify-center gap-1"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                              </tr>
+                              <tr>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-4 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-4 w-32 mb-2 rounded"></div><div class="skeleton h-3 w-16 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-3.5 w-20 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-12 mb-1 rounded"></div><div class="skeleton h-3 w-10 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="flex justify-center gap-1"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                              </tr>
+                              <tr>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-4 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-4 w-24 mb-2 rounded"></div><div class="skeleton h-3 w-24 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-3.5 w-28 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-20 mb-1 rounded"></div><div class="skeleton h-3 w-10 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="flex justify-center gap-1"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+              <div class="flex justify-between items-center mt-4 px-2">
+                  <span id="page-info" class="text-[10px] text-slate-400 font-bold uppercase">Halaman 1</span>
+                  <div class="flex gap-2">
+                      <button onclick="changePage(-1)" class="glass px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/10 text-slate-300 shadow-sm">&lt; Prev</button>
+                      <button onclick="changePage(1)" class="glass px-4 py-2 rounded-lg text-xs font-bold hover:bg-white/10 text-slate-300 shadow-sm">Next &gt;</button>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Sub-Tab Content 2: Verifikasi Pendaftaran -->
+          <div id="subtab-alumni-verify" class="hidden space-y-6">
+              <div class="table-container">
+                  <div class="p-6 border-b border-emerald-500/20 bg-emerald-500/5">
+                      <h3 class="text-sm font-black uppercase text-emerald-400"><i class="fas fa-money-check-alt mr-2"></i> Konfirmasi Transfer / Donasi</h3>
+                  </div>
+                  <div class="overflow-x-auto custom-scrollbar">
+                      <table class="w-full text-left modern-table">
+                          <thead>
+                              <tr><th class="p-5">Waktu</th><th class="p-5">Pengirim</th><th class="p-5 text-right">Nominal</th><th class="p-5 text-center">Bukti</th><th class="p-5 text-center">Aksi</th></tr>
+                          </thead>
+                          <tbody id="request-finance-list" class="divide-y divide-white/5 text-sm">
+                              <!-- Skeleton Loading rows -->
+                              <tr>
+                                  <td class="p-5"><div class="skeleton h-4 w-24 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-4 w-28 mb-1 rounded"></div><div class="skeleton h-3 w-16 rounded"></div></td>
+                                  <td class="p-5 text-right"><div class="skeleton h-4 w-20 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-7 w-12 rounded mx-auto"></div></td>
+                                  <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-14 rounded-lg"></div><div class="skeleton h-7 w-14 rounded-lg"></div></div></td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+
+              <div class="table-container">
+                  <div class="p-6 border-b border-indigo-500/20 bg-indigo-500/5">
+                      <h3 class="text-sm font-black uppercase text-indigo-400"><i class="fas fa-user-check mr-2"></i> Verifikasi Data Alumni Baru</h3>
+                  </div>
+                  <div class="overflow-x-auto custom-scrollbar">
+                      <table class="w-full text-left modern-table">
+                          <thead>
+                              <tr><th class="p-5">Nama</th><th class="p-5">Tahun Lulus</th><th class="p-5">Domisili</th><th class="p-5 text-center">Aksi</th></tr>
+                          </thead>
+                          <tbody id="request-list" class="divide-y divide-white/5 text-sm">
+                              <!-- Skeleton Loading rows -->
+                              <tr>
+                                  <td class="p-5"><div class="skeleton h-4 w-28 mb-1 rounded"></div><div class="skeleton h-3 w-20 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-3.5 w-24 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-12 rounded-lg"></div><div class="skeleton h-7 w-12 rounded-lg"></div></div></td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
       </div>
 
-      <div id="tab-panitia" class="tab-content hidden space-y-4">
-        <button id="btn-add-panitia" onclick="openModalAddPanitia()" class="btn-md3 btn-md3-primary"><i class="fas fa-plus"></i> Tambah Panitia</button>
-        <div class="table-container">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left modern-table">
-                    <thead>
-                        <tr><th class="p-5">Nama Lengkap</th><th class="p-5">Divisi / Jabatan</th><th class="p-5 text-center">Tanda Tangan</th><th class="p-5 text-center">Aksi ID Card</th></tr>
-                    </thead>
-                    <tbody id="panitia-list" class="divide-y divide-white/5 text-sm">
-                        <!-- Skeleton Loading rows -->
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-32 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-24 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-6 w-16 rounded mx-auto"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-7 w-20 rounded-lg mx-auto"></div></td>
-                        </tr>
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-28 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-20 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-6 w-16 rounded mx-auto"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-7 w-20 rounded-lg mx-auto"></div></td>
-                        </tr>
-                    </tbody>
-                </table>
+      <div id="tab-panitia" class="tab-content hidden space-y-6">
+          <!-- Sub-Tab Navigation for Kepanitiaan & Rundown -->
+          <div class="flex border-b border-white/10 gap-6 px-1">
+              <button id="subbtn-panitia-struktur" onclick="window.switchPanitiaSubTab('struktur')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-indigo-500 text-white transition-all">
+                  <i class="fas fa-id-badge mr-1.5 text-indigo-400"></i> Struktur Panitia
+              </button>
+              <button id="subbtn-panitia-rundown" onclick="window.switchPanitiaSubTab('rundown')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                  <i class="fas fa-list-ol mr-1.5 text-cyan-400"></i> Rundown Acara
+              </button>
+          </div>
+
+          <!-- Sub-Tab Content 1: Struktur Panitia -->
+          <div id="subtab-panitia-struktur" class="space-y-4">
+              <button id="btn-add-panitia" onclick="openModalAddPanitia()" class="btn-md3 btn-md3-primary"><i class="fas fa-plus"></i> Tambah Panitia</button>
+              <div class="table-container">
+                  <div class="overflow-x-auto custom-scrollbar">
+                      <table class="w-full text-left modern-table">
+                          <thead>
+                              <tr><th class="p-5">Nama Lengkap</th><th class="p-5">Divisi / Jabatan</th><th class="p-5 text-center">Tanda Tangan</th><th class="p-5 text-center">Aksi ID Card</th></tr>
+                          </thead>
+                          <tbody id="panitia-list" class="divide-y divide-white/5 text-sm">
+                              <!-- Skeleton Loading rows -->
+                              <tr>
+                                  <td class="p-5"><div class="skeleton h-4 w-32 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-3.5 w-24 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-6 w-16 rounded mx-auto"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-7 w-20 rounded-lg mx-auto"></div></td>
+                              </tr>
+                              <tr>
+                                  <td class="p-5"><div class="skeleton h-4 w-28 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-3.5 w-20 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-6 w-16 rounded mx-auto"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-7 w-20 rounded-lg mx-auto"></div></td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Sub-Tab Content 2: Rundown Acara -->
+          <div id="subtab-panitia-rundown" class="hidden space-y-4">
+              <div class="flex flex-wrap gap-2">
+                  <button onclick="openModalRundown()" class="btn-md3 btn-md3-primary"><i class="fas fa-plus mr-2"></i> Tambah Manual</button>
+                  <button onclick="openModal('modal-ai-rundown')" class="btn-md3 btn-md3-fuchsia"><i class="fas fa-magic mr-2"></i> Buat Rundown via AI</button>
+              </div>
+              <!-- RUNDOWN LIVE TRACKER (DURASIONAL & OFFLINE) -->
+              <div id="rundown-live-tracker" class="hidden"></div>
+              <div class="table-container">
+                  <div class="overflow-x-auto custom-scrollbar">
+                      <table class="w-full text-left modern-table">
+                          <thead>
+                              <tr><th class="p-5">Waktu</th><th class="p-5">Kegiatan</th><th class="p-5">Keterangan</th><th class="p-5 text-center">Aksi</th></tr>
+                          </thead>
+                          <tbody id="rundown-list" class="divide-y divide-white/5 text-sm">
+                              <!-- Skeleton Loading rows -->
+                              <tr>
+                                  <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-4 w-32 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-3.5 w-40 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                              </tr>
+                              <tr>
+                                  <td class="p-5"><div class="skeleton h-4 w-16 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-4 w-24 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-3.5 w-32 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <div id="modal-duplicates" class="hidden fixed inset-0 z-[500] flex items-center justify-center p-4">
+          <div onclick="closeModal('modal-duplicates')" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+          <div class="glass relative w-full max-w-4xl rounded-[2rem] p-8 shadow-2xl max-h-[90vh] flex flex-col modal-enter border border-purple-500/20">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-lg font-black uppercase text-purple-400"><i class="fas fa-users-slash mr-2"></i> Resolusi Data Ganda</h3>
+              <div class="flex items-center gap-2">
+                  <button id="btn-duplicate-bulk-keep" onclick="window.showDuplicateBulkKeepConfirm()" class="hidden bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-lg shadow-purple-600/30 flex items-center gap-1.5"><i class="fas fa-check-circle"></i> Timpa Terpilih (<span id="duplicate-bulk-keep-count">0</span>)</button>
+                  <button id="btn-duplicate-bulk-delete" onclick="window.showDuplicateBulkDeleteConfirm()" class="hidden bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-lg shadow-red-600/30 flex items-center gap-1.5"><i class="fas fa-trash-alt"></i> Hapus Terpilih (<span id="duplicate-bulk-delete-count">0</span>)</button>
+                  <button id="btn-bulk-merge-duplicates" onclick="window.showBulkMergeConfirm()" class="hidden bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-lg shadow-purple-600/30 flex items-center gap-1.5"><i class="fas fa-compress-alt"></i> Gabungkan Masal (Semua)</button>
+                  <button onclick="closeModal('modal-duplicates')" class="text-slate-400 hover:text-white transition-colors flex items-center"><i class="fas fa-times text-xl"></i></button>
+              </div>
             </div>
-        </div>
-      </div>
-<div id="modal-duplicates" class="hidden fixed inset-0 z-[500] flex items-center justify-center p-4">
-    <div onclick="closeModal('modal-duplicates')" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="glass relative w-full max-w-4xl rounded-[2rem] p-8 shadow-2xl max-h-[90vh] flex flex-col modal-enter border border-purple-500/20">
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-lg font-black uppercase text-purple-400"><i class="fas fa-users-slash mr-2"></i> Resolusi Data Ganda</h3>
-        <div class="flex items-center gap-2">
-            <!-- Pilihan Tindakan Terpilih -->
-            <button id="btn-duplicate-bulk-keep" onclick="window.showDuplicateBulkKeepConfirm()" class="hidden bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-lg shadow-purple-600/30 flex items-center gap-1.5"><i class="fas fa-check-circle"></i> Timpa Terpilih (<span id="duplicate-bulk-keep-count">0</span>)</button>
-            <button id="btn-duplicate-bulk-delete" onclick="window.showDuplicateBulkDeleteConfirm()" class="hidden bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-lg shadow-red-600/30 flex items-center gap-1.5"><i class="fas fa-trash-alt"></i> Hapus Terpilih (<span id="duplicate-bulk-delete-count">0</span>)</button>
-            
-            <!-- Tindakan Default -->
-            <button id="btn-bulk-merge-duplicates" onclick="window.showBulkMergeConfirm()" class="hidden bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase transition-all shadow-lg shadow-purple-600/30 flex items-center gap-1.5"><i class="fas fa-compress-alt"></i> Gabungkan Masal (Semua)</button>
-            <button onclick="closeModal('modal-duplicates')" class="text-slate-400 hover:text-white transition-colors flex items-center"><i class="fas fa-times text-xl"></i></button>
-        </div>
-      </div>
-      <div class="text-xs text-slate-300 mb-4 bg-purple-500/10 p-4 rounded-xl border border-purple-500/20 leading-relaxed">
-         AI menemukan data yang terindikasi kembar. Silakan bandingkan informasi di bawah ini, lalu pilih mana data yang ingin di <b>Edit/Update</b>, dan mana yang ingin di <b>Hapus</b>.
-      </div>
-      <div id="duplicates-list" class="overflow-y-auto custom-scrollbar flex-1 space-y-4">
-      </div>
-    </div>
-  </div>
-      <div id="tab-rundown" class="tab-content hidden space-y-4">
-        <div class="flex flex-wrap gap-2">
-            <button onclick="openModalRundown()" class="btn-md3 btn-md3-primary"><i class="fas fa-plus mr-2"></i> Tambah Manual</button>
-            <button onclick="openModal('modal-ai-rundown')" class="btn-md3 btn-md3-fuchsia"><i class="fas fa-magic mr-2"></i> Buat Rundown via AI</button>
-        </div>
-        <!-- RUNDOWN LIVE TRACKER (DURASIONAL & OFFLINE) -->
-        <div id="rundown-live-tracker" class="hidden"></div>
-        <div class="table-container">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left modern-table">
-                    <thead>
-                        <tr><th class="p-5">Waktu</th><th class="p-5">Kegiatan</th><th class="p-5">Keterangan</th><th class="p-5 text-center">Aksi</th></tr>
-                    </thead>
-                    <tbody id="rundown-list" class="divide-y divide-white/5 text-sm">
-                        <!-- Skeleton Loading rows -->
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-32 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-40 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-16 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-24 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-32 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="text-xs text-slate-300 mb-4 bg-purple-500/10 p-4 rounded-xl border border-purple-500/20 leading-relaxed">
+               AI menemukan data yang terindikasi kembar. Silakan bandingkan informasi di bawah ini, lalu pilih mana data yang ingin di <b>Edit/Update</b>, dan mana yang ingin di <b>Hapus</b>.
             </div>
-        </div>
+            <div id="duplicates-list" class="overflow-y-auto custom-scrollbar flex-1 space-y-4">
+            </div>
+          </div>
       </div>
 
 
@@ -2313,52 +2381,6 @@
                 </table>
             </div>
         </div>
-      </div>
-      <div id="tab-requests" class="tab-content hidden space-y-6">
-          <div class="table-container">
-              <div class="p-6 border-b border-emerald-500/20 bg-emerald-500/5">
-                  <h3 class="text-sm font-black uppercase text-emerald-400"><i class="fas fa-money-check-alt mr-2"></i> Konfirmasi Transfer / Donasi</h3>
-              </div>
-              <div class="overflow-x-auto custom-scrollbar">
-                  <table class="w-full text-left modern-table">
-                      <thead>
-                          <tr><th class="p-5">Waktu</th><th class="p-5">Pengirim</th><th class="p-5 text-right">Nominal</th><th class="p-5 text-center">Bukti</th><th class="p-5 text-center">Aksi</th></tr>
-                      </thead>
-                      <tbody id="request-finance-list" class="divide-y divide-white/5 text-sm">
-                          <!-- Skeleton Loading rows -->
-                          <tr>
-                              <td class="p-5"><div class="skeleton h-4 w-24 rounded"></div></td>
-                              <td class="p-5"><div class="skeleton h-4 w-28 mb-1 rounded"></div><div class="skeleton h-3 w-16 rounded"></div></td>
-                              <td class="p-5 text-right"><div class="skeleton h-4 w-20 rounded"></div></td>
-                              <td class="p-5 text-center"><div class="skeleton h-7 w-12 rounded mx-auto"></div></td>
-                              <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-14 rounded-lg"></div><div class="skeleton h-7 w-14 rounded-lg"></div></div></td>
-                          </tr>
-                      </tbody>
-                  </table>
-              </div>
-          </div>
-
-          <div class="table-container">
-              <div class="p-6 border-b border-indigo-500/20 bg-indigo-500/5">
-                  <h3 class="text-sm font-black uppercase text-indigo-400"><i class="fas fa-user-check mr-2"></i> Verifikasi Data Alumni Baru</h3>
-              </div>
-              <div class="overflow-x-auto custom-scrollbar">
-                  <table class="w-full text-left modern-table">
-                      <thead>
-                          <tr><th class="p-5">Nama</th><th class="p-5">Tahun Lulus</th><th class="p-5">Domisili</th><th class="p-5 text-center">Aksi</th></tr>
-                      </thead>
-                      <tbody id="request-list" class="divide-y divide-white/5 text-sm">
-                          <!-- Skeleton Loading rows -->
-                          <tr>
-                              <td class="p-5"><div class="skeleton h-4 w-28 mb-1 rounded"></div><div class="skeleton h-3 w-20 rounded"></div></td>
-                              <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
-                              <td class="p-5"><div class="skeleton h-3.5 w-24 rounded"></div></td>
-                              <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-12 rounded-lg"></div><div class="skeleton h-7 w-12 rounded-lg"></div></div></td>
-                          </tr>
-                      </tbody>
-                  </table>
-              </div>
-          </div>
       </div>
       <div id="tab-logistik" class="tab-content hidden space-y-4">
         <div class="flex flex-col lg:flex-row justify-between gap-4">
@@ -3291,8 +3313,8 @@
             <button onclick="window.switchSettingsSubTab('event')" id="subbtn-mobile-settings-event" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300 hidden">
               <i class="fas fa-calendar-check text-amber-400 text-sm"></i> Acara
             </button>
-            <button onclick="window.switchSettingsSubTab('ai')" id="subbtn-mobile-settings-ai" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300 hidden">
-              <i class="fas fa-brain text-blue-400 text-sm"></i> AI
+            <button onclick="window.switchSettingsSubTab('system')" id="subbtn-mobile-settings-system" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300">
+              <i class="fas fa-toolbox text-emerald-400 text-sm"></i> Sistem
             </button>
             <button onclick="window.switchSettingsSubTab('users')" id="subbtn-mobile-settings-users" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300 hidden">
               <i class="fas fa-users-cog text-indigo-400 text-sm"></i> User
@@ -3305,15 +3327,6 @@
             </button>
             <button onclick="window.switchSettingsSubTab('audit')" id="subbtn-mobile-settings-audit" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300 hidden">
               <i class="fas fa-history text-rose-400 text-sm"></i> Log
-            </button>
-            <button onclick="window.switchSettingsSubTab('utilities')" id="subbtn-mobile-settings-utilities" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300">
-              <i class="fas fa-toolbox text-emerald-400 text-sm"></i> Tools
-            </button>
-            <button onclick="showTab('whatsapp')" id="subbtn-mobile-settings-whatsapp" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300 hidden">
-              <i class="fab fa-whatsapp text-emerald-400 text-sm"></i> WhatsApp
-            </button>
-            <button onclick="window.switchSettingsSubTab('gallery')" id="subbtn-mobile-settings-gallery" class="mobile-settings-sub-btn px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 bg-white/5 border border-white/5 text-slate-300 hidden">
-              <i class="fas fa-camera text-pink-400 text-sm"></i> Galeri
             </button>
           </div>
           
@@ -3331,9 +3344,9 @@
                 <span>Info Acara</span>
               </button>
 
-              <button onclick="window.switchSettingsSubTab('ai')" id="subbtn-settings-ai" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal hidden">
-                <i class="fas fa-brain text-base w-5 text-center text-blue-400"></i>
-                <span>Konfigurasi AI</span>
+              <button onclick="window.switchSettingsSubTab('system')" id="subbtn-settings-system" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal">
+                <i class="fas fa-toolbox text-base w-5 text-center text-emerald-400"></i>
+                <span>Konfigurasi Sistem</span>
               </button>
 
               <button onclick="window.switchSettingsSubTab('users')" id="subbtn-settings-users" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal hidden">
@@ -3349,21 +3362,6 @@
               <button onclick="window.switchSettingsSubTab('audit')" id="subbtn-settings-audit" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal hidden">
                 <i class="fas fa-history text-base w-5 text-center text-rose-400"></i>
                 <span>Log Aktivitas</span>
-              </button>
-
-              <button onclick="window.switchSettingsSubTab('utilities')" id="subbtn-settings-utilities" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal">
-                <i class="fas fa-toolbox text-base w-5 text-center text-emerald-400"></i>
-                <span>Tools & Notif</span>
-              </button>
-
-              <button onclick="showTab('whatsapp')" id="subbtn-settings-whatsapp" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal hidden">
-                <i class="fab fa-whatsapp text-base w-5 text-center text-emerald-400"></i>
-                <span>WhatsApp Gateway</span>
-              </button>
-
-              <button onclick="window.switchSettingsSubTab('gallery')" id="subbtn-settings-gallery" class="settings-sub-btn flex items-center gap-2.5 px-4 py-3 rounded-xl text-left text-xs font-black uppercase tracking-wider whitespace-nowrap lg:whitespace-normal hidden">
-                <i class="fas fa-camera text-base w-5 text-center text-pink-400"></i>
-                <span>Galeri Dokumentasi</span>
               </button>
 
             </div>
@@ -3465,71 +3463,7 @@
             </div>
 
             <!-- Sub-Tab 3: Konfigurasi AI -->
-            <div id="subtab-settings-ai" class="settings-sub-content hidden premium-card p-6 md:p-8 space-y-6">
-              <div class="flex justify-between items-center pb-4 border-b border-white/5">
-                <h4 class="text-sm font-black uppercase text-blue-400 tracking-wider flex items-center gap-2">
-                  <i class="fas fa-brain"></i>
-                  <span>Pengaturan AI</span>
-                </h4>
-              </div>
-              <p class="text-xs text-slate-300 mb-4">Simpan kunci API (Gemini & Groq) dan pilih provider aktif yang digunakan untuk menangani kendala limitasi kuota.</p>
-              <form onsubmit="handleAiSettingsSubmit(event)" class="space-y-4">
-                <div>
-                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kunci API Google Gemini</label>
-                  <input type="password" id="ai-gemini-key" class="input-field py-3 text-sm mt-1" placeholder="Masukkan Gemini API Key..." />
-                  <div class="text-[9px] text-slate-400 mt-1.5 ml-1">Dapatkan di: <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-400 underline">aistudio.google.com</a></div>
-                </div>
-                <div>
-                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kunci API Groq</label>
-                  <input type="password" id="ai-groq-key" class="input-field py-3 text-sm mt-1" placeholder="Masukkan Groq API Key..." />
-                  <div class="text-[9px] text-slate-400 mt-1.5 ml-1">Dapatkan di: <a href="https://console.groq.com/keys" target="_blank" class="text-blue-400 underline">console.groq.com</a></div>
-                </div>
-                <div>
-                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Provider Aktif</label>
-                  <select id="ai-provider" class="input-field py-3 text-sm mt-1">
-                    <option value="gemini">Google Gemini (Model: gemini-flash-latest)</option>
-                    <option value="groq">Groq AI (Model: Llama 3)</option>
-                  </select>
-                </div>
-                <button type="submit" class="btn-md3 btn-md3-primary w-full mt-4"><i class="fas fa-save mr-2"></i> Simpan Konfigurasi AI</button>
-              </form>
-
-              <!-- Cloudinary Settings -->
-              <div class="border-t border-white/5 pt-6 mt-2">
-                <h4 class="text-sm font-black uppercase text-orange-400 tracking-wider flex items-center gap-2 mb-1">
-                  <i class="fas fa-cloud-upload-alt"></i>
-                  <span>Pengaturan Penyimpanan Gambar (Cloudinary)</span>
-                </h4>
-                <p class="text-xs text-slate-300 mb-4">Konfigurasi akun Cloudinary untuk unggah foto bukti transfer, foto profil, dan aset lainnya.</p>
-                <form onsubmit="window.handleCloudinarySettingsSubmit(event)" class="space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Cloud Name</label>
-                      <input type="text" id="cld-cloud-name" class="input-field py-3 text-sm mt-1" placeholder="Contoh: dowih3wr7" />
-                      <div class="text-[9px] text-slate-400 mt-1 ml-1">Dapatkan di: <a href="https://cloudinary.com/console" target="_blank" class="text-orange-400 underline">cloudinary.com/console</a></div>
-                    </div>
-                    <div>
-                      <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Upload Preset</label>
-                      <input type="text" id="cld-upload-preset" class="input-field py-3 text-sm mt-1" placeholder="Contoh: Reuniakbar" />
-                      <div class="text-[9px] text-slate-400 mt-1 ml-1">Buat preset di <b>Settings → Upload → Upload presets</b></div>
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Format Berkas Diizinkan</label>
-                      <input type="text" id="cld-allowed-formats" class="input-field py-3 text-sm mt-1" placeholder="jpg,jpeg,png,webp" />
-                      <div class="text-[9px] text-slate-400 mt-1 ml-1">Pisahkan dengan koma, tanpa spasi</div>
-                    </div>
-                    <div>
-                      <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Ukuran Maks Berkas (MB)</label>
-                      <input type="number" id="cld-max-size-mb" class="input-field py-3 text-sm mt-1" placeholder="5" min="1" max="20" />
-                      <div class="text-[9px] text-slate-400 mt-1 ml-1">Rekomendasi: 5 MB untuk bukti transfer</div>
-                    </div>
-                  </div>
-                  <button type="submit" class="btn-md3 w-full mt-2" style="background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;"><i class="fas fa-save mr-2"></i> Simpan Konfigurasi Cloudinary</button>
-                </form>
-              </div>
-            </div>
+            <!-- subtab-settings-ai moved to Konfigurasi Sistem -->
 
             <!-- Sub-Tab 4: Manajemen User -->
             <div id="subtab-settings-users" class="settings-sub-content hidden premium-card p-6 md:p-8 space-y-6">
@@ -3606,100 +3540,180 @@
             </div>
 
             <!-- Sub-Tab 7: Tools & Notif -->
-            <div id="subtab-settings-utilities" class="settings-sub-content hidden space-y-6">
-              
-              <!-- Utilitas Cadangan Data -->
-              <div class="premium-card p-6 md:p-8 space-y-4">
-                <h4 class="text-sm font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5"><i class="fas fa-database"></i> Cadangan & Pemulihan</h4>
-                <p class="text-xs text-slate-300">Ekspor seluruh data alumni, kas, dan donasi Anda ke Excel, atau pulihkan dari cadangan sebelumnya.</p>
-                <div class="grid grid-cols-2 gap-3 max-w-sm">
-                  <button type="button" onclick="window.backupDataToExcel()" class="btn-md3 btn-md3-amber w-full py-2.5 text-xs"><i class="fas fa-download mr-1"></i> Ekspor Data</button>
-                  <input type="file" id="restore-file-input" accept=".xlsx" class="hidden" onchange="window.restoreDataFromExcel(event)">
-                  <button type="button" onclick="document.getElementById('restore-file-input').click()" class="btn-md3 btn-md3-outlined w-full py-2.5 text-xs"><i class="fas fa-upload mr-1"></i> Impor Cadangan</button>
+            <!-- Sub-Tab Content: Konfigurasi Sistem -->
+            <div id="subtab-settings-system" class="settings-sub-content hidden space-y-6">
+                <!-- Nested Navigation (Tools, AI, Gallery) -->
+                <div class="flex border-b border-white/10 gap-6 px-1">
+                    <button id="subbtn-sys-utilities" onclick="window.switchSystemSubSubTab('utilities')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-indigo-500 text-white transition-all">
+                        <i class="fas fa-toolbox mr-1.5 text-emerald-400"></i> Tools & Notif
+                    </button>
+                    <button id="subbtn-sys-ai" onclick="window.switchSystemSubSubTab('ai')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                        <i class="fas fa-brain mr-1.5 text-blue-400"></i> Konfigurasi AI
+                    </button>
+                    <button id="subbtn-sys-gallery" onclick="window.switchSystemSubSubTab('gallery')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                        <i class="fas fa-camera mr-1.5 text-pink-400"></i> Galeri Dokumentasi
+                    </button>
                 </div>
-              </div>
 
-              <!-- Tools Data & Maintenance -->
-              <div id="card-data-tools-tab" class="premium-card p-6 md:p-8 space-y-4">
-                <h4 class="text-sm font-black text-rose-400 uppercase tracking-widest flex items-center gap-2">
-                  <i class="fas fa-tools"></i> Tools Data & Maintenance
-                </h4>
-                <p class="text-xs text-slate-300">Alat untuk membersihkan dan menormalisasi data wilayah serta penulisan nama alumni yang tidak konsisten di database.</p>
-                <div class="flex flex-wrap gap-3">
-                  <button onclick="window.openWilayahCleanupModal()" class="btn-md3 btn-md3-outlined py-3 px-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 text-rose-400 border-rose-500/30 hover:bg-rose-500/10">
-                    <i class="fas fa-broom text-sm"></i> Bersihkan Data Wilayah
-                  </button>
-                  <button onclick="window.openNamaCleanupModal()" class="btn-md3 btn-md3-outlined py-3 px-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10">
-                    <i class="fas fa-user-edit text-sm"></i> Kapitalisasi Nama Alumni
-                  </button>
-                  <button onclick="window.manualSyncCloudinary()" class="btn-md3 btn-md3-outlined py-3 px-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10">
-                    <i class="fas fa-cloud-upload-alt text-sm"></i> Sinkronisasi JSON Cloudinary
-                  </button>
-                </div>
-              </div>
+                <!-- Sub-Sub-Tab Content 1: Tools & Notif -->
+                <div id="subsubtab-sys-utilities" class="settings-sys-subcontent space-y-6">
+                  <!-- Utilitas Cadangan Data -->
+                  <div class="premium-card p-6 md:p-8 space-y-4">
+                    <h4 class="text-sm font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5"><i class="fas fa-database"></i> Cadangan & Pemulihan</h4>
+                    <p class="text-xs text-slate-300">Ekspor seluruh data alumni, kas, dan donasi Anda ke Excel, atau pulihkan dari cadangan sebelumnya.</p>
+                    <div class="grid grid-cols-2 gap-3 max-w-sm">
+                      <button type="button" onclick="window.backupDataToExcel()" class="btn-md3 btn-md3-amber w-full py-2.5 text-xs"><i class="fas fa-download mr-1"></i> Ekspor Data</button>
+                      <input type="file" id="restore-file-input" accept=".xlsx" class="hidden" onchange="window.restoreDataFromExcel(event)">
+                      <button type="button" onclick="document.getElementById('restore-file-input').click()" class="btn-md3 btn-md3-outlined w-full py-2.5 text-xs"><i class="fas fa-upload mr-1"></i> Impor Cadangan</button>
+                    </div>
+                  </div>
 
-              <!-- Kartu Notifikasi Push (FCM) -->
-              <div class="premium-card p-6 md:p-8 space-y-4 flex flex-col justify-between font-black text-[9px]">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h4 class="text-sm font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-1">
-                      <i class="fas fa-bell text-base"></i> Notifikasi Push Real-Time
+                  <!-- Tools Data & Maintenance -->
+                  <div id="card-data-tools-tab" class="premium-card p-6 md:p-8 space-y-4">
+                    <h4 class="text-sm font-black text-rose-400 uppercase tracking-widest flex items-center gap-2">
+                      <i class="fas fa-tools"></i> Tools Data & Maintenance
                     </h4>
-                    <p class="text-xs text-slate-300 leading-relaxed max-w-md">Aktifkan untuk menerima notifikasi real-time pendaftaran & pembayaran secara instan.</p>
+                    <p class="text-xs text-slate-300">Alat untuk membersihkan dan menormalisasi data wilayah serta penulisan nama alumni yang tidak konsisten di database.</p>
+                    <div class="flex flex-wrap gap-3">
+                      <button onclick="window.openWilayahCleanupModal()" class="btn-md3 btn-md3-outlined py-3 px-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 text-rose-400 border-rose-500/30 hover:bg-rose-500/10">
+                        <i class="fas fa-broom text-sm"></i> Bersihkan Data Wilayah
+                      </button>
+                      <button onclick="window.openNamaCleanupModal()" class="btn-md3 btn-md3-outlined py-3 px-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10">
+                        <i class="fas fa-user-edit text-sm"></i> Kapitalisasi Nama Alumni
+                      </button>
+                      <button onclick="window.manualSyncCloudinary()" class="btn-md3 btn-md3-outlined py-3 px-4 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2.5 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10">
+                        <i class="fas fa-cloud-upload-alt text-sm"></i> Sinkronisasi JSON Cloudinary
+                      </button>
+                    </div>
                   </div>
-                  <div class="flex items-center gap-2 bg-black/25 px-3 py-1.5 rounded-xl border border-white/5 self-start sm:self-auto font-black text-[9px]">
-                    <div id="notif-status-dot" class="w-2 h-2 rounded-full bg-slate-600"></div>
-                    <span id="notif-status-text" class="text-[9px] font-black uppercase tracking-wider text-slate-500">Nonaktif</span>
+
+                  <!-- Kartu Notifikasi Push (FCM) -->
+                  <div class="premium-card p-6 md:p-8 space-y-4 flex flex-col justify-between font-black text-[9px]">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <h4 class="text-sm font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 mb-1">
+                          <i class="fas fa-bell text-base"></i> Notifikasi Push Real-Time
+                        </h4>
+                        <p class="text-xs text-slate-300 leading-relaxed max-w-md">Aktifkan untuk menerima notifikasi real-time pendaftaran & pembayaran secara instan.</p>
+                      </div>
+                      <div class="flex items-center gap-2 bg-black/25 px-3 py-1.5 rounded-xl border border-white/5 self-start sm:self-auto font-black text-[9px]">
+                        <div id="notif-status-dot" class="w-2 h-2 rounded-full bg-slate-600"></div>
+                        <span id="notif-status-text" class="text-[9px] font-black uppercase tracking-wider text-slate-500">Nonaktif</span>
+                      </div>
+                    </div>
+
+                    <div class="pt-2">
+                      <button id="btn-enable-notif" onclick="window.initFCM()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] text-white py-3.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]">
+                        <i class="fas fa-bell"></i> Aktifkan Notifikasi
+                      </button>
+                      <button id="btn-disable-notif" onclick="window.disableFCM()" class="hidden w-full bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.99]">
+                        <i class="fas fa-bell-slash"></i> Matikan Notifikasi
+                      </button>
+                    </div>
+
+                    <details class="text-[9px] text-slate-500 mt-2 border-t border-white/5 pt-3">
+                      <summary class="cursor-pointer font-bold uppercase tracking-wider text-amber-500/70 hover:text-amber-400 transition-colors focus:outline-none flex items-center gap-1 select-none">
+                        <i class="fas fa-cog"></i> Panduan Konfigurasi (Developer Only)
+                      </summary>
+                      <div class="mt-2 p-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-amber-400/80 leading-relaxed font-semibold">
+                        <strong>Notif saat aplikasi tertutup:</strong> Tempelkan VAPID Key dari Firebase Console (Project Settings → Cloud Messaging → Web Push Certificates) ke baris pertama file <code class="bg-black/30 px-1 rounded text-white text-[8px]">www/js/fcm-notifications.js</code>.
+                      </div>
+                    </details>
                   </div>
                 </div>
 
-                <div class="pt-2">
-                  <button id="btn-enable-notif" onclick="window.initFCM()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] text-white py-3.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99]">
-                    <i class="fas fa-bell"></i> Aktifkan Notifikasi
-                  </button>
-                  <button id="btn-disable-notif" onclick="window.disableFCM()" class="hidden w-full bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-[0.99]">
-                    <i class="fas fa-bell-slash"></i> Matikan Notifikasi
-                  </button>
+                <!-- Sub-Sub-Tab Content 2: Konfigurasi AI -->
+                <div id="subsubtab-sys-ai" class="settings-sys-subcontent hidden premium-card p-6 md:p-8 space-y-6">
+                  <div class="flex justify-between items-center pb-4 border-b border-white/5">
+                    <h4 class="text-sm font-black uppercase text-blue-400 tracking-wider flex items-center gap-2">
+                      <i class="fas fa-brain"></i>
+                      <span>Pengaturan AI</span>
+                    </h4>
+                  </div>
+                  <p class="text-xs text-slate-300 mb-4">Simpan kunci API (Gemini & Groq) dan pilih provider aktif yang digunakan untuk menangani kendala limitasi kuota.</p>
+                  <form onsubmit="handleAiSettingsSubmit(event)" class="space-y-4">
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kunci API Google Gemini</label>
+                      <input type="password" id="ai-gemini-key" class="input-field py-3 text-sm mt-1" placeholder="Masukkan Gemini API Key..." />
+                      <div class="text-[9px] text-slate-400 mt-1.5 ml-1">Dapatkan di: <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-400 underline">aistudio.google.com</a></div>
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kunci API Groq</label>
+                      <input type="password" id="ai-groq-key" class="input-field py-3 text-sm mt-1" placeholder="Masukkan Groq API Key..." />
+                      <div class="text-[9px] text-slate-400 mt-1.5 ml-1">Dapatkan di: <a href="https://console.groq.com/keys" target="_blank" class="text-blue-400 underline">console.groq.com</a></div>
+                    </div>
+                    <div>
+                      <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Provider Aktif</label>
+                      <select id="ai-provider" class="input-field py-3 text-sm mt-1">
+                        <option value="gemini">Google Gemini (Model: gemini-flash-latest)</option>
+                        <option value="groq">Groq AI (Model: Llama 3)</option>
+                      </select>
+                    </div>
+                    <button type="submit" class="btn-md3 btn-md3-primary w-full mt-4"><i class="fas fa-save mr-2"></i> Simpan Konfigurasi AI</button>
+                  </form>
+
+                  <!-- Cloudinary Settings -->
+                  <div class="border-t border-white/5 pt-6 mt-2">
+                    <h4 class="text-sm font-black uppercase text-orange-400 tracking-wider flex items-center gap-2 mb-1">
+                      <i class="fas fa-cloud-upload-alt"></i>
+                      <span>Pengaturan Penyimpanan Gambar (Cloudinary)</span>
+                    </h4>
+                    <p class="text-xs text-slate-300 mb-4">Konfigurasi akun Cloudinary untuk unggah foto bukti transfer, foto profil, dan aset lainnya.</p>
+                    <form onsubmit="window.handleCloudinarySettingsSubmit(event)" class="space-y-4">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Cloud Name</label>
+                          <input type="text" id="cld-cloud-name" class="input-field py-3 text-sm mt-1" placeholder="Contoh: dowih3wr7" />
+                          <div class="text-[9px] text-slate-400 mt-1 ml-1">Dapatkan di: <a href="https://cloudinary.com/console" target="_blank" class="text-orange-400 underline">cloudinary.com/console</a></div>
+                        </div>
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Upload Preset</label>
+                          <input type="text" id="cld-upload-preset" class="input-field py-3 text-sm mt-1" placeholder="Contoh: Reuniakbar" />
+                          <div class="text-[9px] text-slate-400 mt-1 ml-1">Buat preset di <b>Settings → Upload → Upload presets</b></div>
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Format Berkas Diizinkan</label>
+                          <input type="text" id="cld-allowed-formats" class="input-field py-3 text-sm mt-1" placeholder="jpg,jpeg,png,webp" />
+                          <div class="text-[9px] text-slate-400 mt-1 ml-1">Pisahkan dengan koma, tanpa spasi</div>
+                        </div>
+                        <div>
+                          <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Ukuran Maks Berkas (MB)</label>
+                          <input type="number" id="cld-max-size-mb" class="input-field py-3 text-sm mt-1" placeholder="5" min="1" max="20" />
+                          <div class="text-[9px] text-slate-400 mt-1 ml-1">Rekomendasi: 5 MB untuk bukti transfer</div>
+                        </div>
+                      </div>
+                      <button type="submit" class="btn-md3 w-full mt-2" style="background:linear-gradient(135deg,#f97316,#ea580c);color:#fff;"><i class="fas fa-save mr-2"></i> Simpan Konfigurasi Cloudinary</button>
+                    </form>
+                  </div>
                 </div>
 
-                <details class="text-[9px] text-slate-500 mt-2 border-t border-white/5 pt-3">
-                  <summary class="cursor-pointer font-bold uppercase tracking-wider text-amber-500/70 hover:text-amber-400 transition-colors focus:outline-none flex items-center gap-1 select-none">
-                    <i class="fas fa-cog"></i> Panduan Konfigurasi (Developer Only)
-                  </summary>
-                  <div class="mt-2 p-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-amber-400/80 leading-relaxed font-semibold">
-                    <strong>Notif saat aplikasi tertutup:</strong> Tempelkan VAPID Key dari Firebase Console (Project Settings → Cloud Messaging → Web Push Certificates) ke baris pertama file <code class="bg-black/30 px-1 rounded text-white text-[8px]">www/js/fcm-notifications.js</code>.
+                <!-- Sub-Sub-Tab Content 3: Galeri Dokumentasi -->
+                <div id="subsubtab-sys-gallery" class="settings-sys-subcontent hidden premium-card p-6 md:p-8 space-y-6">
+                  <div class="flex justify-between items-center pb-4 border-b border-white/5">
+                    <h4 class="text-sm font-black uppercase text-pink-400 tracking-wider flex items-center gap-2">
+                      <i class="fas fa-camera"></i>
+                      <span>Pengaturan Galeri Dokumentasi</span>
+                    </h4>
+                    <button type="button" onclick="window.addGalleryCategoryRow()" class="btn-md3 btn-md3-emerald py-2 px-3 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                      <i class="fas fa-plus"></i> Tambah Kategori
+                    </button>
                   </div>
-                </details>
-              </div>
+                  <p class="text-xs text-slate-300">Kelola kategori galeri foto/video dokumentasi reuni secara real-time. Anda dapat menambah, menghapus, atau mengubah nama kategori secara bebas.</p>
+                  
+                  <form id="form-gallery-settings" onsubmit="window.handleGallerySettingsSubmit(event)" class="space-y-4">
+                    <!-- Container untuk baris kategori dinamis -->
+                    <div id="gallery-categories-container" class="space-y-4">
+                      <!-- Baris kategori akan di-render secara dinamis di sini -->
+                    </div>
 
+                    <button type="submit" id="btn-save-gallery-settings" class="btn-md3 btn-md3-primary w-full mt-6 flex items-center justify-center gap-2 py-3.5 shadow-lg">
+                      <i class="fas fa-save"></i> Simpan Pengaturan Galeri
+                    </button>
+                  </form>
+                </div>
             </div>
-
-          </div>
-
-          <!-- Sub-Tab 8: Galeri Dokumentasi -->
-          <div id="subtab-settings-gallery" class="settings-sub-content hidden premium-card p-6 md:p-8 space-y-6">
-            <div class="flex justify-between items-center pb-4 border-b border-white/5">
-              <h4 class="text-sm font-black uppercase text-pink-400 tracking-wider flex items-center gap-2">
-                <i class="fas fa-camera"></i>
-                <span>Pengaturan Galeri Dokumentasi</span>
-              </h4>
-              <button type="button" onclick="window.addGalleryCategoryRow()" class="btn-md3 btn-md3-emerald py-2 px-3 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-                <i class="fas fa-plus"></i> Tambah Kategori
-              </button>
-            </div>
-            <p class="text-xs text-slate-300">Kelola kategori galeri foto/video dokumentasi reuni secara real-time. Anda dapat menambah, menghapus, atau mengubah nama kategori secara bebas.</p>
-            
-            <form id="form-gallery-settings" onsubmit="window.handleGallerySettingsSubmit(event)" class="space-y-4">
-              <!-- Container untuk baris kategori dinamis -->
-              <div id="gallery-categories-container" class="space-y-4">
-                <!-- Baris kategori akan di-render secara dinamis di sini -->
-              </div>
-
-              <button type="submit" id="btn-save-gallery-settings" class="btn-md3 btn-md3-primary w-full mt-6 flex items-center justify-center gap-2 py-3.5 shadow-lg">
-                <i class="fas fa-save"></i> Simpan Pengaturan Galeri
-              </button>
-            </form>
-          </div>
 
         </div>
 
@@ -4157,21 +4171,16 @@
     
     <div class="space-y-6">
       
-      <!-- Kategori 1: Administrasi & Verifikasi -->
+      <!-- Kategori 1: Administrasi -->
       <div>
         <h4 class="text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-2.5 px-1 flex items-center gap-1.5">
-          <i class="fas fa-user-shield text-[10px]"></i> Administrasi & Verifikasi
+          <i class="fas fa-user-shield text-[10px]"></i> Administrasi
         </h4>
         <div class="grid grid-cols-3 gap-2">
           <a href="countdown.html" target="_blank" class="flex flex-col items-center justify-center p-3 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center min-h-[72px]" style="text-decoration: none;">
             <i class="fas fa-globe text-indigo-400 text-sm mb-1"></i>
             <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Halaman Publik</span>
           </a>
-          <div id="btn-mobile-requests" onclick="window.switchMobileTab('requests')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px] relative">
-            <i class="fas fa-user-check text-emerald-400 text-sm mb-1"></i>
-            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Verifikasi</span>
-            <span id="badge-mobile-requests" class="hidden absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span>
-          </div>
           <div id="btn-mobile-tugas" onclick="window.switchMobileTab('tugas')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
             <i class="fas fa-tasks text-amber-500 text-sm mb-1"></i>
             <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Tugas Panitia</span>
@@ -4202,13 +4211,9 @@
           <i class="fas fa-calendar-alt text-[10px]"></i> Kegiatan & Laporan
         </h4>
         <div class="grid grid-cols-3 gap-2">
-          <div onclick="window.switchMobileTab('rundown')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
-            <i class="fas fa-calendar-alt text-cyan-400 text-sm mb-1"></i>
-            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Rundown</span>
-          </div>
           <div id="btn-mobile-panitia" onclick="window.switchMobileTab('panitia')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
             <i class="fas fa-id-card text-blue-400 text-sm mb-1"></i>
-            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Panitia</span>
+            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Panitia & Rundown</span>
           </div>
           <div onclick="window.switchMobileTab('guestbook')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
             <i class="fas fa-book text-pink-400 text-sm mb-1"></i>

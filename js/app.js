@@ -264,6 +264,13 @@ window.switchWaModeTab = (mode) => {
 };
 
 window.switchSettingsSubTab = (subTabName) => {
+  // REDIRECTS FOR CONSOLIDATED SYSTEM SETTINGS
+  if (subTabName === 'ai' || subTabName === 'gallery' || subTabName === 'utilities') {
+    window.switchSettingsSubTab('system');
+    window.switchSystemSubSubTab(subTabName);
+    return;
+  }
+
   const subContents = document.querySelectorAll(".settings-sub-content");
   subContents.forEach(el => {
     el.classList.add("hidden");
@@ -294,93 +301,20 @@ window.switchSettingsSubTab = (subTabName) => {
   const activeMobileBtn = document.getElementById(`subbtn-mobile-settings-${subTabName}`);
   if (activeMobileBtn) activeMobileBtn.classList.add("active");
 
+  // If selecting parent system settings tab, default to active sub-sub-tab or utilities
+  if (subTabName === 'system') {
+    const subSubContents = document.querySelectorAll(".settings-sys-subcontent");
+    let activeSubSub = 'utilities';
+    subSubContents.forEach(el => {
+      if (!el.classList.contains("hidden")) {
+        activeSubSub = el.id.replace("subsubtab-sys-", "");
+      }
+    });
+    window.switchSystemSubSubTab(activeSubSub);
+  }
+
   // ---- INTEGRATED AUTO-LOAD DATA HOOKS FOR ALL SUB-TABS ----
-  if (subTabName === 'ai') {
-      (async () => {
-          try {
-              const doc = await db.collection("app_settings").doc("ai_config").get();
-              if (doc.exists) {
-                  const data = doc.data();
-                  const geminiKeyEl = document.getElementById("ai-gemini-key");
-                  const groqKeyEl = document.getElementById("ai-groq-key");
-                  const providerEl = document.getElementById("ai-provider");
-                  
-                  if (geminiKeyEl) geminiKeyEl.value = data.gemini_key || "";
-                  if (groqKeyEl) groqKeyEl.value = data.groq_key || "";
-                  if (providerEl && data.ai_provider) providerEl.value = data.ai_provider;
-                  
-                  window.geminiApiKey = data.gemini_key || "";
-                  window.groqApiKey = data.groq_key || "";
-                  window.aiProvider = data.ai_provider || "gemini";
-              }
-          } catch(err) {
-              console.error("Gagal memuat AI config di sub-tab", err);
-          }
-
-          // Load Cloudinary config dan isi form
-          try {
-              const cldDoc = await db.collection("app_settings").doc("cloudinary_config").get();
-              if (cldDoc.exists) {
-                  const d = cldDoc.data();
-                  const cnEl  = document.getElementById("cld-cloud-name");
-                  const upEl  = document.getElementById("cld-upload-preset");
-                  const fmtEl = document.getElementById("cld-allowed-formats");
-                  const szEl  = document.getElementById("cld-max-size-mb");
-                  if (cnEl)  cnEl.value  = d.cloud_name    || "";
-                  if (upEl)  upEl.value  = d.upload_preset || "";
-                  if (fmtEl) fmtEl.value = d.allowed_formats || "jpg,jpeg,png,webp";
-                  if (szEl)  szEl.value  = d.max_size_mb   || 5;
-
-                  // Perbarui runtime config
-                  if (window.CLOUDINARY_CONFIG) {
-                      window.CLOUDINARY_CONFIG.cloud_name      = d.cloud_name    || window.CLOUDINARY_CONFIG.cloud_name;
-                      window.CLOUDINARY_CONFIG.upload_preset   = d.upload_preset || window.CLOUDINARY_CONFIG.upload_preset;
-                      window.CLOUDINARY_CONFIG.allowed_formats = d.allowed_formats || window.CLOUDINARY_CONFIG.allowed_formats;
-                      window.CLOUDINARY_CONFIG.max_size_mb     = d.max_size_mb   || window.CLOUDINARY_CONFIG.max_size_mb;
-                  }
-              }
-          } catch(err) {
-              console.error("Gagal memuat Cloudinary config di sub-tab", err);
-          }
-      })();
-  } else if (subTabName === 'gallery') {
-      (async () => {
-          try {
-              const doc = await db.collection("settings").doc("documentation").get();
-              const container = document.getElementById("gallery-categories-container");
-              if (container) container.innerHTML = ""; // Bersihkan kontainer terlebih dahulu
-
-              if (doc.exists) {
-                  const data = doc.data();
-                  if (data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
-                      data.categories.forEach(cat => {
-                          window.addGalleryCategoryRow(cat.name, cat.folder_id, cat.id);
-                      });
-                  } else {
-                      // Fallback migrasi jika hanya ada field individual dari format lama
-                      const ac = data.folder_acara || "";
-                      const ns = data.folder_nostalgia || "";
-                      const pn = data.folder_panitia || "";
-                      
-                      if (ac) window.addGalleryCategoryRow("Acara Utama", ac);
-                      if (ns) window.addGalleryCategoryRow("Foto Sekolah Lawas", ns);
-                      if (pn) window.addGalleryCategoryRow("Persiapan Panitia", pn);
-                      
-                      if (!ac && !ns && !pn) {
-                          // Jika masih kosong sama sekali, tampilkan 1 baris kosong
-                          window.addGalleryCategoryRow("", "");
-                      }
-                  }
-              } else {
-                  // Default awal jika dokumen belum ada
-                  window.addGalleryCategoryRow("", "");
-              }
-          } catch(err) {
-              console.error("Gagal memuat konfigurasi folder galeri:", err);
-          }
-      })();
-  } else if (subTabName === 'profile') {
-
+  if (subTabName === 'profile') {
       if (window.STATE && window.STATE.user) {
           const nameEl = document.getElementById("set-name");
           const photoEl = document.getElementById("preview-profile-photo");
@@ -400,6 +334,189 @@ window.switchSettingsSubTab = (subTabName) => {
       if (typeof window.renderApproveUsers === 'function') window.renderApproveUsers();
   } else if (subTabName === 'audit') {
       if (typeof window.renderAuditLog === 'function') window.renderAuditLog();
+  }
+};
+
+window.switchSystemSubSubTab = (subSubTabId) => {
+  const subSubContents = document.querySelectorAll(".settings-sys-subcontent");
+  subSubContents.forEach(el => {
+    el.classList.add("hidden");
+  });
+
+  const activeContent = document.getElementById(`subsubtab-sys-${subSubTabId}`);
+  if (activeContent) {
+    activeContent.classList.remove("hidden");
+  }
+
+  const subSubBtns = [
+    { id: 'subbtn-sys-utilities', key: 'utilities' },
+    { id: 'subbtn-sys-ai', key: 'ai' },
+    { id: 'subbtn-sys-gallery', key: 'gallery' }
+  ];
+  subSubBtns.forEach(item => {
+    const btn = document.getElementById(item.id);
+    if (btn) {
+      if (item.key === subSubTabId) {
+        btn.classList.remove("border-transparent", "text-slate-400");
+        btn.classList.add("border-indigo-500", "text-white");
+      } else {
+        btn.classList.remove("border-indigo-500", "text-white");
+        btn.classList.add("border-transparent", "text-slate-400");
+      }
+    }
+  });
+
+  if (subSubTabId === 'ai') {
+    window.loadSystemAiConfig();
+  } else if (subSubTabId === 'gallery') {
+    window.loadSystemGalleryConfig();
+  }
+};
+
+window.loadSystemAiConfig = async () => {
+  try {
+      const doc = await db.collection("app_settings").doc("ai_config").get();
+      if (doc.exists) {
+          const data = doc.data();
+          const geminiKeyEl = document.getElementById("ai-gemini-key");
+          const groqKeyEl = document.getElementById("ai-groq-key");
+          const providerEl = document.getElementById("ai-provider");
+          
+          if (geminiKeyEl) geminiKeyEl.value = data.gemini_key || "";
+          if (groqKeyEl) groqKeyEl.value = data.groq_key || "";
+          if (providerEl && data.ai_provider) providerEl.value = data.ai_provider;
+          
+          window.geminiApiKey = data.gemini_key || "";
+          window.groqApiKey = data.groq_key || "";
+          window.aiProvider = data.ai_provider || "gemini";
+      }
+  } catch(err) {
+      console.error("Gagal memuat AI config di sub-tab", err);
+  }
+
+  try {
+      const cldDoc = await db.collection("app_settings").doc("cloudinary_config").get();
+      if (cldDoc.exists) {
+          const d = cldDoc.data();
+          const cnEl  = document.getElementById("cld-cloud-name");
+          const upEl  = document.getElementById("cld-upload-preset");
+          const fmtEl = document.getElementById("cld-allowed-formats");
+          const szEl  = document.getElementById("cld-max-size-mb");
+          if (cnEl)  cnEl.value  = d.cloud_name    || "";
+          if (upEl)  upEl.value  = d.upload_preset || "";
+          if (fmtEl) fmtEl.value = d.allowed_formats || "jpg,jpeg,png,webp";
+          if (szEl)  szEl.value  = d.max_size_mb   || 5;
+
+          if (window.CLOUDINARY_CONFIG) {
+              window.CLOUDINARY_CONFIG.cloud_name      = d.cloud_name    || window.CLOUDINARY_CONFIG.cloud_name;
+              window.CLOUDINARY_CONFIG.upload_preset   = d.upload_preset || window.CLOUDINARY_CONFIG.upload_preset;
+              window.CLOUDINARY_CONFIG.allowed_formats = d.allowed_formats || window.CLOUDINARY_CONFIG.allowed_formats;
+              window.CLOUDINARY_CONFIG.max_size_mb     = d.max_size_mb   || window.CLOUDINARY_CONFIG.max_size_mb;
+          }
+      }
+  } catch(err) {
+      console.error("Gagal memuat Cloudinary config di sub-tab", err);
+  }
+};
+
+window.loadSystemGalleryConfig = async () => {
+  try {
+      const doc = await db.collection("settings").doc("documentation").get();
+      const container = document.getElementById("gallery-categories-container");
+      if (container) container.innerHTML = "";
+
+      if (doc.exists) {
+          const data = doc.data();
+          if (data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+              data.categories.forEach(cat => {
+                  window.addGalleryCategoryRow(cat.name, cat.folder_id, cat.id);
+              });
+          } else {
+              const ac = data.folder_acara || "";
+              const ns = data.folder_nostalgia || "";
+              const pn = data.folder_panitia || "";
+              
+              if (ac) window.addGalleryCategoryRow("Acara Utama", ac);
+              if (ns) window.addGalleryCategoryRow("Foto Sekolah Lawas", ns);
+              if (pn) window.addGalleryCategoryRow("Persiapan Panitia", pn);
+              
+              if (!ac && !ns && !pn) {
+                  window.addGalleryCategoryRow("", "");
+              }
+          }
+      } else {
+          window.addGalleryCategoryRow("", "");
+      }
+  } catch(err) {
+      console.error("Gagal memuat konfigurasi folder galeri:", err);
+  }
+};
+
+window.switchAlumniSubTab = (subTabId) => {
+  const isList = subTabId === 'list';
+  const listBtn = document.getElementById("subbtn-alumni-list");
+  const verifyBtn = document.getElementById("subbtn-alumni-verify");
+  const listContent = document.getElementById("subtab-alumni-list");
+  const verifyContent = document.getElementById("subtab-alumni-verify");
+
+  if (isList) {
+    if (listBtn) {
+      listBtn.classList.remove("border-transparent", "text-slate-400");
+      listBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (verifyBtn) {
+      verifyBtn.classList.remove("border-indigo-500", "text-white");
+      verifyBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (listContent) listContent.classList.remove("hidden");
+    if (verifyContent) verifyContent.classList.add("hidden");
+    if (typeof window.renderAlumniTable === 'function') window.renderAlumniTable();
+  } else {
+    if (verifyBtn) {
+      verifyBtn.classList.remove("border-transparent", "text-slate-400");
+      verifyBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (listBtn) {
+      listBtn.classList.remove("border-indigo-500", "text-white");
+      listBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (verifyContent) verifyContent.classList.remove("hidden");
+    if (listContent) listContent.classList.add("hidden");
+    if (typeof window.renderRequestTable === 'function') window.renderRequestTable();
+  }
+};
+
+window.switchPanitiaSubTab = (subTabId) => {
+  const isStruktur = subTabId === 'struktur';
+  const strukturBtn = document.getElementById("subbtn-panitia-struktur");
+  const rundownBtn = document.getElementById("subbtn-panitia-rundown");
+  const strukturContent = document.getElementById("subtab-panitia-struktur");
+  const rundownContent = document.getElementById("subtab-panitia-rundown");
+
+  if (isStruktur) {
+    if (strukturBtn) {
+      strukturBtn.classList.remove("border-transparent", "text-slate-400");
+      strukturBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (rundownBtn) {
+      rundownBtn.classList.remove("border-indigo-500", "text-white");
+      rundownBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (strukturContent) strukturContent.classList.remove("hidden");
+    if (rundownContent) rundownContent.classList.add("hidden");
+    if (typeof window.renderPanitiaTable === 'function') window.renderPanitiaTable();
+  } else {
+    if (rundownBtn) {
+      rundownBtn.classList.remove("border-transparent", "text-slate-400");
+      rundownBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (strukturBtn) {
+      strukturBtn.classList.remove("border-indigo-500", "text-white");
+      strukturBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (rundownContent) rundownContent.classList.remove("hidden");
+    if (strukturContent) strukturContent.classList.add("hidden");
+    if (typeof window.renderRundownTable === 'function') window.renderRundownTable();
   }
 };
 
@@ -673,6 +790,16 @@ window.toggleSidebar = () => {
 // FUNGSI GANTI TAB
 window.showTab = (tabId) => {
   // REDIRECTS FOR MERGED TABS
+  if (tabId === 'requests') {
+      window.showTab('alumni');
+      window.switchAlumniSubTab('verify');
+      return;
+  }
+  if (tabId === 'rundown') {
+      window.showTab('panitia');
+      window.switchPanitiaSubTab('rundown');
+      return;
+  }
   if (tabId === 'rab') {
       window.showTab('finance');
       window.switchFinanceSubTab('rab');
@@ -690,6 +817,29 @@ window.showTab = (tabId) => {
   }
 
   // DEFAULT SUB-TAB ACTIVATION ON PARENT SELECT
+  if (tabId === 'alumni') {
+      const verifyContent = document.getElementById("subtab-alumni-verify");
+      const verifyActive = verifyContent && !verifyContent.classList.contains("hidden");
+      if (verifyActive) {
+          window.switchAlumniSubTab('verify');
+      } else {
+          window.switchAlumniSubTab('list');
+      }
+  }
+  if (tabId === 'panitia') {
+      const isViewer = window.STATE && window.STATE.user && window.STATE.user.role === 'viewer';
+      if (isViewer) {
+          window.switchPanitiaSubTab('rundown');
+      } else {
+          const rundownContent = document.getElementById("subtab-panitia-rundown");
+          const rundownActive = rundownContent && !rundownContent.classList.contains("hidden");
+          if (rundownActive) {
+              window.switchPanitiaSubTab('rundown');
+          } else {
+              window.switchPanitiaSubTab('struktur');
+          }
+      }
+  }
   if (tabId === 'finance') {
       const rabContent = document.getElementById("subtab-finance-rab");
       const rabActive = rabContent && !rabContent.classList.contains("hidden");
@@ -1113,17 +1263,23 @@ auth.onAuthStateChanged(async (user) => {
         ? window.STATE.eventInfo.api_access_roles
         : ["admin_utama", "creator"];
     const canAccessApi = allowedApiRoles.includes(r);
-    showElement("subbtn-settings-ai", canAccessApi);
-    showElement("subbtn-logo-ai", canAccessApi);
-    showElement("subbtn-mobile-settings-ai", canAccessApi);
 
     const canAccessGallery = r === "admin_utama" || r === "creator" || r === "publikasi";
-    showElement("subbtn-settings-gallery", canAccessGallery);
-    showElement("subbtn-logo-gallery", canAccessGallery);
-    showElement("subbtn-mobile-settings-gallery", canAccessGallery);
-
     const canAccessWaApi = ["admin_utama", "creator", "bendahara", "sekretaris"].includes(r);
     showElement("btn-broadcast-alumni", canAccessWaApi);
+
+    // Konfigurasi Sistem Settings sub-tab checks
+    const canAccessSystem = canAccessApi || canAccessWaApi || canAccessGallery;
+    showElement("subbtn-settings-system", canAccessSystem);
+    showElement("subbtn-mobile-settings-system", canAccessSystem);
+    showElement("subbtn-sys-ai", canAccessApi);
+    showElement("subbtn-sys-utilities", canAccessWaApi);
+    showElement("subbtn-sys-gallery", canAccessGallery);
+
+    // Keep logo sub-menu updates
+    showElement("subbtn-logo-ai", canAccessApi);
+    showElement("subbtn-logo-gallery", canAccessGallery);
+    showElement("subbtn-logo-utilities", canAccessWaApi);
     
     // Tanya AI is available to all logged in users (r exists)
     const canUseAI = !!r;
@@ -1133,8 +1289,7 @@ auth.onAuthStateChanged(async (user) => {
 
     // 1. Verifikasi (Requests)
     const canVerify = ["creator", "admin_utama", "sekretaris", "bendahara", "ketua", "koordinator_wilayah", "korwil_kabupaten", "korwil_kecamatan", "korwil_desa"].includes(r);
-    showElement("btn-requests", canVerify);
-    showElement("btn-mobile-requests", canVerify);
+    showElement("subbtn-alumni-verify", canVerify);
 
     // 2. Keuangan & RAB
     const canFinance = ["creator", "admin_utama", "bendahara", "sekretaris", "ketua", "koordinator_wilayah", "korwil_kabupaten", "korwil_kecamatan", "korwil_desa"].includes(r);
@@ -1184,8 +1339,11 @@ auth.onAuthStateChanged(async (user) => {
     const isPanitia = r !== "viewer";
     showElement("btn-tugas", isPanitia);
     showElement("btn-mobile-tugas", isPanitia);
-    showElement("btn-panitia", isPanitia);
-    showElement("btn-mobile-panitia", isPanitia);
+    // Panitia parent button (Kepanitiaan & Rundown) is visible to all logged-in users (!!r)
+    showElement("btn-panitia", !!r);
+    showElement("btn-mobile-panitia", !!r);
+    // Inside tab-panitia sub-tab buttons:
+    showElement("subbtn-panitia-struktur", isPanitia);
 
     // 5.5. Distribusi Surat (Letter Distribution)
     const canSurat = ["creator", "admin_utama", "sekretaris", "bendahara", "ketua", "koordinator_wilayah", "korwil_kabupaten", "korwil_kecamatan", "korwil_desa"].includes(r);
@@ -1354,14 +1512,25 @@ window.updateBadges = () => {
     ? window.STATE.users.filter((u) => u.role === "pending").length
     : 0;
 
-  // 1. Desktop Sidebar Requests Badge
-  const badgeRequests = document.getElementById("badge-requests");
-  if (badgeRequests) {
+  // 1. Desktop Sidebar Alumni Badge (Parent)
+  const badgeAlumni = document.getElementById("badge-alumni");
+  if (badgeAlumni) {
     if (pendingRequestsCount > 0) {
-      badgeRequests.innerText = pendingRequestsCount;
-      badgeRequests.classList.remove("hidden");
+      badgeAlumni.innerText = pendingRequestsCount;
+      badgeAlumni.classList.remove("hidden");
     } else {
-      badgeRequests.classList.add("hidden");
+      badgeAlumni.classList.add("hidden");
+    }
+  }
+
+  // 1.5. Alumni Sub-Tab Verify Badge
+  const badgeSubtabVerify = document.getElementById("badge-subtab-alumni-verify");
+  if (badgeSubtabVerify) {
+    if (pendingRequestsCount > 0) {
+      badgeSubtabVerify.innerText = pendingRequestsCount;
+      badgeSubtabVerify.classList.remove("hidden");
+    } else {
+      badgeSubtabVerify.classList.add("hidden");
     }
   }
 
@@ -1385,17 +1554,6 @@ window.updateBadges = () => {
       badgeMobileMore.classList.remove("hidden");
     } else {
       badgeMobileMore.classList.add("hidden");
-    }
-  }
-
-  // 4. Mobile sheet "Verifikasi" button badge
-  const badgeMobileRequests = document.getElementById("badge-mobile-requests");
-  if (badgeMobileRequests) {
-    if (pendingRequestsCount > 0) {
-      badgeMobileRequests.innerText = pendingRequestsCount;
-      badgeMobileRequests.classList.remove("hidden");
-    } else {
-      badgeMobileRequests.classList.add("hidden");
     }
   }
 
@@ -10488,8 +10646,8 @@ window.updateLiveRundownTracker = () => {
 
 // Set up interval for Rundown live updates
 setInterval(() => {
-    const rundownTab = document.getElementById("tab-rundown");
-    if (rundownTab && !rundownTab.classList.contains("hidden")) {
+    const rundownSubTab = document.getElementById("subtab-panitia-rundown");
+    if (rundownSubTab && !rundownSubTab.classList.contains("hidden")) {
         window.updateLiveRundownTracker();
     }
 }, 30000);
