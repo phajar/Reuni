@@ -131,6 +131,135 @@
   };
 
 
+  window.printAllIDCards = async () => {
+    const list = (window.STATE && window.STATE.panitia) ? window.STATE.panitia : [];
+    if (list.length === 0) {
+      return window.notify("Belum ada data kepanitiaan.", "error");
+    }
+
+    window.toggleLoading(true, "Mencetak semua ID Card...");
+    try {
+        await window._loadJsPDF();
+        const { jsPDF } = window.jspdf;
+        
+        let logoBase64 = null;
+        try {
+            const response = await fetch("img/logo.png");
+            const blob = await response.blob();
+            logoBase64 = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        } catch(e) { console.error("Gagal memuat logo", e); }
+
+        const cropToCircle = (base64) => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    const size = Math.min(img.width, img.height);
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext("2d");
+                    
+                    ctx.beginPath();
+                    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.clip();
+                    
+                    const x = (size - img.width) / 2;
+                    const y = (size - img.height) / 2;
+                    ctx.drawImage(img, x, y, img.width, img.height);
+                    
+                    resolve(canvas.toDataURL("image/png"));
+                };
+                img.onerror = () => resolve(base64);
+                img.src = base64;
+            });
+        };
+
+        if (logoBase64) {
+            logoBase64 = await cropToCircle(logoBase64);
+        }
+
+        const doc = new jsPDF("p", "mm", [54, 86]);
+
+        list.forEach((p, idx) => {
+            if (idx > 0) {
+                doc.addPage([54, 86], "p");
+            }
+            
+            // Draw ID Card background & headers
+            doc.setFillColor(248, 250, 252);
+            doc.rect(0, 0, 54, 86, "F");
+            doc.setFillColor(79, 70, 229);
+            doc.rect(0, 0, 54, 30, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9);
+            doc.text("PANITIA REUNI AKBAR", 27, 10, { align: "center" });
+            doc.setFontSize(13);
+            doc.text("AL-FATAH", 27, 16, { align: "center" });
+            
+            // Logo circle frame
+            doc.setFillColor(255, 255, 255);
+            doc.circle(27, 30, 12, "F");
+            doc.setDrawColor(226, 232, 240);
+            doc.setLineWidth(0.5);
+            doc.circle(27, 30, 12, "S");
+            
+            if (logoBase64) {
+                doc.addImage(logoBase64, 'PNG', 17, 20, 20, 20);
+            } else {
+                doc.setFillColor(203, 213, 225);
+                doc.circle(27, 27, 4, "F");
+                doc.setLineWidth(3);
+                doc.setDrawColor(203, 213, 225);
+                doc.line(22, 36, 32, 36);
+            }
+
+            // Name
+            doc.setTextColor(30, 41, 59);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(11);
+            doc.text(String(p.nama || "").substring(0, 20), 27, 50, {
+              align: "center",
+            });
+            doc.setDrawColor(99, 102, 241);
+            doc.setLineWidth(0.5);
+            doc.line(15, 55, 39, 55);
+
+            // Role / Jabatan
+            doc.setTextColor(245, 158, 11);
+            const roleStr = p.divisi ? `${p.jabatan} (${p.divisi})` : (p.jabatan || "Panitia");
+            const cleanRole = String(roleStr).toUpperCase();
+            const fontSize = cleanRole.length > 20 ? 7.5 : (cleanRole.length > 15 ? 9 : 10);
+            doc.setFontSize(fontSize);
+            doc.text(cleanRole, 27, 62, {
+              align: "center",
+            });
+
+            // Footer
+            doc.setFillColor(30, 41, 59);
+            doc.rect(0, 76, 54, 10, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(6);
+            doc.setFont("helvetica", "normal");
+            doc.text("ID CARD PANITIA RESMI", 27, 82, { align: "center" });
+        });
+
+        await window.savePDF(doc, `IDCards_Semua_Panitia.pdf`);
+        window.notify("Semua ID Card berhasil dicetak!");
+    } catch(err) {
+        console.error(err);
+        window.notify("Gagal mencetak semua ID Card", "error");
+    } finally {
+        window.toggleLoading(false);
+    }
+  };
+
+
   // --- Extracted from app.js (window.printIDCard) ---
   window.printIDCard = async (dataStr) => {
     window.toggleLoading(true, "Mencetak ID Card...");
