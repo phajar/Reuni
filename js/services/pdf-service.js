@@ -1750,4 +1750,149 @@ window.openInvitationPreview = async (nama, nowa, angkatan) => {
     }
 };
 
+window.exportSuratPDF = async () => {
+  window.toggleLoading(true, "Membuat Laporan Distribusi Surat PDF...");
+  try {
+      await window._loadJsPDF();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("p", "mm", "a4");
+      
+      // 1. KOP SURAT RESMI (Official Header)
+      try {
+        const logoImg = await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = "img/logo.png";
+        });
+        if (logoImg) {
+          doc.addImage(logoImg, "PNG", 18, 11, 16, 16);
+        }
+      } catch (logoErr) {
+        console.error("Failed to load logo in PDF:", logoErr);
+      }
+
+      doc.setFont("times", "bold");
+      doc.setFontSize(14);
+      doc.text("ALUMNI PONDOK PESANTREN", 112, 16, { align: "center" });
+      doc.text("AL-FATAH TEGALWARU PURWAKARTA", 112, 21, { align: "center" });
+      
+      doc.setFont("times", "italic");
+      doc.setFontSize(10);
+      doc.text("Jl. BBI Cirata Kp. Cilangkap Rt. 10 Rw.05 Cadassari Tegalwaru Purwakarta 41165", 112, 26, { align: "center" });
+      
+      // Decorative double lines
+      doc.setLineWidth(0.8);
+      doc.setDrawColor(0, 0, 0);
+      doc.line(15, 30, 195, 30);
+      doc.setLineWidth(0.2);
+      doc.line(15, 31, 195, 31);
+      
+      // 2. JUDUL DOKUMEN & SUBTITLE (Filter)
+      doc.setFont("times", "bold");
+      doc.setFontSize(12);
+      doc.text("LAPORAN DATA DISTRIBUSI SURAT ALUMNI", 105, 38, { align: "center" });
+      
+      // Get active filters
+      const kab = document.getElementById("filter-surat-kab")?.value || "";
+      const kec = document.getElementById("filter-surat-kec")?.value || "";
+      const des = document.getElementById("filter-surat-desa")?.value || "";
+      const status = document.getElementById("filter-surat-status")?.value || "";
+      const searchVal = document.getElementById("search-surat-input")?.value || "";
+      
+      let filterParts = [];
+      if (kab) filterParts.push(`Kab. ${kab}`);
+      if (kec) filterParts.push(`Kec. ${kec}`);
+      if (des) filterParts.push(`Desa ${des}`);
+      if (status) filterParts.push(`Status: ${status === 'sudah' ? 'Sudah Diterima' : 'Belum Diterima'}`);
+      if (searchVal) filterParts.push(`Cari: "${searchVal}"`);
+      
+      const filterText = filterParts.length > 0 ? filterParts.join(", ") : "Semua Data";
+      
+      doc.setFont("times", "bolditalic");
+      doc.setFontSize(9.5);
+      doc.text(`Kriteria: ${filterText}`, 105, 43, { align: "center" });
+      
+      doc.setFont("times", "normal");
+      doc.text(`Tanggal Cetak Dokumen: ${new Date().toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, 105, 48, { align: "center" });
+      
+      // 3. TABLE DATA SURAT
+      const dataToExport = window.filteredSuratData || [];
+      if (dataToExport.length === 0) {
+        window.notify("Tidak ada data untuk diekspor", "warning");
+        return;
+      }
+      
+      doc.autoTable({
+        startY: 53,
+        head: [["No", "Nama Alumni", "Angkatan", "Lembaga", "Alamat Lengkap", "No. WhatsApp", "Status Surat"]],
+        body: dataToExport.map((a, i) => {
+          const addressStr = [a.alamat, a.desa, a.kecamatan, a.kabupaten].filter(Boolean).join(", ");
+          return [
+            i + 1,
+            a.nama || "-",
+            a.angkatan || "-",
+            a.lembaga || "-",
+            addressStr || "-",
+            a.nowa || "-",
+            a.status_surat === "sudah" ? "Sudah Diterima" : "Belum Diterima",
+          ];
+        }),
+        styles: { font: "times", fontSize: 8.5, cellPadding: 2.5 },
+        headStyles: { fillColor: [15, 23, 42], fontStyle: "bold" },
+        columnStyles: {
+            0: { cellWidth: 10, halign: "center" },
+            1: { cellWidth: 38 },
+            2: { cellWidth: 16, halign: "center" },
+            3: { cellWidth: 16, halign: "center" },
+            4: { cellWidth: 48 },
+            5: { cellWidth: 26 },
+            6: { cellWidth: 26, halign: "center" }
+        },
+        didParseCell: function (data) {
+            if (data.section === "body" && data.column.index === 6) {
+                data.cell.styles.textColor = data.cell.text[0] === "Belum Diterima" ? [180, 0, 0] : [0, 100, 0];
+                data.cell.styles.fontStyle = "bold";
+            }
+        }
+      });
+
+      // 4. SIGNATURES
+      let finalY = doc.lastAutoTable.finalY + 15;
+      if (finalY > 220) {
+          doc.addPage();
+          finalY = 30;
+      }
+      
+      doc.setFont("times", "normal");
+      doc.setFontSize(10);
+      doc.text("Hormat kami,", 105, finalY, { align: "center" });
+      doc.setFont("times", "bold");
+      doc.text("PANITIA PELAKSANA REUNI AKBAR AL-FATAH", 105, finalY + 5, { align: "center" });
+      
+      finalY += 15;
+      
+      drawCommitteeSignatures(doc, finalY, "data");
+
+      // Construct dynamic file name
+      let suffix = "";
+      if (kab) suffix += `_${kab}`;
+      if (kec) suffix += `_${kec}`;
+      if (des) suffix += `_${des}`;
+      if (status) suffix += `_${status}`;
+      if (searchVal) suffix += `_Cari_${searchVal}`;
+      suffix = suffix.replace(/[^a-zA-Z0-9_\-\s]/g, "").trim().replace(/\s+/g, "_");
+
+      const pdfFileName = suffix ? `Laporan_Distribusi_Surat${suffix}.pdf` : "Laporan_Distribusi_Surat.pdf";
+      await window.savePDF(doc, pdfFileName);
+      
+  } catch (err) {
+      console.error(err);
+      window.notify("Gagal membuat laporan PDF", "error");
+  } finally {
+      window.toggleLoading(false);
+  }
+};
+
 })();
+

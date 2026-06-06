@@ -1669,17 +1669,33 @@
               </div>
           </div>
 
-          <div class="premium-card p-6 md:p-8">
-              <div class="flex flex-col sm:flex-row justify-between sm:items-end mb-4 gap-2">
-                  <h3 class="text-sm font-black uppercase text-indigo-500"><i class="fas fa-bullseye mr-2"></i> Progress Pendanaan Acara</h3>
-                  <span class="text-2xl font-black text-indigo-400" id="target-percentage">0%</span>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div class="premium-card p-6">
+                  <div class="flex flex-col sm:flex-row justify-between sm:items-end mb-4 gap-2">
+                      <h3 class="text-sm font-black uppercase text-indigo-500"><i class="fas fa-bullseye mr-2"></i> Progress Pendanaan Acara</h3>
+                      <span class="text-2xl font-black text-indigo-400" id="target-percentage">0%</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-4 mb-3 overflow-hidden border border-white/5">
+                      <div id="target-progress" class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                  </div>
+                  <div class="flex justify-between text-[10px] font-bold">
+                      <span class="text-emerald-500 text-xs" id="target-current">Rp 0</span>
+                      <span class="text-slate-500 text-xs" id="target-max">Target Minimal: Rp 50.000.000</span>
+                  </div>
               </div>
-              <div class="w-full bg-slate-800 rounded-full h-4 mb-3 overflow-hidden border border-white/5">
-                  <div id="target-progress" class="bg-gradient-to-r from-indigo-500 to-emerald-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
-              </div>
-              <div class="flex justify-between text-[10px] font-bold">
-                  <span class="text-emerald-500 text-xs" id="target-current">Rp 0</span>
-                  <span class="text-slate-500 text-xs" id="target-max">Target Minimal: Rp 50.000.000</span>
+              
+              <div class="premium-card p-6 border border-purple-500/20">
+                  <div class="flex flex-col sm:flex-row justify-between sm:items-end mb-4 gap-2">
+                      <h3 class="text-sm font-black uppercase text-purple-500"><i class="fas fa-envelope-open-text mr-2"></i> Progress Distribusi Surat</h3>
+                      <span class="text-2xl font-black text-purple-400" id="surat-percentage">0%</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-4 mb-3 overflow-hidden border border-white/5">
+                      <div id="surat-progress" class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                  </div>
+                  <div class="flex justify-between text-[10px] font-bold">
+                      <span class="text-purple-400 text-xs" id="surat-stat-sent">0 Terkirim</span>
+                      <span class="text-slate-500 text-xs" id="surat-stat-total">Total Alumni: 0</span>
+                  </div>
               </div>
           </div>
 
@@ -2077,9 +2093,13 @@
                   <option value="sudah">Sudah Diterima</option>
               </select>
           </div>
-          <div class="flex justify-between items-center px-1">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center px-1 gap-2">
               <span id="surat-filter-count" class="text-[10px] font-bold text-indigo-400"></span>
-              <button onclick="openModalAlumni()" class="btn-md3 btn-md3-primary py-1.5 px-3 text-xs"><i class="fas fa-plus mr-1"></i> Tambah Alumni</button>
+              <div class="flex flex-wrap gap-2">
+                  <button onclick="window.exportSuratExcel()" class="btn-md3 btn-md3-emerald-tonal py-1.5 px-3 text-xs" title="Ekspor ke Excel"><i class="fas fa-file-excel mr-1"></i> Ekspor Excel</button>
+                  <button onclick="window.exportSuratPDF()" class="btn-md3 btn-md3-tonal py-1.5 px-3 text-xs" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Ekspor ke PDF"><i class="fas fa-file-pdf mr-1 text-red-400"></i> Ekspor PDF</button>
+                  <button onclick="openModalAlumni()" class="btn-md3 btn-md3-primary py-1.5 px-3 text-xs"><i class="fas fa-plus mr-1"></i> Tambah Alumni</button>
+              </div>
           </div>
           <div class="table-container">
               <div class="overflow-x-auto custom-scrollbar">

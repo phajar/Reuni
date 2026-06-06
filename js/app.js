@@ -1849,6 +1849,20 @@ window.renderHome = () => {
     document.getElementById("target-max").innerText =
       `Target RAB: ${window.formatRupiah(totalRAB)}`;
 
+  // Progress Distribusi Surat
+  const totalAlumni = window.STATE.alumni.length;
+  const sudahSurat = window.STATE.alumni.filter(a => a.status_surat === "sudah").length;
+  const suratPerc = totalAlumni > 0 ? Math.min((sudahSurat / totalAlumni) * 100, 100).toFixed(1) : 0;
+
+  if (document.getElementById("surat-percentage"))
+    document.getElementById("surat-percentage").innerText = suratPerc + "%";
+  if (document.getElementById("surat-progress"))
+    document.getElementById("surat-progress").style.width = suratPerc + "%";
+  if (document.getElementById("surat-stat-sent"))
+    document.getElementById("surat-stat-sent").innerText = sudahSurat + " Terkirim";
+  if (document.getElementById("surat-stat-total"))
+    document.getElementById("surat-stat-total").innerText = "Total Alumni: " + totalAlumni;
+
   let angMap = {},
     kecMap = {},
     kabMap = {};
@@ -12434,4 +12448,76 @@ window.updateStatusSurat = async (id, status, nama) => {
     window.toggleLoading(false);
   }
 };
+
+window.exportSuratExcel = async () => {
+  window.toggleLoading(true, "Membuat Laporan Distribusi Surat Excel...");
+  try {
+    await window._loadXLSX();
+    if (!window.XLSX) {
+      throw new Error("Pustaka SheetJS (XLSX) gagal dimuat.");
+    }
+    
+    const dataToExport = window.filteredSuratData || [];
+    if (dataToExport.length === 0) {
+      window.notify("Tidak ada data untuk diekspor", "warning");
+      return;
+    }
+    
+    // Map data to rows matching the columns required
+    const rows = dataToExport.map((a, i) => {
+      const addressStr = [a.alamat, a.desa, a.kecamatan, a.kabupaten].filter(Boolean).join(", ");
+      return {
+        "No": i + 1,
+        "Nama Alumni": a.nama || "",
+        "Angkatan": a.angkatan || "",
+        "Lembaga": a.lembaga || "",
+        "Alamat Lengkap": addressStr || "",
+        "No. WhatsApp": a.nowa || "",
+        "Status Surat": a.status_surat === "sudah" ? "Sudah Diterima" : "Belum Diterima"
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Distribusi Surat");
+
+    // Auto-fit column widths
+    const maxLens = {};
+    rows.forEach(row => {
+      Object.keys(row).forEach(key => {
+        const valStr = String(row[key] || "");
+        maxLens[key] = Math.max(maxLens[key] || 10, valStr.length, key.length);
+      });
+    });
+    worksheet["!cols"] = Object.keys(maxLens).map(key => ({
+      wch: maxLens[key] + 3
+    }));
+
+    // Generate filename suffix from active filters
+    const kab = document.getElementById("filter-surat-kab")?.value || "";
+    const kec = document.getElementById("filter-surat-kec")?.value || "";
+    const des = document.getElementById("filter-surat-desa")?.value || "";
+    const status = document.getElementById("filter-surat-status")?.value || "";
+    const searchVal = document.getElementById("search-surat-input")?.value || "";
+
+    let suffix = "";
+    if (kab) suffix += `_${kab}`;
+    if (kec) suffix += `_${kec}`;
+    if (des) suffix += `_${des}`;
+    if (status) suffix += `_${status}`;
+    if (searchVal) suffix += `_Cari_${searchVal}`;
+    suffix = suffix.replace(/[^a-zA-Z0-9_\-\s]/g, "").trim().replace(/\s+/g, "_");
+
+    const xlsxFileName = suffix ? `Laporan_Distribusi_Surat${suffix}.xlsx` : "Laporan_Distribusi_Surat.xlsx";
+
+    XLSX.writeFile(workbook, xlsxFileName);
+    window.notify("✅ Laporan Excel berhasil diunduh!", "success");
+  } catch (err) {
+    console.error("Export Excel Error:", err);
+    window.notify("Gagal membuat laporan Excel: " + (err.message || err), "error");
+  } finally {
+    window.toggleLoading(false);
+  }
+};
+
 
