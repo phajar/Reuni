@@ -2415,11 +2415,15 @@
 
         <!-- Scheduled Campaigns (Full Width Card) -->
         <div id="wa-campaigns-card" class="premium-card p-6 space-y-4">
-          <div class="flex justify-between items-center border-b border-white/5 pb-3">
+          <div class="flex justify-between items-center border-b border-white/5 pb-3 gap-2">
             <h4 class="text-[10px] font-black text-indigo-400 uppercase tracking-widest"><i class="fas fa-calendar-alt mr-1.5"></i> Kampanye Broadcast Terjadwal</h4>
+            <div class="flex gap-1">
+              <button onclick="window.switchCampaignView('list')" id="btn-camp-view-list" class="btn-md3 btn-md3-primary !py-1 !px-2.5 text-[8px] uppercase tracking-wider font-bold">Daftar</button>
+              <button onclick="window.switchCampaignView('calendar')" id="btn-camp-view-calendar" class="btn-md3 btn-md3-outlined !py-1 !px-2.5 text-[8px] uppercase tracking-wider font-bold">Kalender</button>
+            </div>
           </div>
           
-          <div class="overflow-x-auto custom-scrollbar">
+          <div id="campaign-list-view" class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-left modern-table">
               <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase">
                 <tr>
@@ -2435,6 +2439,23 @@
                 <!-- Dynamically populated via JS -->
               </tbody>
             </table>
+          </div>
+
+          <div id="campaign-calendar-view" class="hidden space-y-4">
+            <div class="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5">
+              <button onclick="window.changeCampaignMonth(-1)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white"><i class="fas fa-chevron-left text-xs"></i></button>
+              <span id="calendar-month-year" class="text-xs font-black uppercase text-indigo-400 tracking-wider">Maret 2026</span>
+              <button onclick="window.changeCampaignMonth(1)" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white"><i class="fas fa-chevron-right text-xs"></i></button>
+            </div>
+            <div class="grid grid-cols-7 gap-1.5 text-center text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">
+              <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1.5">
+              <!-- Calendar days will be generated here -->
+            </div>
+            <div id="calendar-day-details" class="hidden p-4 rounded-3xl bg-[#080b18]/60 border border-white/5 space-y-3">
+              <!-- Selected day's campaigns list -->
+            </div>
           </div>
         </div>
 

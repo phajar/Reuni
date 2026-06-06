@@ -2136,6 +2136,12 @@ window.renderCampaignsTable = async () => {
             `;
         });
         listContainer.innerHTML = html;
+        if (window.renderCampaignCalendar && !document.getElementById('campaign-calendar-view').classList.contains('hidden')) {
+            window.renderCampaignCalendar();
+            if (window.selectedCalendarDay) {
+                window.selectCampaignDay(window.selectedCalendarDay.day, window.selectedCalendarDay.year, window.selectedCalendarDay.month);
+            }
+        }
     } catch(err) {
         console.error("Gagal merender daftar kampanye:", err);
         listContainer.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-red-400 font-bold uppercase tracking-wider text-[10px]"><i class="fas fa-exclamation-triangle mr-1"></i> Gagal memuat kampanye: ${err.message}</td></tr>`;
@@ -3081,4 +3087,179 @@ window.postWaStatus = async () => {
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
+};
+
+// ========================================================
+// CAMPAIGN CALENDAR VIEWER
+// ========================================================
+window.currentCalendarDate = new Date();
+
+window.switchCampaignView = (view) => {
+    const listEl = document.getElementById('campaign-list-view');
+    const calEl = document.getElementById('campaign-calendar-view');
+    const btnList = document.getElementById('btn-camp-view-list');
+    const btnCal = document.getElementById('btn-camp-view-calendar');
+    
+    if (view === 'calendar') {
+        if (listEl) listEl.classList.add('hidden');
+        if (calEl) calEl.classList.remove('hidden');
+        if (btnList) {
+            btnList.className = 'btn-md3 btn-md3-outlined !py-1 !px-2.5 text-[8px] uppercase tracking-wider font-bold';
+        }
+        if (btnCal) {
+            btnCal.className = 'btn-md3 btn-md3-primary !py-1 !px-2.5 text-[8px] uppercase tracking-wider font-bold';
+        }
+        window.renderCampaignCalendar();
+    } else {
+        if (listEl) listEl.classList.remove('hidden');
+        if (calEl) calEl.classList.add('hidden');
+        if (btnList) {
+            btnList.className = 'btn-md3 btn-md3-primary !py-1 !px-2.5 text-[8px] uppercase tracking-wider font-bold';
+        }
+        if (btnCal) {
+            btnCal.className = 'btn-md3 btn-md3-outlined !py-1 !px-2.5 text-[8px] uppercase tracking-wider font-bold';
+        }
+        const detailsEl = document.getElementById('calendar-day-details');
+        if (detailsEl) detailsEl.classList.add('hidden');
+        window.selectedCalendarDay = null; // Reset tracked selected calendar day
+        window.renderCampaignsTable();
+    }
+};
+
+window.changeCampaignMonth = (dir) => {
+    window.currentCalendarDate.setMonth(window.currentCalendarDate.getMonth() + dir);
+    window.renderCampaignCalendar();
+};
+
+window.renderCampaignCalendar = () => {
+    const grid = document.getElementById('calendar-grid');
+    const monthYear = document.getElementById('calendar-month-year');
+    if (!grid || !monthYear) return;
+    
+    const year = window.currentCalendarDate.getFullYear();
+    const month = window.currentCalendarDate.getMonth();
+    
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    monthYear.innerText = `${monthNames[month]} ${year}`;
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    
+    let html = "";
+    
+    // Empty cells for alignment
+    for (let i = 0; i < firstDay; i++) {
+        html += `<div class="aspect-square bg-transparent rounded-xl"></div>`;
+    }
+    
+    const campaignsByDay = {};
+    const campaigns = window.waCampaigns || [];
+    campaigns.forEach(camp => {
+        if (!camp.scheduled_at) return;
+        const d = new Date(camp.scheduled_at);
+        if (d.getFullYear() === year && d.getMonth() === month) {
+            const date = d.getDate();
+            if (!campaignsByDay[date]) campaignsByDay[date] = [];
+            campaignsByDay[date].push(camp);
+        }
+    });
+    
+    for (let day = 1; day <= totalDays; day++) {
+        const camps = campaignsByDay[day] || [];
+        const hasCampaigns = camps.length > 0;
+        let badgeColor = "bg-white/[0.02] text-slate-400 border border-white/5";
+        let dotHtml = "";
+        
+        if (hasCampaigns) {
+            const isCompleted = camps.every(c => c.status === 'completed');
+            const isPending = camps.some(c => c.status === 'pending');
+            const isSending = camps.some(c => c.status === 'sending');
+            
+            if (isSending) {
+                badgeColor = "bg-purple-500/10 text-purple-400 border border-purple-500/30 font-bold";
+                dotHtml = `<span class="absolute bottom-1 w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse"></span>`;
+            } else if (isPending) {
+                badgeColor = "bg-blue-500/10 text-blue-400 border border-blue-500/30 font-bold";
+                dotHtml = `<span class="absolute bottom-1 w-1.5 h-1.5 bg-blue-500 rounded-full"></span>`;
+            } else if (isCompleted) {
+                badgeColor = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold";
+                dotHtml = `<span class="absolute bottom-1 w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>`;
+            } else {
+                badgeColor = "bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold";
+                dotHtml = `<span class="absolute bottom-1 w-1.5 h-1.5 bg-amber-500 rounded-full"></span>`;
+            }
+        }
+        
+        const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+        const todayBorder = isToday ? " ring-2 ring-indigo-500 ring-offset-2 ring-offset-[#060813] " : "";
+        
+        html += `
+            <button onclick="window.selectCampaignDay(${day}, ${year}, ${month})" class="aspect-square ${badgeColor} ${todayBorder} rounded-xl flex flex-col items-center justify-center relative hover:bg-white/10 active:scale-95 transition-all p-1 cursor-pointer">
+                <span class="text-xs">${day}</span>
+                ${hasCampaigns ? `<span class="text-[7px] text-slate-500 font-extrabold mt-0.5">${camps.length}x</span>` : ''}
+                ${dotHtml}
+            </button>
+        `;
+    }
+    
+    grid.innerHTML = html;
+};
+
+window.selectCampaignDay = (day, year, month) => {
+    window.selectedCalendarDay = { day, year, month }; // Track currently selected day for live updates
+    const detailsEl = document.getElementById('calendar-day-details');
+    if (!detailsEl) return;
+    
+    const selectedDate = new Date(year, month, day);
+    const dateStr = selectedDate.toLocaleDateString("id-ID", { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    
+    const campaigns = (window.waCampaigns || []).filter(camp => {
+        if (!camp.scheduled_at) return false;
+        const d = new Date(camp.scheduled_at);
+        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+    });
+    
+    if (campaigns.length === 0) {
+        detailsEl.innerHTML = `
+            <div class="text-[9px] text-slate-400 font-bold uppercase"><i class="far fa-calendar mr-1"></i> ${dateStr}</div>
+            <div class="text-slate-500 text-[9px] italic mt-1">Tidak ada kampanye dijadwalkan pada hari ini.</div>
+        `;
+        detailsEl.classList.remove('hidden');
+        return;
+    }
+    
+    let html = `
+        <div class="text-[9px] text-indigo-400 font-black uppercase border-b border-white/5 pb-2 mb-2"><i class="fas fa-calendar-check mr-1"></i> ${dateStr} (${campaigns.length} Kampanye)</div>
+        <div class="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
+    `;
+    
+    campaigns.forEach(camp => {
+        const timeStr = new Date(camp.scheduled_at).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' });
+        let statusColor = "text-slate-400";
+        if (camp.status === 'pending') statusColor = "text-blue-400";
+        else if (camp.status === 'sending') statusColor = "text-purple-400 animate-pulse";
+        else if (camp.status === 'completed') statusColor = "text-emerald-400";
+        else if (camp.status === 'failed') statusColor = "text-red-400";
+        
+        const deleteBtn = camp.status === "pending" 
+            ? `<button onclick="window.cancelScheduledCampaign('${camp.id}', '${window.escapeHtml(camp.name)}')" class="text-rose-500 hover:text-rose-400 bg-rose-500/10 p-1.5 rounded hover:bg-rose-500/20 text-[9px] border border-rose-500/15 transition-all"><i class="fas fa-trash-alt"></i></button>`
+            : '';
+            
+        html += `
+            <div class="flex justify-between items-center bg-white/5 p-2 rounded-xl border border-white/5">
+                <div class="min-w-0 flex-1">
+                    <div class="text-[9px] font-bold text-white truncate">${window.escapeHtml(camp.name)}</div>
+                    <div class="text-[8px] text-slate-500 font-medium mt-0.5"><i class="far fa-clock"></i> ${timeStr} WIB • Status: <span class="${statusColor} font-bold">${camp.status}</span></div>
+                    <div class="text-[8px] text-slate-400 italic mt-0.5 truncate">"${window.escapeHtml(camp.message)}"</div>
+                </div>
+                <div class="ml-2 flex items-center gap-1.5">
+                    ${deleteBtn}
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    detailsEl.innerHTML = html;
+    detailsEl.classList.remove('hidden');
 };

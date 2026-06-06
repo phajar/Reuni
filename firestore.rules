@@ -325,7 +325,17 @@ service cloud.firestore {
 
     // --- KAMPANYE BROADCAST TERJADWAL (WhatsApp) ---------------------------
     match /wa_campaigns/{docId} {
-      allow read, write: if isAnyStaff();
+      allow read: if true;
+      allow write: if isAnyStaff()
+                    || (request.resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_broadcast)
+                    || (resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_broadcast);
+    }
+
+    // --- PENGINGAT HARIAN (reminder_logs) ----------------------------------
+    match /reminder_logs/{docId} {
+      allow read: if true;
+      allow write: if isAnyStaff()
+                    || (request.resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_broadcast);
     }
 
     // --- WHATSAPP SESSIONS PERSISTENCE ------------------------------------

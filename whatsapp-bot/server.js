@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const pino = require('pino');
 const dns = require('dns');
+const sharp = require('sharp');
 
 // Prevent Node.js process from crashing on unhandled socket/network exceptions
 process.on('uncaughtException', (err) => {
@@ -108,6 +109,7 @@ async function uploadSession(db) {
         
         if (Object.keys(data).length > 0) {
             const docRef = doc(db, 'settings', 'wa_session');
+            data.bot_token = waApiConfig.token_keuangan || 'FpYxfLcvrhFZrnQFF5bX';
             await setDoc(docRef, data);
             console.log('[FIRESTORE] Session uploaded successfully.');
         }
@@ -353,7 +355,7 @@ async function connectToWhatsApp() {
                 }
                 try {
                     const docRef = doc(db, 'settings', 'wa_session');
-                    await setDoc(docRef, {});
+                    await setDoc(docRef, { bot_token: waApiConfig.token_keuangan || 'FpYxfLcvrhFZrnQFF5bX' });
                     console.log('Firestore session cleared.');
                 } catch (e) {
                     console.error('Failed to clear Firestore session:', e);
@@ -401,6 +403,9 @@ async function startServer() {
 
     // 8. Initialize Event Reminder Cron
     initEventReminderCron(db);
+
+    // 9. Initialize Campaign Scheduler Cron (Server-side)
+    initCampaignSchedulerCron(db);
 }
 
 // Start Baileys WhatsApp Connection
@@ -984,7 +989,7 @@ app.post('/api/reset', authenticateApiKey, async (req, res) => {
         try {
             const docRef = doc(db, 'settings', 'wa_session');
             await Promise.race([
-                setDoc(docRef, {}),
+                setDoc(docRef, { bot_token: waApiConfig.token_keuangan || 'FpYxfLcvrhFZrnQFF5bX' }),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore write timeout')), 3000))
             ]);
             console.log('[WA] Firestore session cleared.');
@@ -3359,14 +3364,25 @@ async function handleUndanganCommand(jid, m) {
         const inviteLink = `https://phajar.github.io/Reuni/surat-undangan.html?nama=${encodeURIComponent(alumnusData.nama)}&angkatan=${encodeURIComponent(alumnusData.angkatan)}&lembaga=${encodeURIComponent(alumnusData.lembaga || '')}`;
         
         const msg = `*💌 SURAT UNDANGAN DIGITAL PERSONAL*\n` +
-                    `──────────────────────\n` +
+                    `*━━━━━━━━━━━━━━━━━━━━━━━━━━*\n` +
                     `Halo *${alumnusData.nama}* (Angkatan ${alumnusData.angkatan || '-'}),\n\n` +
-                    `Berikut adalah link surat undangan resmi personal Anda untuk menghadiri Reuni Akbar AL-FATAH:\n\n` +
-                    `👉 *${inviteLink}*\n\n` +
+                    `Berikut adalah surat undangan resmi personal Anda untuk menghadiri Reuni Akbar AL-FATAH:\n\n` +
+                    `👉 *Tautan Undangan Web*:\n${inviteLink}\n\n` +
                     `Silakan buka tautan di atas untuk melihat surat resmi formal, mengunduh PDF resmi, atau mencetak surat undangan Anda.\n\n` +
-                    `_Sistem Bot Reuni PP Al-Fatah_`;
+                    `*━━━━━━━━━━━━━━━━━━━━━━━━━━*\n` +
+                    `_Sistem Bot Reuni Akbar PP AL-FATAH_`;
                     
-        await sock.sendMessage(jid, { text: msg });
+        try {
+            console.log(`[WA BOT] Generating invitation card image for ${alumnusData.nama}`);
+            const cardBuffer = await generateInvitationCard(alumnusData.nama, alumnusData.angkatan, alumnusData.lembaga);
+            await sock.sendMessage(jid, { 
+                image: cardBuffer, 
+                caption: msg 
+            });
+        } catch (imgErr) {
+            console.error('[WA BOT] Gagal membuat kartu gambar, fallback ke teks:', imgErr);
+            await sock.sendMessage(jid, { text: msg });
+        }
     } catch (err) {
         console.error('[WA BOT] Gagal memproses perintah !undangan:', err);
         await sock.sendMessage(jid, { text: '⚠️ Terjadi kesalahan saat membuat undangan Anda. Silakan hubungi panitia.' });
@@ -3944,7 +3960,8 @@ async function runEventReminderCheck(db) {
             total_alumni: allAlumni.length,
             berhasil_dikirim: sentCount,
             gagal: failCount,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            bot_token: waApiConfig.token_broadcast || 'FpYxfLcvrhFZrnQFF5bX'
         });
         console.log(`[REMINDER] ✅ Broadcast H-${daysLeft} selesai. Berhasil: ${sentCount}, Gagal: ${failCount}. Log disimpan: ${logDocId}`);
     } catch (e) {
@@ -4041,3 +4058,270 @@ function buildReminderMessage(daysLeft, namaAlumni, eventDateFormatted, sudahBay
         );
     }
 }
+
+// ========================================================
+// EXTENDED SESSIONS & SCHEDULER HELPER FUNCTIONS
+// ========================================================
+function getSocketByRole(role) {
+    if (connectionStatus !== 'open') return null;
+    return sock;
+}
+
+async function generateInvitationCard(name, angkatan, lembaga) {
+    const escapeSvg = (str) => {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
+    };
+
+    const cleanName = escapeSvg(name).toUpperCase();
+    const cleanAngkatan = escapeSvg(angkatan);
+    const cleanLembaga = escapeSvg(lembaga || '-').toUpperCase();
+
+    // Custom dark gradient styled vector invitation card design (SVG)
+    const svgString = `
+    <svg width="800" height="500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#080b18;stop-opacity:1" />
+          <stop offset="50%" style="stop-color:#0f172a;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#1e1b4b;stop-opacity:1" />
+        </linearGradient>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+
+      <!-- Background card -->
+      <rect width="100%" height="100%" fill="url(#grad)" rx="24" />
+      <rect x="20" y="20" width="760" height="460" fill="none" stroke="#6366f1" stroke-width="2" stroke-opacity="0.15" rx="18" />
+      <rect x="25" y="25" width="750" height="450" fill="none" stroke="#a78bfa" stroke-width="1" stroke-opacity="0.1" rx="16" />
+
+      <!-- Decorative abstract circles -->
+      <circle cx="50" cy="50" r="120" fill="#6366f1" fill-opacity="0.05" filter="url(#glow)" />
+      <circle cx="750" cy="450" r="140" fill="#ec4899" fill-opacity="0.04" filter="url(#glow)" />
+
+      <!-- Bottom Branding Text -->
+      <text x="400" y="115" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="900" fill="#818cf8" letter-spacing="4" text-anchor="middle">⚜️ KARTU UNDANGAN RESMI ⚜️</text>
+      <text x="400" y="150" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="900" fill="#ffffff" letter-spacing="2" text-anchor="middle">REUNI AKBAR PP AL-FATAH</text>
+
+      <!-- Line separator -->
+      <line x1="220" y1="175" x2="580" y2="175" stroke="#6366f1" stroke-width="1.5" stroke-opacity="0.25" />
+
+      <!-- Guest Label -->
+      <text x="400" y="215" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="bold" fill="#64748b" text-anchor="middle" letter-spacing="1">KEPADA YTH. ALUMNI:</text>
+      
+      <!-- Guest Name (Big & Bold) -->
+      <text x="400" y="270" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="900" fill="#38bdf8" text-anchor="middle">${cleanName}</text>
+
+      <!-- Badges Info -->
+      <rect x="200" y="310" width="400" height="38" fill="#1e1b4b" fill-opacity="0.6" stroke="#6366f1" stroke-width="1" stroke-opacity="0.3" rx="8" />
+      <text x="400" y="334" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="900" fill="#e9d5ff" text-anchor="middle" letter-spacing="1.5">
+        ANGKATAN ${cleanAngkatan} ${cleanLembaga && cleanLembaga !== '-' ? ` • ${cleanLembaga}` : ''}
+      </text>
+
+      <!-- Date & Venue -->
+      <text x="400" y="395" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="bold" fill="#64748b" text-anchor="middle">Jadwal: Minggu, 12 Juli 2026 | Tempat: Kompleks Ponpes Al-Fatah</text>
+      
+      <!-- Footer Note -->
+      <text x="400" y="455" font-family="Arial, Helvetica, sans-serif" font-size="8" font-weight="bold" fill="#475569" letter-spacing="2" text-anchor="middle">DIHASILKAN SECARA DIGITAL OLEH WA BOT PANITIA</text>
+    </svg>
+    `;
+
+    const svgBuffer = Buffer.from(svgString);
+    const logoPath = path.join(__dirname, '..', 'img', 'logo.png');
+
+    try {
+        if (fs.existsSync(logoPath)) {
+            const logoBuffer = await sharp(logoPath)
+                .resize(60, 60)
+                .toBuffer();
+            
+            return await sharp({
+                create: {
+                    width: 800,
+                    height: 500,
+                    channels: 4,
+                    background: { r: 8, g: 11, b: 24, alpha: 1 }
+                }
+            })
+            .composite([
+                { input: svgBuffer, top: 0, left: 0 },
+                { input: logoBuffer, top: 28, left: 370 }
+            ])
+            .png()
+            .toBuffer();
+        } else {
+            return await sharp(svgBuffer).png().toBuffer();
+        }
+    } catch (err) {
+        console.error('[sharp] Error generating card:', err);
+        throw err;
+    }
+}
+
+function initCampaignSchedulerCron(db) {
+    console.log('[SCHEDULER] Initializing Server-side Campaign Scheduler...');
+    
+    // Recovery mechanism on server startup: reset any stuck 'sending' campaigns back to 'pending'
+    try {
+        const campaignCol = collection(db, 'wa_campaigns');
+        const qStuck = query(campaignCol, where('status', '==', 'sending'));
+        getDocs(qStuck).then(stuckSnap => {
+            if (!stuckSnap.empty) {
+                console.log(`[SCHEDULER] Found ${stuckSnap.size} campaigns stuck in 'sending' status. Resetting to 'pending' for recovery...`);
+                stuckSnap.forEach(async (docSnap) => {
+                    await setDoc(doc(db, 'wa_campaigns', docSnap.id), { 
+                        status: 'pending',
+                        bot_token: waApiConfig.token_broadcast || 'FpYxfLcvrhFZrnQFF5bX'
+                    }, { merge: true });
+                });
+            }
+        }).catch(err => {
+            console.error('[SCHEDULER] Error recovering stuck campaigns:', err);
+        });
+    } catch (recoverErr) {
+        console.error('[SCHEDULER] Setup error during campaign recovery:', recoverErr);
+    }
+    
+    cron.schedule('*/1 * * * *', async () => {
+        try {
+            const nowIso = new Date().toISOString();
+            const campaignCol = collection(db, 'wa_campaigns');
+            const q = query(campaignCol, where('status', '==', 'pending'));
+            const snap = await getDocs(q);
+            
+            if (snap.empty) return;
+            
+            const pendingCampaigns = [];
+            snap.forEach(doc => {
+                const data = doc.data();
+                if (data.scheduled_at && data.scheduled_at <= nowIso) {
+                    pendingCampaigns.push({ id: doc.id, ...data });
+                }
+            });
+            
+            for (const camp of pendingCampaigns) {
+                const campDocRef = doc(db, 'wa_campaigns', camp.id);
+                try {
+                    const freshSnap = await getDoc(campDocRef);
+                    if (!freshSnap.exists() || freshSnap.data().status !== 'pending') {
+                        continue;
+                    }
+                    
+                    await setDoc(campDocRef, { 
+                        status: 'sending',
+                        bot_token: waApiConfig.token_broadcast || 'FpYxfLcvrhFZrnQFF5bX'
+                    }, { merge: true });
+                    console.log(`[SCHEDULER] Server-side acquired lease for campaign "${camp.name}". Starting broadcast...`);
+                    
+                    runServerCampaign(db, camp);
+                } catch (leaseErr) {
+                    console.error(`[SCHEDULER] Lease acquisition failed for ${camp.name}:`, leaseErr);
+                }
+            }
+        } catch (err) {
+            console.error('[SCHEDULER] Cron check failed:', err);
+        }
+    });
+}
+
+async function runServerCampaign(db, camp) {
+    const campDocRef = doc(db, 'wa_campaigns', camp.id);
+    const targets = camp.targets || [];
+    const fileUrl = camp.file_url;
+    const delayVal = camp.delay_val || "3-5";
+    
+    const delayParts = delayVal.split('-');
+    const minDelay = parseFloat(delayParts[0]) || 3;
+    const maxDelay = parseFloat(delayParts[1]) || 5;
+    
+    // Resume support: start from last_index + 1 if available
+    const lastIndex = camp.last_index !== undefined ? camp.last_index : -1;
+    const startIndex = lastIndex + 1;
+    
+    let success = camp.stats?.success || 0;
+    let failed = camp.stats?.failed || 0;
+    
+    console.log(`[SCHEDULER] Campaign "${camp.name}" started/resumed. Targets count: ${targets.length}. Starting from index: ${startIndex}`);
+    
+    const activeSock = getSocketByRole('broadcast');
+    if (!activeSock) {
+        console.warn(`[SCHEDULER] No active socket to run campaign "${camp.name}". Delaying execution.`);
+        await setDoc(campDocRef, { 
+            status: 'pending',
+            bot_token: waApiConfig.token_broadcast || 'FpYxfLcvrhFZrnQFF5bX'
+        }, { merge: true });
+        return;
+    }
+    
+    try {
+        for (let i = startIndex; i < targets.length; i++) {
+            const freshSnap = await getDoc(campDocRef);
+            if (freshSnap.exists() && freshSnap.data().status === 'cancelled') {
+                console.log(`[SCHEDULER] Campaign "${camp.name}" cancelled midway by administrator.`);
+                break;
+            }
+            
+            const item = targets[i];
+            
+            if (i > startIndex) {
+                const randomSec = Math.random() * (maxDelay - minDelay) + minDelay;
+                await new Promise(r => setTimeout(r, randomSec * 1000));
+            }
+            
+            try {
+                let cleanPhone = item.type === 'personal' ? String(item.target).replace(/\D/g, '') : item.target;
+                if (item.type === 'personal' && cleanPhone.startsWith('08')) {
+                    cleanPhone = '628' + cleanPhone.substring(2);
+                }
+                
+                const targetJid = item.type === 'personal' ? `${cleanPhone}@s.whatsapp.net` : cleanPhone;
+                const personalMsg = item.type === 'personal' 
+                    ? camp.message.replace(/\[Nama\]/g, item.name).replace(/\[Angkatan\]/g, item.angkatan || '')
+                    : camp.message;
+                    
+                if (fileUrl) {
+                    const ext = path.extname(fileUrl).toLowerCase();
+                    const isImage = ['.png', '.jpg', '.jpeg', '.webp'].includes(ext);
+                    
+                    if (isImage) {
+                        await activeSock.sendMessage(targetJid, { image: { url: fileUrl }, caption: personalMsg });
+                    } else {
+                        await activeSock.sendMessage(targetJid, { document: { url: fileUrl }, fileName: path.basename(fileUrl), caption: personalMsg });
+                    }
+                } else {
+                    await activeSock.sendMessage(targetJid, { text: personalMsg });
+                }
+                success++;
+            } catch (sendErr) {
+                failed++;
+                console.error(`[SCHEDULER] Failed to send message to ${item.name}:`, sendErr.message);
+            }
+            
+            await setDoc(campDocRef, {
+                stats: { success, failed, total: targets.length },
+                last_index: i,
+                bot_token: waApiConfig.token_broadcast || 'FpYxfLcvrhFZrnQFF5bX'
+            }, { merge: true });
+        }
+        
+        await setDoc(campDocRef, { 
+            status: 'completed',
+            bot_token: waApiConfig.token_broadcast || 'FpYxfLcvrhFZrnQFF5bX'
+        }, { merge: true });
+        console.log(`[SCHEDULER] Campaign "${camp.name}" execution finished. Success: ${success}, Failed: ${failed}`);
+    } catch (err) {
+        console.error(`[SCHEDULER] Campaign execution crashed:`, err);
+        await setDoc(campDocRef, { 
+            status: 'failed',
+            bot_token: waApiConfig.token_broadcast || 'FpYxfLcvrhFZrnQFF5bX'
+        }, { merge: true });
+    }
+}
+
