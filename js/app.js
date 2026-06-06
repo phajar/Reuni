@@ -859,10 +859,11 @@ auth.onAuthStateChanged(async (user) => {
                     ? "Korwil Desa"
                     : r === "ketua"
                       ? "Ketua"
-                      : "Viewer";
+                      : "Anggota";
+    const labelPrefix = r === "viewer" ? "Anggota" : "Petugas";
     if (document.getElementById("greeting"))
       document.getElementById("greeting").innerText =
-        `Petugas: ${window.STATE.user.nama} | ${roleName}`;
+        `${labelPrefix}: ${window.STATE.user.nama} | ${roleName}`;
 
     // --- BATAS VALIDASI HAK AKSES FITUR WA ---
     const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -891,7 +892,7 @@ auth.onAuthStateChanged(async (user) => {
         korwil_kecamatan: "Koor Wil. Kecamatan",
         korwil_desa: "Koor Wil. Desa",
         panitia_divisi: "Panitia Divisi",
-        viewer: "Viewer / Tamu",
+        viewer: "Anggota",
         publikasi: "Humas Publikasi",
       };
       sRoleEl.innerText = roleNames[r] || r.toUpperCase();
@@ -919,7 +920,7 @@ auth.onAuthStateChanged(async (user) => {
         korwil_kecamatan: "Koor Wil. Kecamatan",
         korwil_desa: "Koor Wil. Desa",
         panitia_divisi: "Panitia Divisi",
-        viewer: "Viewer / Tamu",
+        viewer: "Anggota",
         publikasi: "Humas Publikasi",
       };
       sidebarRoleEl.innerText = roleNames[r] || r.toUpperCase();
@@ -4950,9 +4951,10 @@ window.handleUpdateProfile = async (e) => {
                     ? "Korwil Desa"
                     : r === "ketua"
                       ? "Ketua"
-                      : "Viewer";
+                      : "Anggota";
+    const labelPrefix = r === "viewer" ? "Anggota" : "Petugas";
     document.getElementById("greeting").innerText =
-      `Petugas: ${newName} | ${roleName}`;
+      `${labelPrefix}: ${newName} | ${roleName}`;
     window.closeModal("modal-settings");
     window.notify("Perubahan profil berhasil disimpan!", "success");
   } catch (err) {
