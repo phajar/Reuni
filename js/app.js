@@ -289,12 +289,6 @@ window.switchSettingsSubTab = (subTabName) => {
   const activeBtn = document.getElementById(`subbtn-settings-${subTabName}`);
   if (activeBtn) activeBtn.classList.add("active");
 
-  const sidebarSubBtns = document.querySelectorAll(".nav-sub-btn");
-  sidebarSubBtns.forEach(btn => btn.classList.remove("active"));
-
-  const activeLogoBtn = document.getElementById(`subbtn-logo-${subTabName}`);
-  if (activeLogoBtn) activeLogoBtn.classList.add("active");
-
   const mobileSubBtns = document.querySelectorAll(".mobile-settings-sub-btn");
   mobileSubBtns.forEach(btn => btn.classList.remove("active"));
 
@@ -720,37 +714,8 @@ window.toggleProfilePopover = () => {
   
   if (popover.classList.contains("hidden")) {
     popover.classList.remove("hidden");
-    const logoMenu = document.getElementById("logo-dropdown-menu");
-    if (logoMenu) logoMenu.classList.add("hidden");
   } else {
     popover.classList.add("hidden");
-  }
-};
-
-window.toggleLogoDropdown = () => {
-  const menu = document.getElementById("logo-dropdown-menu");
-  if (!menu) return;
-  
-  if (menu.classList.contains("hidden")) {
-    menu.classList.remove("hidden");
-    const popover = document.getElementById("profile-popover");
-    if (popover) popover.classList.add("hidden");
-  } else {
-    menu.classList.add("hidden");
-  }
-};
-
-window.clickLogoSubMenu = (subTabName) => {
-  window.showTab('settings');
-  window.switchSettingsSubTab(subTabName);
-  window.toggleLogoDropdown();
-  
-  // Otomatis tutup sidebar di HP/Tablet setelah diklik
-  if (window.innerWidth < 1024) {
-    const sidebar = document.getElementById("main-sidebar");
-    if (sidebar && !sidebar.classList.contains("-translate-x-full")) {
-      window.toggleSidebar();
-    }
   }
 };
 
@@ -760,12 +725,6 @@ document.addEventListener("click", (e) => {
   const profileCard = document.querySelector("[onclick='window.toggleProfilePopover()']");
   if (popover && !popover.classList.contains("hidden") && profileCard && !profileCard.contains(e.target) && !popover.contains(e.target)) {
     popover.classList.add("hidden");
-  }
-  
-  const logoMenu = document.getElementById("logo-dropdown-menu");
-  const logoCircle = document.querySelector("[onclick='window.toggleLogoDropdown()']");
-  if (logoMenu && !logoMenu.classList.contains("hidden") && logoCircle && !logoCircle.contains(e.target) && !logoMenu.contains(e.target)) {
-    logoMenu.classList.add("hidden");
   }
 });
 
@@ -1245,11 +1204,6 @@ auth.onAuthStateChanged(async (user) => {
     showElement("subbtn-settings-users", isAdmin);
     showElement("subbtn-settings-approve", isAdmin);
     showElement("subbtn-settings-audit", isAdmin);
-    
-    showElement("subbtn-logo-event", isAdmin);
-    showElement("subbtn-logo-users", isAdmin);
-    showElement("subbtn-logo-approve", isAdmin);
-    showElement("subbtn-logo-audit", isAdmin);
 
     showElement("subbtn-mobile-settings-event", isAdmin);
     showElement("subbtn-mobile-settings-users", isAdmin);
@@ -1276,11 +1230,6 @@ auth.onAuthStateChanged(async (user) => {
     showElement("subbtn-sys-utilities", canAccessWaApi);
     showElement("subbtn-sys-gallery", canAccessGallery);
 
-    // Keep logo sub-menu updates
-    showElement("subbtn-logo-ai", canAccessApi);
-    showElement("subbtn-logo-gallery", canAccessGallery);
-    showElement("subbtn-logo-utilities", canAccessWaApi);
-    
     // Tanya AI is available to all logged in users (r exists)
     const canUseAI = !!r;
     showElement("btn-sidebar-tanya-ai", canUseAI);
@@ -1303,7 +1252,6 @@ auth.onAuthStateChanged(async (user) => {
     showElement("btn-whatsapp", canWA);
     showElement("btn-mobile-whatsapp", canWA);
     showElement("subbtn-whatsapp-groups", canWA);
-    showElement("subbtn-logo-whatsapp", canWA);
     showElement("subbtn-settings-whatsapp", canWA);
     showElement("subbtn-mobile-settings-whatsapp", canWA);
     
