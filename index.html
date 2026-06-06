@@ -2596,6 +2596,14 @@
                   <input type="text" id="set-event-wa-humas" class="input-field mt-1" placeholder="Format: 628xxxxxxxx (Tanpa +, 0, atau spasi)" />
                 </div>
                 <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Lokasi & Tautan Google Maps</label>
+                  <input type="text" id="set-event-location" class="input-field mt-1" placeholder="Misal: Aula Pondok Pesantren - https://maps.google.com/..." />
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Panduan Parkir & Akses</label>
+                  <textarea id="set-event-parking" class="input-field mt-1 h-20 resize-none text-xs p-3 leading-relaxed custom-scrollbar" placeholder="Ketik panduan parkir, alur masuk, atau info parkir motor & mobil di sini..."></textarea>
+                </div>
+                <div>
                   <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Jadwal Pengingat (Milestone H-)</label>
                   <input type="text" id="set-reminder-milestones" class="input-field mt-1" placeholder="Misal: 30, 14, 7, 3, 1 (pisahkan dengan koma)" oninput="window.handleMilestonesChange(this.value)" />
                   <p class="text-[8px] text-slate-500 mt-1 ml-1">Masukkan angka hari sebelum acara dipisah koma. Bot akan mengirim pengingat otomatis pada hari-hari ini.</p>

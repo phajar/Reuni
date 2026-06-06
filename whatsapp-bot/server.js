@@ -314,6 +314,12 @@ async function connectToWhatsApp() {
             } else if (command === '!undangan') {
                 console.log(`[WA BOT] Perintah !undangan dari ${jid}`);
                 await handleUndanganCommand(jid, m);
+            } else if (command === '!info') {
+                console.log(`[WA BOT] Perintah !info dari ${jid}`);
+                await handleInfoCommand(jid, m);
+            } else if (command === '!rundown') {
+                console.log(`[WA BOT] Perintah !rundown dari ${jid}`);
+                await handleRundownCommand(jid, m);
             }
         } catch (err) {
             console.error('[WA BOT] Gagal memproses pesan masuk:', err);
@@ -3014,6 +3020,8 @@ async function handleMenuCommand(jid, m) {
                       `🔹 *!konfirmasi [nominal] [nomor_wa_tujuan]* : Lapor bukti transfer\n` +
                       `🔹 *!status* : Cek status pendaftaran & iuran Anda\n` +
                       `🔹 *!undangan* : Dapatkan link undangan digital personal\n` +
+                      `🔹 *!info* : Info lokasi, Google Maps, & area parkir\n` +
+                      `🔹 *!rundown* : Jadwal & susunan rundown acara reuni\n` +
                       `🔹 *!menu* : Tampilkan menu ringkas ini\n` +
                       `🔹 *!help* : Bantuan detail & penjelasan perintah\n\n`;
                       
@@ -3032,6 +3040,102 @@ async function handleMenuCommand(jid, m) {
     } catch (err) {
         console.error('[WA BOT] Gagal memproses perintah !menu:', err);
         await sock.sendMessage(jid, { text: 'Maaf, terjadi kesalahan saat memproses perintah menu.' });
+    }
+}
+
+async function handleInfoCommand(jid, m) {
+    try {
+        const docRef = doc(db, 'settings', 'event_info');
+        const docSnap = await getDoc(docRef);
+        
+        let locationText = 'Belum diatur oleh panitia.';
+        let parkingText = 'Belum diatur oleh panitia.';
+        let eventDateText = 'TBD';
+        let eventTimeText = 'Belum ditentukan';
+        let eventGuestText = '-';
+        
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.event_location) locationText = data.event_location;
+            if (data.event_parking) parkingText = data.event_parking;
+            if (data.event_date && data.event_date !== 'TBD') {
+                eventDateText = data.event_date;
+            }
+            if (data.event_time) eventTimeText = data.event_time;
+            if (data.event_guest) eventGuestText = data.event_guest;
+        }
+
+        const divider = '*━━━━━━━━━━━━━━━━━━━━━━━━━━*';
+        const infoMsg = 
+            `⚜️ *INFO LOKASI & PARKIR ACARA* ⚜️\n` +
+            `${divider}\n\n` +
+            `📅 *Tanggal:* ${eventDateText}\n` +
+            `⏰ *Waktu:* ${eventTimeText}\n` +
+            `🎤 *Bintang Tamu / Info:* ${eventGuestText}\n\n` +
+            `📍 *Lokasi Acara:*\n` +
+            `${locationText}\n\n` +
+            `🅿️ *Panduan & Informasi Parkir:*\n` +
+            `${parkingText}\n\n` +
+            `${divider}\n` +
+            `_Sistem Bot Reuni Akbar PP AL-FATAH_`;
+
+        await sock.sendMessage(jid, { text: infoMsg });
+    } catch (err) {
+        console.error('[WA BOT] Gagal memproses perintah !info:', err);
+        await sock.sendMessage(jid, { text: 'Maaf, terjadi kesalahan saat mengambil informasi lokasi & parkir.' });
+    }
+}
+
+async function handleRundownCommand(jid, m) {
+    try {
+        const rundownRef = collection(db, 'rundown');
+        const querySnapshot = await getDocs(rundownRef);
+        
+        const rundownList = [];
+        querySnapshot.forEach((doc) => {
+            rundownList.push({ id: doc.id, ...doc.data() });
+        });
+        
+        const divider = '*━━━━━━━━━━━━━━━━━━━━━━━━━━*';
+        
+        if (rundownList.length === 0) {
+            const emptyMsg = 
+                `⚜️ *RUNDOWN / JADWAL ACARA* ⚜️\n` +
+                `${divider}\n\n` +
+                `📅 Jadwal rundown belum diatur oleh panitia.\n\n` +
+                `${divider}\n` +
+                `_Sistem Bot Reuni Akbar PP AL-FATAH_`;
+            await sock.sendMessage(jid, { text: emptyMsg });
+            return;
+        }
+        
+        // Sort rundown by time (waktu)
+        // Sort alphabetically by start time (e.g. "08:00 - 09:00")
+        rundownList.sort((a, b) => {
+            const timeA = (a.waktu || '').trim();
+            const timeB = (b.waktu || '').trim();
+            return timeA.localeCompare(timeB);
+        });
+        
+        let rundownText = `⚜️ *RUNDOWN / JADWAL ACARA* ⚜️\n` +
+                          `${divider}\n\n`;
+                          
+        rundownList.forEach((r, idx) => {
+            rundownText += `*${idx + 1}. [${r.waktu || 'TBD'}]* \n` +
+                           `📍 *Kegiatan:* ${r.kegiatan || '-'}\n`;
+            if (r.keterangan && r.keterangan.trim()) {
+                rundownText += `📝 *Keterangan:* _${r.keterangan.trim()}_\n`;
+            }
+            rundownText += `\n`;
+        });
+        
+        rundownText += `${divider}\n` +
+                       `_Sistem Bot Reuni Akbar PP AL-FATAH_`;
+                       
+        await sock.sendMessage(jid, { text: rundownText });
+    } catch (err) {
+        console.error('[WA BOT] Gagal memproses perintah !rundown:', err);
+        await sock.sendMessage(jid, { text: 'Maaf, terjadi kesalahan saat mengambil data rundown.' });
     }
 }
 
@@ -3069,6 +3173,10 @@ async function handleHelpCommand(jid, m) {
                       `Mengecek status akun pendaftaran, kehadiran, dan status/nominal pembayaran iuran donasi Anda.\n\n` +
                       `✉️ *!undangan*\n` +
                       `Mendapatkan link surat undangan digital resmi personal Anda.\n\n` +
+                      `📍 *!info*\n` +
+                      `Menampilkan informasi lokasi acara, link Google Maps, serta panduan parkir & akses masuk.\n\n` +
+                      `🗓️ *!rundown*\n` +
+                      `Menampilkan jadwal kegiatan dan susunan rundown acara reuni secara lengkap.\n\n` +
                       `📋 *!menu*\n` +
                       `Menampilkan ringkasan seluruh daftar perintah valid.\n\n` +
                       `❓ *!help*\n` +

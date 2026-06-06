@@ -205,6 +205,8 @@ window.populateEventSettingsForm = () => {
   const setEventTimeEl = document.getElementById("set-event-time");
   const setEventGuestEl = document.getElementById("set-event-guest");
   const setEventWaHumasEl = document.getElementById("set-event-wa-humas");
+  const setEventLocationEl = document.getElementById("set-event-location");
+  const setEventParkingEl = document.getElementById("set-event-parking");
   const apiBendaharaEl = document.getElementById("api-access-bendahara");
   const apiSekretarisEl = document.getElementById("api-access-sekretaris");
   const setEventWaDisabledEl = document.getElementById("set-event-wa-disabled");
@@ -218,6 +220,8 @@ window.populateEventSettingsForm = () => {
       if (setEventTimeEl) setEventTimeEl.value = window.STATE.eventTime || "";
       if (setEventGuestEl) setEventGuestEl.value = window.STATE.eventGuest || "";
       if (setEventWaHumasEl) setEventWaHumasEl.value = window.STATE.eventWaHumas || "";
+      if (setEventLocationEl) setEventLocationEl.value = window.STATE.eventInfo && window.STATE.eventInfo.event_location || "";
+      if (setEventParkingEl) setEventParkingEl.value = window.STATE.eventInfo && window.STATE.eventInfo.event_parking || "";
       
       if (setEventWaDisabledEl) {
           setEventWaDisabledEl.checked = window.STATE.eventInfo && window.STATE.eventInfo.wa_disabled === true;
@@ -5518,6 +5522,8 @@ window.handleUpdateEventInfo = async (e) => {
   const setEventTime = document.getElementById("set-event-time");
   const setEventGuest = document.getElementById("set-event-guest");
   const setEventWaHumas = document.getElementById("set-event-wa-humas");
+  const setEventLocation = document.getElementById("set-event-location");
+  const setEventParking = document.getElementById("set-event-parking");
   const setEventWaDisabled = document.getElementById("set-event-wa-disabled");
   const apiBendahara = document.getElementById("api-access-bendahara");
   const apiSekretaris = document.getElementById("api-access-sekretaris");
@@ -5538,6 +5544,8 @@ window.handleUpdateEventInfo = async (e) => {
     apiAccess.push("sekretaris");
   
   const waHumasVal = setEventWaHumas ? setEventWaHumas.value.trim().replace(/\D/g, "") : "";
+  const eventLocationVal = setEventLocation ? setEventLocation.value.trim() : "";
+  const eventParkingVal = setEventParking ? setEventParking.value.trim() : "";
   const waDisabledVal = setEventWaDisabled ? setEventWaDisabled.checked : false;
   const eventTimeVal = setEventTime ? setEventTime.value : "";
   const eventGuestVal = setEventGuest ? setEventGuest.value : "";
@@ -5558,6 +5566,8 @@ window.handleUpdateEventInfo = async (e) => {
           event_date: dFmt,
           event_time: eventTimeVal,
           event_guest: eventGuestVal,
+          event_location: eventLocationVal,
+          event_parking: eventParkingVal,
           wa_humas: waHumasVal,
           wa_disabled: waDisabledVal,
           api_access_roles: apiAccess,
