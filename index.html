@@ -2377,6 +2377,19 @@
       <!-- TAB WHATSAPP: Material Design 3 Native Android Look adapted to Portal Theme -->
       <div id="tab-whatsapp" class="tab-content hidden space-y-6">
         
+        <!-- Sub-Tab Navigation for WhatsApp Portal -->
+        <div class="flex border-b border-white/10 gap-6 px-1">
+          <button id="subbtn-whatsapp-center" onclick="window.switchWhatsappSubTab('center')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-indigo-500 text-white transition-all">
+            <i class="fab fa-whatsapp mr-1.5 text-emerald-400"></i> WhatsApp Center
+          </button>
+          <button id="subbtn-whatsapp-groups" onclick="window.switchWhatsappSubTab('groups')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+            <i class="fas fa-users-cog mr-1.5 text-indigo-400"></i> Grup & Channel WA
+          </button>
+        </div>
+
+        <!-- Sub-Tab Content 1: WhatsApp Center -->
+        <div id="subtab-whatsapp-center" class="space-y-6">
+        
         <!-- Header Panel -->
         <div class="premium-card p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div class="flex items-center gap-3">
@@ -2900,219 +2913,9 @@
                   <i class="fas fa-plus"></i> Tambah ke Daftar
                 </button>
               </div>
-          <!-- TAB SETTINGS: Pengaturan & Sistem -->
-          <!-- TAB SETTINGS: Pengaturan & Sistem (Pusat Pengaturan Terpadu) -->
-          <div id="tab-whatsapp" class="tab-content hidden space-y-6">
-            <!-- Sub-Tab Navigation for WhatsApp Portal -->
-            <div class="flex border-b border-white/10 gap-6 px-1">
-              <button id="subbtn-whatsapp-center" onclick="window.switchWhatsappSubTab('center')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-indigo-500 text-white transition-all">
-                <i class="fab fa-whatsapp mr-1.5 text-emerald-400"></i> WhatsApp Center
-              </button>
-              <button id="subbtn-whatsapp-groups" onclick="window.switchWhatsappSubTab('groups')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
-                <i class="fas fa-users-cog mr-1.5 text-indigo-400"></i> Grup & Channel WA
-              </button>
-            </div>
-
-            <!-- Sub-Tab Content 1: WhatsApp Center -->
-            <div id="subtab-whatsapp-center" class="space-y-6">
-              <!-- Header Panel -->
-              <div class="premium-card p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl shadow-lg border border-emerald-500/20">
-                    <i class="fab fa-whatsapp"></i>
-                  </div>
-                  <div>
-                    <h3 id="wa-header-title" class="text-sm font-black uppercase text-white tracking-wider">WhatsApp Gateway</h3>
-                    <p id="wa-header-desc" class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Manajemen Koneksi Bot Server & API Gateway</p>
-                    <div id="wa-active-provider-info" class="text-[10px] text-indigo-400 font-bold uppercase mt-2.5 flex items-center gap-1.5">
-                      <i class="fas fa-info-circle animate-pulse"></i>
-                      <span>WhatsApp Aktif: Mendeteksi...</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Status Chips -->
-                <div id="wa-status-chips" class="flex flex-wrap gap-2">
-                  <div id="wa-node-status" class="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-300">
-                    <div class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
-                    <span class="font-bold uppercase text-[9px] tracking-wider">NodeJS Loading</span>
-                  </div>
-                  <div id="wa-local-api-status" class="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-300">
-                    <div id="wa-local-dot" class="w-2 h-2 rounded-full bg-slate-500"></div>
-                    <span id="wa-local-text" class="font-bold uppercase text-[9px] tracking-wider">API LOKAL: CHECKING</span>
-                  </div>
-                  <div id="wa-connection-status" class="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-300">
-                    <i class="fab fa-whatsapp text-emerald-400"></i>
-                    <span class="font-bold uppercase text-[9px] tracking-wider">OFFLINE</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Segmented Control for Local vs Cloud Mode -->
-              <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 max-w-md">
-                <button onclick="window.switchWaModeTab('local')" id="btn-wa-mode-local" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer bg-indigo-600 text-white shadow-md">
-                  <i class="fas fa-server mr-1.5"></i> Server HP Lokal
-                </button>
-                <button onclick="window.switchWaModeTab('cloud')" id="btn-wa-mode-cloud" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200">
-                  <i class="fas fa-cloud mr-1.5"></i> API Gateway Cloud
-                </button>
-              </div>
-
-              <!-- WA Mode 1: Local NodeJS Bot Server -->
-              <div id="wa-mode-local-content" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Left Column: Bot Connection Console -->
-                <div class="space-y-6">
-                  <!-- QR Code & Status Panel -->
-                  <div class="premium-card p-6 flex flex-col items-center text-center space-y-4">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 w-full border-b border-white/5 pb-2 text-left"><i class="fas fa-qrcode mr-1.5 text-indigo-400"></i> Koneksi QR Code</h4>
-                    
-                    <div id="wa-qr-container" class="w-64 h-64 bg-slate-900/55 rounded-3xl border border-white/10 flex items-center justify-center relative overflow-hidden group shadow-inner">
-                      <div id="wa-qr-code" class="p-2 bg-white rounded-2xl shadow-xl transition-all duration-300">
-                        <!-- Dynamically injected canvas or placeholder -->
-                        <div class="w-56 h-56 flex flex-col items-center justify-center text-slate-500">
-                          <i class="fas fa-qrcode text-5xl mb-3 animate-pulse"></i>
-                          <p class="text-[10px] font-bold uppercase tracking-wider">QR Code Belum Dimuat</p>
-                        </div>
-                      </div>
-                      
-                      <!-- Connection Success overlay -->
-                      <div id="wa-connected-overlay" class="hidden absolute inset-0 bg-[#060813]/90 flex flex-col items-center justify-center p-6 text-center transition-all duration-300">
-                        <div class="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-4xl mb-4 border border-emerald-500/20 shadow-lg shadow-emerald-500/10 scale-in">
-                          <i class="fas fa-check-circle"></i>
-                        </div>
-                        <h5 class="text-sm font-black text-white leading-tight">WhatsApp Terkoneksi!</h5>
-                        <p class="text-[10px] text-emerald-400 font-bold uppercase mt-1">Bot Siap Mengirim Pesan</p>
-                        
-                        <div class="mt-6 w-full space-y-2 text-[10px] text-slate-400 font-medium">
-                          <div class="flex justify-between border-b border-white/5 pb-1"><span>Nama Device:</span><span id="wa-device-name" class="font-bold text-slate-200">-</span></div>
-                          <div class="flex justify-between"><span>Nomor Bot:</span><span id="wa-device-number" class="font-bold text-slate-200">-</span></div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- QR Helper Text -->
-                    <div class="text-[10px] text-slate-400 font-medium leading-relaxed max-w-sm">
-                      <p id="wa-qr-instruction">1. Buka WhatsApp di ponsel Anda.<br>2. Ketuk Menu atau Pengaturan &gt; Perangkat Tertaut.<br>3. Klik Hubungkan Perangkat dan arahkan kamera ke kode QR di atas.</p>
-                    </div>
-                    
-                    <!-- Controls -->
-                    <div class="w-full flex gap-2 pt-2 border-t border-white/5">
-                      <button onclick="window.startWaBotServer()" class="btn-md3 btn-md3-primary flex-1"><i class="fas fa-play mr-1.5"></i> Nyalakan Bot</button>
-                      <button onclick="window.stopWaBotServer()" class="btn-md3 btn-md3-danger-tonal flex-1"><i class="fas fa-power-off mr-1.5"></i> Putus Bot</button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Right Column: Settings & Diagnostics -->
-                <div class="space-y-6">
-                  <!-- Server settings -->
-                  <div class="premium-card p-6 flex flex-col space-y-4">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 border-b border-white/5 pb-2"><i class="fas fa-cog mr-1.5 text-indigo-400"></i> Konfigurasi Koneksi Lokal</h4>
-                    
-                    <div class="space-y-4">
-                      <div>
-                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">URL Server Bot NodeJS Lokal</label>
-                        <div class="flex gap-2">
-                          <div class="relative flex-1">
-                            <input type="text" id="set-wa-local-url" placeholder="Contoh: http://localhost:8000" class="input-field text-xs py-2.5 pl-3" />
-                          </div>
-                          <button onclick="window.saveWaLocalConfig()" class="btn-md3 btn-md3-outlined px-4 py-2 text-xs font-bold shadow-sm">Simpan</button>
-                        </div>
-                        <p class="text-[8px] text-slate-500 mt-1.5 font-semibold leading-tight">Masukkan alamat server nodejs bot lokal Anda. Kosongkan jika server bot berjalan di port default (http://localhost:8000).</p>
-                      </div>
-                      
-                      <div class="pt-2 border-t border-white/5 flex justify-between items-center">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase">Log Aktivitas Server</span>
-                        <button onclick="window.clearWaLocalLogs()" class="text-slate-500 hover:text-slate-300 font-bold uppercase tracking-wider text-[8px]">Hapus Log</button>
-                      </div>
-                      <div id="wa-local-logs" class="bg-black/60 border border-white/5 rounded-2xl p-4 font-mono text-[9px] text-slate-400 h-40 overflow-y-auto custom-scrollbar whitespace-pre-wrap select-text leading-relaxed">
-                        <!-- Injected via JS -->
-                        [Sistem] Menunggu server bot dijalankan...
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- WA Mode 2: Cloud API Gateway (Fonnte/Waba) -->
-              <div id="wa-mode-cloud-content" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Left Column: Cloud Provider settings -->
-                <div class="space-y-6">
-                  <div class="premium-card p-6 flex flex-col space-y-4">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 border-b border-white/5 pb-2"><i class="fas fa-cloud-upload-alt mr-1.5 text-indigo-400"></i> Pengaturan Cloud API Gateway</h4>
-                    
-                    <div class="space-y-4">
-                      <div>
-                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Penyedia API Gateway</label>
-                        <select id="set-wa-cloud-provider" onchange="window.toggleWaCloudProviderFields()" class="input-field text-xs py-2.5">
-                          <option value="fonnte">Fonnte (Direkomendasikan)</option>
-                          <option value="starsender">StarSender</option>
-                          <option value="custom">Custom API (HTTP Post)</option>
-                        </select>
-                      </div>
-                      
-                      <div id="field-cloud-token">
-                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Token API / Api Key</label>
-                        <input type="password" id="set-wa-cloud-token" placeholder="Masukkan token API gateway Anda" class="input-field text-xs py-2.5" />
-                      </div>
-                      
-                      <div id="field-cloud-url" class="hidden">
-                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Custom Endpoint URL</label>
-                        <input type="text" id="set-wa-cloud-url" placeholder="Contoh: https://api.domain.com/send-message" class="input-field text-xs py-2.5" />
-                      </div>
-                      
-                      <div class="pt-2">
-                        <button onclick="window.saveWaCloudConfig()" class="btn-md3 btn-md3-primary w-full"><i class="fas fa-save mr-1.5"></i> Simpan Konfigurasi Cloud</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Right Column: Cloud Diagnostics -->
-                <div class="space-y-6">
-                  <div class="premium-card p-6 flex flex-col space-y-4">
-                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 border-b border-white/5 pb-2"><i class="fas fa-info-circle mr-1.5 text-indigo-400"></i> Informasi Gateway Cloud</h4>
-                    
-                    <div id="wa-cloud-info-panel" class="space-y-3 text-[10px] text-slate-400 font-medium">
-                      <div class="flex justify-between border-b border-white/5 pb-1"><span>Status Akun:</span><span id="wa-cloud-status" class="font-bold text-yellow-400">MEMUAT...</span></div>
-                      <div class="flex justify-between border-b border-white/5 pb-1"><span>Nama Pengguna:</span><span id="wa-cloud-user" class="font-bold text-slate-200">-</span></div>
-                      <div class="flex justify-between border-b border-white/5 pb-1"><span>Nomor Terhubung:</span><span id="wa-cloud-device" class="font-bold text-slate-200">-</span></div>
-                      <div class="flex justify-between border-b border-white/5 pb-1"><span>Kedaluwarsa Paket:</span><span id="wa-cloud-expired" class="font-bold text-slate-200">-</span></div>
-                      <div class="flex justify-between"><span>Kuota Pesan Hari Ini:</span><span id="wa-cloud-quota" class="font-bold text-slate-200">-</span></div>
-                      
-                      <div class="pt-4 border-t border-white/5 flex gap-2">
-                        <button onclick="window.checkWaCloudStatus()" class="btn-md3 btn-md3-outlined w-full py-2 text-[10px] font-bold"><i class="fas fa-sync mr-1.5"></i> Perbarui Status</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Campaign Section (Always Visible at bottom of Whatsapp Center) -->
-              <div class="premium-card p-6 flex flex-col space-y-4">
-                <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                  <h4 class="text-xs font-black uppercase tracking-wider text-white"><i class="fas fa-calendar-alt mr-1.5 text-indigo-400"></i> Kampanye Broadcast Terjadwal</h4>
-                </div>
-                
-                <div class="overflow-x-auto custom-scrollbar">
-                  <table class="w-full text-left modern-table">
-                    <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase">
-                      <tr>
-                        <th class="p-3">Nama Kampanye</th>
-                        <th class="p-3">Waktu Rencana</th>
-                        <th class="p-3 text-center">Pesan</th>
-                        <th class="p-3 text-center">Target (P/F/T)</th>
-                        <th class="p-3 text-center">Status</th>
-                        <th class="p-3 text-center">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody id="wa-campaigns-list" class="divide-y divide-white/5 text-xs text-slate-300">
-                      <!-- Dynamically populated via JS -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+                      </div> <!-- wa-web-right-col -->
+          </div> <!-- wa-web-api-container -->
+        </div> <!-- subtab-whatsapp-center -->
 
             <!-- Sub-Tab Content 2: Grup & Channel WA -->
             <div id="subtab-whatsapp-groups" class="hidden space-y-6">

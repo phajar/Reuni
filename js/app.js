@@ -848,8 +848,8 @@ window.showTab = (tabId) => {
   }
   
   if (tabId === 'settings') {
-      const activeSidebarSubBtn = document.querySelector(".nav-sub-btn.active");
-      if (!activeSidebarSubBtn) {
+      const activeSettingsSubBtn = document.querySelector(".settings-sub-btn.active, .mobile-settings-sub-btn.active");
+      if (!activeSettingsSubBtn) {
           window.switchSettingsSubTab("profile");
       }
       setTimeout(() => {
