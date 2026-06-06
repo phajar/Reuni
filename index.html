@@ -1536,12 +1536,45 @@
     </aside>
 
     <main class="flex-1 p-4 pb-44 lg:p-8 xl:p-12 overflow-y-auto max-h-screen custom-scrollbar relative">
-            <!-- Logo at absolute top right (Clickable Settings Entry) -->
+      <!-- Logo at absolute top right (Clickable Settings Entry) -->
       <div class="fixed top-4 right-4 lg:top-8 lg:right-8 z-[200]">
         <!-- The Clickable Logo Circle -->
-        <div onclick="window.showTab('settings')" class="w-12 h-12 lg:w-16 lg:h-16 bg-white/10 backdrop-blur-xl rounded-full p-0 flex items-center justify-center border border-white/20 shadow-xl cursor-pointer hover:scale-105 active:scale-95 transition-all overflow-hidden relative group" title="Buka Pengaturan Sistem">
+        <div onclick="window.toggleLogoDropdown()" class="w-12 h-12 lg:w-16 lg:h-16 bg-white/10 backdrop-blur-xl rounded-full p-0 flex items-center justify-center border border-white/20 shadow-xl cursor-pointer hover:scale-105 active:scale-95 transition-all overflow-hidden relative group" title="Buka Pengaturan Sistem">
           <img src="img/logo.png" class="w-full h-full object-cover drop-shadow-md rounded-full" alt="Logo" />
           <div class="absolute inset-0 bg-indigo-600/0 group-hover:bg-indigo-600/10 transition-colors"></div>
+        </div>
+
+        <!-- Logo Dropdown Menu (Positioned absolute below the logo) -->
+        <div id="logo-dropdown-menu" class="hidden absolute right-0 mt-3 w-56 bg-[#060813]/95 backdrop-blur-xl border border-white/10 rounded-3xl p-3 shadow-2xl z-[210] space-y-1 transition-all duration-200">
+          <div class="px-3 py-2 border-b border-white/5 mb-1">
+            <h4 class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Konfigurasi Sistem</h4>
+            <p class="text-[8px] text-slate-500 uppercase font-bold tracking-wider">Akses Portal Pengaturan</p>
+          </div>
+          
+          <button onclick="window.clickLogoSubMenu('profile')" id="subbtn-logo-profile" class="nav-sub-btn">
+            <i class="fas fa-user-cog text-[11px] w-4"></i> Profil Saya
+          </button>
+          <button onclick="window.clickLogoSubMenu('event')" id="subbtn-logo-event" class="nav-sub-btn hidden">
+            <i class="fas fa-calendar-check text-[11px] w-4"></i> Info Acara
+          </button>
+          <button onclick="window.clickLogoSubMenu('system')" id="subbtn-logo-system" class="nav-sub-btn hidden">
+            <i class="fas fa-toolbox text-[11px] w-4"></i> Konfigurasi Sistem
+          </button>
+          <button onclick="window.clickLogoSubMenu('users')" id="subbtn-logo-users" class="nav-sub-btn hidden">
+            <i class="fas fa-users-cog text-[11px] w-4"></i> Manajemen User
+          </button>
+          <button onclick="window.clickLogoSubMenu('approve')" id="subbtn-logo-approve" class="nav-sub-btn hidden justify-between items-center pr-3">
+            <span class="flex items-center gap-2">
+              <i class="fas fa-user-check text-[11px] w-4"></i> Persetujuan
+            </span>
+            <span id="badge-logo-approve" class="hidden w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span>
+          </button>
+          <button onclick="window.clickLogoSubMenu('audit')" id="subbtn-logo-audit" class="nav-sub-btn hidden">
+            <i class="fas fa-history text-[11px] w-4"></i> Log Aktivitas
+          </button>
+          <button onclick="showTab('whatsapp'); window.toggleLogoDropdown();" id="subbtn-logo-whatsapp" class="nav-sub-btn hidden">
+            <i class="fab fa-whatsapp text-[11px] w-4"></i> WhatsApp Gateway
+          </button>
         </div>
       </div>
 
