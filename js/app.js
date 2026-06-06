@@ -851,9 +851,15 @@ auth.onAuthStateChanged(async (user) => {
             ? "Sekretaris"
             : r === "koordinator_wilayah"
               ? "Koordinator Wilayah"
-              : r === "ketua"
-                ? "Ketua"
-                : "Viewer";
+              : r === "korwil_kabupaten"
+                ? "Korwil Kabupaten"
+                : r === "korwil_kecamatan"
+                  ? "Korwil Kecamatan"
+                  : r === "korwil_desa"
+                    ? "Korwil Desa"
+                    : r === "ketua"
+                      ? "Ketua"
+                      : "Viewer";
     if (document.getElementById("greeting"))
       document.getElementById("greeting").innerText =
         `Petugas: ${window.STATE.user.nama} | ${roleName}`;
@@ -881,6 +887,9 @@ auth.onAuthStateChanged(async (user) => {
         sekretaris: "Sekretaris",
         bendahara: "Bendahara",
         koordinator_wilayah: "Koordinator Wilayah",
+        korwil_kabupaten: "Koor Wil. Kabupaten",
+        korwil_kecamatan: "Koor Wil. Kecamatan",
+        korwil_desa: "Koor Wil. Desa",
         panitia_divisi: "Panitia Divisi",
         viewer: "Viewer / Tamu",
         publikasi: "Humas Publikasi",
@@ -906,6 +915,9 @@ auth.onAuthStateChanged(async (user) => {
         sekretaris: "Sekretaris",
         bendahara: "Bendahara",
         koordinator_wilayah: "Koordinator Wilayah",
+        korwil_kabupaten: "Koor Wil. Kabupaten",
+        korwil_kecamatan: "Koor Wil. Kecamatan",
+        korwil_desa: "Koor Wil. Desa",
         panitia_divisi: "Panitia Divisi",
         viewer: "Viewer / Tamu",
         publikasi: "Humas Publikasi",
@@ -4930,9 +4942,15 @@ window.handleUpdateProfile = async (e) => {
             ? "Sekretaris"
             : r === "koordinator_wilayah"
               ? "Koordinator Wilayah"
-              : r === "ketua"
-                ? "Ketua"
-                : "Viewer";
+              : r === "korwil_kabupaten"
+                ? "Korwil Kabupaten"
+                : r === "korwil_kecamatan"
+                  ? "Korwil Kecamatan"
+                  : r === "korwil_desa"
+                    ? "Korwil Desa"
+                    : r === "ketua"
+                      ? "Ketua"
+                      : "Viewer";
     document.getElementById("greeting").innerText =
       `Petugas: ${newName} | ${roleName}`;
     window.closeModal("modal-settings");
