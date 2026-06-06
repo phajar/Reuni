@@ -40,6 +40,7 @@ window.sortConfig = {
   alumni: { key: "created_at", dir: "desc" },
   finance: { key: "tanggal", dir: "desc" },
 };
+window.reminderTemplates = {};
 window.isLightMode = localStorage.getItem("af_theme") === "light";
 window.pieChartInstance = null;
 let idleTime = 0;
@@ -227,8 +228,22 @@ window.populateEventSettingsForm = () => {
           : ["admin_utama", "creator"];
       if (apiBendaharaEl) apiBendaharaEl.checked = apiAccess.includes("bendahara");
       if (apiSekretarisEl) apiSekretarisEl.checked = apiAccess.includes("sekretaris");
+      
+      const templates = window.STATE.eventInfo && window.STATE.eventInfo.reminder_templates
+          ? window.STATE.eventInfo.reminder_templates
+          : {};
+      window.reminderTemplates = { ...templates };
+      
+      const milestonesEl = document.getElementById("set-reminder-milestones");
+      if (milestonesEl) {
+          const milestones = window.STATE.eventInfo && window.STATE.eventInfo.reminder_milestones
+              ? window.STATE.eventInfo.reminder_milestones
+              : [30, 14, 7, 3, 1];
+          milestonesEl.value = milestones.join(", ");
+          window.handleMilestonesChange(milestonesEl.value, false);
+      }
   }
-};
+}
 
 window.switchWaModeTab = (mode) => {
   const btnLocal = document.getElementById('btn-wa-mode-local');
@@ -714,6 +729,35 @@ window.toggleTheme = () => {
 };
 window.applyTheme();
 
+window.toggleSidebarCollapse = () => {
+  const sidebar = document.getElementById("main-sidebar");
+  if (!sidebar) return;
+  sidebar.classList.toggle("collapsed");
+  const isCollapsed = sidebar.classList.contains("collapsed");
+  localStorage.setItem("sidebar_collapsed", isCollapsed ? "true" : "false");
+  
+  const icon = document.getElementById("sidebar-collapse-icon");
+  if (icon) {
+    icon.className = isCollapsed ? "fas fa-chevron-right text-sm" : "fas fa-chevron-left text-sm";
+  }
+};
+
+window.applySidebarCollapse = () => {
+  const sidebar = document.getElementById("main-sidebar");
+  if (!sidebar) return;
+  const isCollapsed = localStorage.getItem("sidebar_collapsed") === "true";
+  if (isCollapsed) {
+    sidebar.classList.add("collapsed");
+  } else {
+    sidebar.classList.remove("collapsed");
+  }
+  const icon = document.getElementById("sidebar-collapse-icon");
+  if (icon) {
+    icon.className = isCollapsed ? "fas fa-chevron-right text-sm" : "fas fa-chevron-left text-sm";
+  }
+};
+window.applySidebarCollapse();
+
 window.toggleProfilePopover = () => {
   const popover = document.getElementById("profile-popover");
   if (!popover) return;
@@ -940,7 +984,8 @@ window.showTab = (tabId) => {
   const mainEl = document.querySelector("main");
   if (mainEl) mainEl.scrollTop = 0;
 
-  window.renderAllTabs();
+  window.currentTab = tabId;
+  window.renderActiveTab(tabId);
 
   // OTOMATIS TUTUP SIDEBAR DI HP/TABLET SETELAH DIKLIK
   if (window.innerWidth < 1024) {
@@ -1241,17 +1286,18 @@ auth.onAuthStateChanged(async (user) => {
 
     // Tampilkan/sembunyikan sub-tab administrasi di Pusat Pengaturan
     const isAdmin = r === "admin_utama" || r === "creator";
-    showElement("subbtn-settings-event", isAdmin);
+    const canManageEvent = ["creator", "admin_utama", "ketua", "sekretaris", "bendahara"].includes(r);
+    showElement("subbtn-settings-event", canManageEvent);
     showElement("subbtn-settings-users", isAdmin);
     showElement("subbtn-settings-approve", isAdmin);
     showElement("subbtn-settings-audit", isAdmin);
 
-    showElement("subbtn-mobile-settings-event", isAdmin);
+    showElement("subbtn-mobile-settings-event", canManageEvent);
     showElement("subbtn-mobile-settings-users", isAdmin);
     showElement("subbtn-mobile-settings-approve", isAdmin);
     showElement("subbtn-mobile-settings-audit", isAdmin);
     
-    showElement("subbtn-logo-event", isAdmin);
+    showElement("subbtn-logo-event", canManageEvent);
     showElement("subbtn-logo-users", isAdmin);
     showElement("subbtn-logo-approve", isAdmin);
     showElement("subbtn-logo-audit", isAdmin);
@@ -1576,43 +1622,34 @@ window.updateBadges = () => {
   }
 };
 
-window.renderAllTabs = () => {
-  try {
-    window.renderHome();
-  } catch (e) {}
-  try {
-    window.renderAlumniTable();
-  } catch (e) {}
-  try {
-    window.renderFinanceTable();
-  } catch (e) {}
-  try {
-    window.renderRequestTable();
-  } catch (e) {}
-  try {
-    window.renderRekapWilayah();
-  } catch (e) {}
-  try {
-    window.renderRABTable();
-  } catch (e) {}
-  try {
-    window.renderPanitiaTable();
-  } catch (e) {}
-  try {
-    window.renderRundownTable();
-  } catch (e) {}
-  try {
-    window.renderGuestbookTable();
-  } catch (e) {}
-  try {
-    window.renderDistribusiSurat();
-  } catch (e) {}
+window.currentTab = 'home';
+window.dirtyTabs = {
+  home: true,
+  alumni: true,
+  finance: true,
+  rekap: true,
+  panitia: true,
+  guestbook: true,
+  logistik: true,
+  whatsapp: true,
+  settings: true
+};
 
+window.markAllTabsDirty = () => {
+  if (!window.dirtyTabs) return;
+  for (const tab in window.dirtyTabs) {
+    window.dirtyTabs[tab] = true;
+  }
+};
+
+window.renderActiveTab = (tabId) => {
+  // Always update badges (very lightweight)
   if (typeof window.updateBadges === "function") {
-    window.updateBadges();
+    try { window.updateBadges(); } catch (e) {}
   }
 
-  if (window.STATE.user) {
+  // Update role buttons
+  if (window.STATE && window.STATE.user) {
     const r = window.STATE.user.role;
     const btnRek = document.getElementById("btn-payment-settings");
     if (btnRek) {
@@ -1627,6 +1664,46 @@ window.renderAllTabs = () => {
       else btnSendLaporan.classList.add("hidden");
     }
   }
+
+  // If tab is not dirty, skip rendering tables
+  if (window.dirtyTabs && !window.dirtyTabs[tabId]) {
+    console.log(`[RENDER] Skip render for tab: ${tabId} (not dirty)`);
+    return;
+  }
+
+  // Mark clean
+  if (window.dirtyTabs) {
+    window.dirtyTabs[tabId] = false;
+  }
+
+  console.log(`[RENDER] Rendering active tab: ${tabId}`);
+
+  try {
+    if (tabId === 'home') {
+      window.renderHome();
+    } else if (tabId === 'alumni') {
+      window.renderAlumniTable();
+      window.renderRequestTable();
+    } else if (tabId === 'finance') {
+      window.renderFinanceTable();
+      window.renderRABTable();
+    } else if (tabId === 'rekap') {
+      window.renderRekapWilayah();
+      window.renderDistribusiSurat();
+    } else if (tabId === 'panitia') {
+      window.renderPanitiaTable();
+      window.renderRundownTable();
+    } else if (tabId === 'guestbook') {
+      window.renderGuestbookTable();
+    }
+  } catch (e) {
+    console.error(`Error rendering active tab ${tabId}:`, e);
+  }
+};
+
+window.renderAllTabs = () => {
+  window.markAllTabsDirty();
+  window.renderActiveTab(window.currentTab || 'home');
 };
 
 window.loadDataRealtime = () => {
@@ -2268,6 +2345,97 @@ window.renderHome = () => {
       }
     }
   } catch (e) {}
+
+  // SPARKLINE MINI CHARTS FOR KAS & ALUMNI
+  try {
+    if (typeof Chart !== "undefined") {
+      function parseTanggalToMonthKeyLocal(tanggal) {
+        if (!tanggal) return null;
+        if (tanggal && typeof tanggal.toDate === "function") {
+          const d = tanggal.toDate();
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        }
+        const str = String(tanggal).trim();
+        if (str.includes("/")) {
+          const parts = str.split("/");
+          if (parts.length === 3) {
+            let day, month, year;
+            if (parts[0].length === 4) {
+              year = parseInt(parts[0]);
+              month = parseInt(parts[1]);
+            } else {
+              day = parseInt(parts[0]);
+              month = parseInt(parts[1]);
+              year = parseInt(parts[2]);
+            }
+            if (!isNaN(year) && !isNaN(month) && year > 1970 && month >= 1 && month <= 12) {
+              return `${year}-${String(month).padStart(2, "0")}`;
+            }
+          }
+          return null;
+        }
+        if (str.match(/^\d{4}-\d{2}/)) {
+          return str.substring(0, 7);
+        }
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) {
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        }
+        return null;
+      }
+
+      let monthlyIn = {}, monthlyOut = {};
+      window.STATE.finance.forEach((f) => {
+        const monthKey = parseTanggalToMonthKeyLocal(f.tanggal);
+        if (!monthKey) return;
+        const nom = Number(f.nominal) || 0;
+        if (f.status === "pemasukan") {
+          monthlyIn[monthKey] = (monthlyIn[monthKey] || 0) + nom;
+        } else if (f.status === "pengeluaran") {
+          monthlyOut[monthKey] = (monthlyOut[monthKey] || 0) + nom;
+        }
+      });
+
+      let monthlyAlumni = {};
+      window.STATE.alumni.forEach((a) => {
+        const monthKey = parseTanggalToMonthKeyLocal(a.created_at || a.tanggal_daftar);
+        if (monthKey) {
+          monthlyAlumni[monthKey] = (monthlyAlumni[monthKey] || 0) + 1;
+        }
+      });
+
+      const allMonths = Array.from(new Set([
+        ...Object.keys(monthlyIn), 
+        ...Object.keys(monthlyOut),
+        ...Object.keys(monthlyAlumni)
+      ])).sort();
+
+      let runningBalance = 0;
+      let balanceTrend = [];
+      let runningAlumni = 0;
+      let alumniTrend = [];
+
+      allMonths.forEach(m => {
+        const net = (monthlyIn[m] || 0) - (monthlyOut[m] || 0);
+        runningBalance += net;
+        balanceTrend.push(runningBalance);
+
+        runningAlumni += (monthlyAlumni[m] || 0);
+        alumniTrend.push(runningAlumni);
+      });
+
+      const sparkBalanceData = balanceTrend.slice(-6);
+      const sparkAlumniData = alumniTrend.slice(-6);
+
+      while (sparkBalanceData.length < 2) sparkBalanceData.push(balance);
+      while (sparkAlumniData.length < 2) sparkAlumniData.push(totalAlumni);
+
+      window.renderSparkline("sparkline-balance", sparkBalanceData, "#818cf8");
+      window.renderSparkline("sparkline-alumni", sparkAlumniData, "#fbbf24");
+    }
+  } catch (err) {
+    console.error("Failed to render sparklines:", err);
+  }
 
   try {
     const pieContainer = document.getElementById("pieChart");
@@ -4413,11 +4581,19 @@ window.openReviewAlumniModal = (id) => {
     `;
   }
 
-  document.getElementById('modal-review-alumni').classList.remove('hidden');
+  const modal = document.getElementById('modal-review-alumni');
+  modal.classList.remove('hidden');
+  setTimeout(() => {
+    modal.classList.add('open');
+  }, 10);
 };
 
 window.closeReviewAlumniModal = () => {
-  document.getElementById('modal-review-alumni').classList.add('hidden');
+  const modal = document.getElementById('modal-review-alumni');
+  modal.classList.remove('open');
+  setTimeout(() => {
+    modal.classList.add('hidden');
+  }, 300);
 };
 
 window.renderRekapWilayah = () => {
@@ -4471,22 +4647,57 @@ window.renderRekapWilayah = () => {
 window.compressImage = (file, maxMB = 0.5) => {
   return new Promise((resolve) => {
     if (!file || !file.type.startsWith("image/")) return resolve(file);
-    if (file.size / (1024 * 1024) <= maxMB) return resolve(file);
+    
+    const maxBytes = maxMB * 1024 * 1024;
+    // Jika ukuran berkas sudah di bawah batas, tak perlu kompresi
+    if (file.size <= maxBytes) return resolve(file);
+
     const r = new FileReader();
     r.readAsDataURL(file);
     r.onload = (e) => {
       const img = new Image();
       img.src = e.target.result;
       img.onload = () => {
+        // Resize dimensi jika melebihi batas 1200px
+        const maxDim = 1200;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+
         const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        canvas.getContext("2d").drawImage(img, 0, 0, img.width, img.height);
-        canvas.toBlob(
-          (b) => resolve(new File([b], file.name, { type: "image/jpeg" })),
-          "image/jpeg",
-          0.7,
-        );
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+
+        // Kompresi iteratif dengan menurunkan kualitas JPEG jika ukuran masih terlalu besar
+        let quality = 0.8;
+        const attemptCompression = () => {
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) return resolve(file);
+              // Jika ukuran di bawah batas, atau kualitas sudah terlalu rendah, selesaikan
+              if (blob.size <= maxBytes || quality <= 0.2) {
+                console.log(`[COMPRESS] Image compressed from ${file.size} to ${blob.size} bytes (Quality: ${quality}, Dim: ${w}x${h})`);
+                resolve(new File([blob], file.name, { type: "image/jpeg" }));
+              } else {
+                quality -= 0.15;
+                attemptCompression();
+              }
+            },
+            "image/jpeg",
+            quality
+          );
+        };
+        attemptCompression();
       };
     };
   });
@@ -4671,16 +4882,8 @@ document.getElementById("form-finance").onsubmit = async (e) => {
       let file = await window.compressImage(fileInput.files[0], 0.5);
 
       // --- UPLOAD VIA CLOUDINARY ---
-      const formData = new FormData();
-      formData.append("file", file); // Cloudinary menggunakan parameter 'file'
-      formData.append("upload_preset", "Reuniakbar"); // GANTI INI
-
-      const cloudRes = await fetch(
-        "https://api.cloudinary.com/v1_1/dowih3wr7/image/upload",
-        { method: "POST", body: formData },
-      ); // GANTI [CLOUD_NAME_ANDA]
-      const cloudData = await cloudRes.json();
-      if (cloudData.secure_url) d.bukti_url = cloudData.secure_url;
+      const secureUrl = await window.uploadToCloudinary(file);
+      if (secureUrl) d.bukti_url = secureUrl;
     }
 
     d.updated_by = window.STATE.user.email;
@@ -5231,15 +5434,15 @@ window.handleUpdateProfile = async (e) => {
       window.toggleLoading(true, "Mengunggah Foto Profil...");
       let file = await window.compressImage(fileInput.files[0], 0.5);
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "Reuniakbar");
-
-      const cloudRes = await fetch(
-        "https://api.cloudinary.com/v1_1/dowih3wr7/image/upload",
-        { method: "POST", body: formData },
-      );
-      const cloudData = await cloudRes.json();
+      let cloudData = {};
+      try {
+        const secureUrl = await window.uploadToCloudinary(file);
+        if (secureUrl) {
+          cloudData.secure_url = secureUrl;
+        }
+      } catch (uploadErr) {
+        console.error("Gagal upload foto profil:", uploadErr);
+      }
 
       if (cloudData.secure_url) {
         if (window.STATE.user.photoURL) {
@@ -5318,6 +5521,7 @@ window.handleUpdateEventInfo = async (e) => {
   const setEventWaDisabled = document.getElementById("set-event-wa-disabled");
   const apiBendahara = document.getElementById("api-access-bendahara");
   const apiSekretaris = document.getElementById("api-access-sekretaris");
+  const setReminderMilestones = document.getElementById("set-reminder-milestones");
 
   const isTbd = setEventTbd ? setEventTbd.checked : false;
   const newDate = setEventDate ? setEventDate.value : "";
@@ -5338,6 +5542,13 @@ window.handleUpdateEventInfo = async (e) => {
   const eventTimeVal = setEventTime ? setEventTime.value : "";
   const eventGuestVal = setEventGuest ? setEventGuest.value : "";
   
+  const milestonesVal = setReminderMilestones ? setReminderMilestones.value : "";
+  const milestonesArray = milestonesVal
+    .split(",")
+    .map(s => parseInt(s.trim(), 10))
+    .filter(n => !isNaN(n) && n > 0)
+    .sort((a, b) => b - a);
+  
   try {
     await db
       .collection("settings")
@@ -5350,6 +5561,8 @@ window.handleUpdateEventInfo = async (e) => {
           wa_humas: waHumasVal,
           wa_disabled: waDisabledVal,
           api_access_roles: apiAccess,
+          reminder_milestones: milestonesArray.length > 0 ? milestonesArray : [30, 14, 7, 3, 1],
+          reminder_templates: window.reminderTemplates || {},
         },
         { merge: true },
       );
@@ -8532,17 +8745,9 @@ window.openSettings = () => {
             "Gagal scan teks, mengunggah gambar fisik...",
           );
           file = await window.compressImage(file, 1);
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("upload_preset", "Reuniakbar");
-
-          const cloudRes = await fetch(
-            "https://api.cloudinary.com/v1_1/dowih3wr7/image/upload",
-            { method: "POST", body: formData },
-          );
-          const cloudData = await cloudRes.json();
-          if (cloudData.secure_url) {
-            d.qris_url = cloudData.secure_url;
+          const secureUrl = await window.uploadToCloudinary(file);
+          if (secureUrl) {
+            d.qris_url = secureUrl;
           }
         }
       } else {
@@ -10730,9 +10935,8 @@ window.populateAlumniFilters = () => {
     const selectAngkatan = document.getElementById("filter-alumni-angkatan");
     if (!selectAngkatan) return;
     const currentVal = selectAngkatan.value;
-    // Kumpulkan angkatan unik
     const angkatanSet = new Set(
-        window.STATE.alumni.map(a => a.angkatan).filter(Boolean)
+        window.STATE.alumni.map(a => Number(a.angkatan)).filter(y => !isNaN(y) && y > 0)
     );
     const sorted = [...angkatanSet].sort((a, b) => a - b);
     selectAngkatan.innerHTML = `<option value="">Semua Angkatan</option>`;
@@ -10906,6 +11110,7 @@ window.applyAlumniFilters = (keepPage = false) => {
     const matched = [];
     window.STATE.alumni.forEach((a) => {
         const matchAngkatan = !angkatan || String(a.angkatan) === String(angkatan);
+        
         let matchLembaga = false;
         if (!lembaga) {
             matchLembaga = true;
@@ -12269,8 +12474,65 @@ window.openFinanceVerificationModal = async (reqId) => {
   }
 
   if (!apiKey) {
-    ocrStatus.textContent = "AI Belum Aktif";
-    ocrStatus.className = "text-[9px] font-black text-amber-400";
+    ocrStatus.textContent = "Mempersiapkan OCR Lokal...";
+    ocrStatus.className = "text-[9px] font-black text-indigo-400";
+    ocrLoading.classList.remove("hidden");
+
+    try {
+      const response = await fetch(req.bukti_url);
+      const imageBlob = await response.blob();
+      
+      const worker = new Worker("js/ocr-worker.js");
+      worker.postMessage({ imageBlob });
+      
+      worker.onmessage = (e) => {
+        const data = e.data;
+        if (data.status === "progress") {
+          ocrStatus.textContent = data.message;
+        } else if (data.status === "success") {
+          ocrLoading.classList.add("hidden");
+          ocrResultRow.classList.remove("hidden");
+          const nominalStruk = Number(data.nominal);
+          const nominalInput = Number(req.nominal);
+          ocrAmount.textContent = window.formatRupiah(nominalStruk);
+          
+          if (nominalStruk === nominalInput) {
+            ocrStatus.textContent = "Selesai (Cocok - Lokal)";
+            ocrStatus.className = "text-[9px] font-black text-emerald-400";
+            ocrMatchBadge.textContent = "COCOK ✓";
+            ocrMatchBadge.className = "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+          } else {
+            ocrStatus.textContent = "Selesai (BEDA - Lokal)";
+            ocrStatus.className = "text-[9px] font-black text-red-400";
+            ocrMatchBadge.textContent = "BEDA ⚠️";
+            ocrMatchBadge.className = "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse";
+          }
+          worker.terminate();
+        } else if (data.status === "error") {
+          ocrLoading.classList.add("hidden");
+          ocrStatus.textContent = data.message || "Gagal Pindai";
+          ocrStatus.className = "text-[9px] font-black text-amber-400";
+          ocrAmount.textContent = "Tidak terbaca";
+          ocrMatchBadge.textContent = "PERIKSA MANUAL ⚠️";
+          ocrMatchBadge.className = "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30";
+          worker.terminate();
+        }
+      };
+      
+      worker.onerror = (err) => {
+        console.error("Worker error:", err);
+        ocrLoading.classList.add("hidden");
+        ocrStatus.textContent = "Gagal Pindai (Lokal)";
+        ocrStatus.className = "text-[9px] font-black text-red-400";
+        worker.terminate();
+      };
+      
+    } catch (err) {
+      console.error("Local OCR fetch or setup error:", err);
+      ocrLoading.classList.add("hidden");
+      ocrStatus.textContent = "Gagal Pindai (Lokal)";
+      ocrStatus.className = "text-[9px] font-black text-red-400";
+    }
     return;
   }
 
@@ -12894,6 +13156,302 @@ window.exportSuratExcel = async () => {
   } finally {
     window.toggleLoading(false);
   }
+};
+
+// ----------------------------------------------------
+// FITUR: SPOTLIGHT HOVER GLOW EFFECT
+// ----------------------------------------------------
+window.initSpotlightGlow = () => {
+  document.addEventListener("mousemove", (e) => {
+    const cards = document.querySelectorAll(".premium-card, .stat-card, .table-container, #main-sidebar .nav-btn");
+    cards.forEach(card => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty("--mx", `${x}px`);
+      card.style.setProperty("--my", `${y}px`);
+    });
+  });
+};
+window.initSpotlightGlow();
+
+// ----------------------------------------------------
+// FITUR: MINI SPARKLINE CHARTS
+// ----------------------------------------------------
+window.renderSparkline = (canvasId, data, color) => {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  
+  if (window.sparklines = window.sparklines || {}, window.sparklines[canvasId]) {
+    window.sparklines[canvasId].destroy();
+  }
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, 40);
+  gradient.addColorStop(0, `${color}33`);
+  gradient.addColorStop(1, `${color}00`);
+
+  window.sparklines[canvasId] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map((_, i) => i),
+      datasets: [{
+        data: data,
+        borderColor: color,
+        borderWidth: 1.5,
+        fill: true,
+        backgroundColor: gradient,
+        tension: 0.4,
+        pointRadius: 0,
+        pointHoverRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        x: { display: false },
+        y: { display: false }
+      }
+    }
+  });
+};
+
+window.handleMilestonesChange = (val, shouldResetActive = true) => {
+  const container = document.getElementById("preview-milestone-buttons");
+  if (!container) return;
+  
+  const milestones = val
+    .split(",")
+    .map(s => parseInt(s.trim(), 10))
+    .filter(n => !isNaN(n) && n > 0)
+    .sort((a, b) => b - a);
+    
+  if (milestones.length === 0) {
+    container.innerHTML = '<span class="text-xs text-slate-500 italic">Masukkan angka hari di atas...</span>';
+    return;
+  }
+  
+  // Keep track of active milestone
+  if (shouldResetActive || !window.activePreviewMilestone || !milestones.includes(window.activePreviewMilestone)) {
+    window.activePreviewMilestone = milestones[0];
+  }
+  
+  container.innerHTML = milestones.map(m => {
+    const isActive = m === window.activePreviewMilestone;
+    const btnClass = isActive 
+      ? "px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md scale-105"
+      : "px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl text-xs font-bold transition-all border border-white/5";
+    return `<button type="button" onclick="window.selectPreviewMilestone(${m})" class="${btnClass}">H-${m}</button>`;
+  }).join("");
+  
+  window.updateReminderPreviewBubble();
+};
+
+window.selectPreviewMilestone = (m) => {
+  window.activePreviewMilestone = m;
+  const milestonesEl = document.getElementById("set-reminder-milestones");
+  const val = milestonesEl ? milestonesEl.value : "30, 14, 7, 3, 1";
+  window.handleMilestonesChange(val, false);
+};
+
+window.updateReminderPreviewBubble = () => {
+  const previewTextEl = document.getElementById("wa-preview-bubble-text");
+  const milestoneTagEl = document.getElementById("wa-preview-milestone-tag");
+  const paymentStatusEl = document.getElementById("preview-payment-status");
+  const paymentLabelEl = document.getElementById("preview-payment-label");
+  
+  if (!previewTextEl) return;
+  
+  const daysLeft = window.activePreviewMilestone || 30;
+  if (milestoneTagEl) milestoneTagEl.innerText = `H-${daysLeft}`;
+  
+  const isPaid = paymentStatusEl ? paymentStatusEl.checked : false;
+  if (paymentLabelEl) {
+    paymentLabelEl.innerText = isPaid ? "Sudah Lunas" : "Belum Lunas";
+    if (isPaid) {
+      paymentLabelEl.classList.remove("text-slate-300");
+      paymentLabelEl.classList.add("text-emerald-400");
+    } else {
+      paymentLabelEl.classList.remove("text-emerald-400");
+      paymentLabelEl.classList.add("text-slate-300");
+    }
+  }
+
+  // Pre-fill / update textarea editor value
+  const key = `${daysLeft}_${isPaid ? 'lunas' : 'belum_lunas'}`;
+  const templateEditor = document.getElementById("set-reminder-template-text");
+  if (templateEditor) {
+    const targetVal = window.reminderTemplates && window.reminderTemplates[key] !== undefined
+      ? window.reminderTemplates[key]
+      : window.getDefaultTemplateText(daysLeft, isPaid);
+    
+    if (templateEditor.value !== targetVal) {
+      templateEditor.value = targetVal;
+    }
+  }
+  
+  // Get current event data from inputs (fallback to database STATE if empty)
+  const setEventDate = document.getElementById("set-event-date");
+  const setEventTbd = document.getElementById("set-event-tbd");
+  const isTbd = setEventTbd ? setEventTbd.checked : false;
+  const dateVal = setEventDate ? setEventDate.value : "";
+  
+  let eventDateStr = "TBD";
+  if (!isTbd && dateVal) {
+    const d = new Date(dateVal);
+    eventDateStr = d.toLocaleDateString('id-ID', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  } else if (window.STATE.eventDate && window.STATE.eventDate !== 'TBD') {
+    const d = new Date(window.STATE.eventDate);
+    eventDateStr = d.toLocaleDateString('id-ID', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
+  
+  const rawMsg = window.generateClientPreviewMessage(daysLeft, eventDateStr, isPaid);
+  
+  // Format WhatsApp markdown to HTML
+  let htmlMsg = rawMsg
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\*([^*]+)\*/g, "<strong>$1</strong>")
+    .replace(/_([^_]+)_/g, "<em>$1</em>")
+    .replace(/~([^~]+)~/g, "<del>$1</del>")
+    .replace(/\n/g, "<br>");
+    
+  previewTextEl.innerHTML = htmlMsg;
+};
+
+window.handleTemplateTextChange = (val) => {
+  const milestone = window.activePreviewMilestone || 30;
+  const isPaid = document.getElementById("preview-payment-status")?.checked || false;
+  const key = `${milestone}_${isPaid ? 'lunas' : 'belum_lunas'}`;
+  if (!window.reminderTemplates) window.reminderTemplates = {};
+  window.reminderTemplates[key] = val;
+  window.updateReminderPreviewBubble();
+};
+
+window.insertPlaceholder = (placeholder) => {
+  const textarea = document.getElementById("set-reminder-template-text");
+  if (!textarea) return;
+  
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const before = text.substring(0, start);
+  const after = text.substring(end, text.length);
+  
+  textarea.value = before + placeholder + after;
+  textarea.focus();
+  
+  // Set cursor position after inserted placeholder
+  textarea.selectionStart = textarea.selectionEnd = start + placeholder.length;
+  
+  // Trigger change handler
+  window.handleTemplateTextChange(textarea.value);
+};
+
+window.getDefaultTemplateText = (daysLeft, sudahBayar) => {
+  const divider = "*━━━━━━━━━━━━━━━━━━━━━━━━━━*";
+  const header = `⚜️ *REUNI AKBAR PP AL-FATAH* ⚜️`;
+  const infoBayar = sudahBayar
+      ? `✅ *Status iuran Anda: LUNAS*\nTerima kasih, sampai jumpa di acara!`
+      : `🙏 Untuk mendukung kelancaran persiapan dan pelaksanaan Reuni Akbar, kami mengharapkan kesediaan seluruh peserta yang belum melakukan kontribusi untuk dapat berpartisipasi sesuai ketentuan yang telah disepakati.\n\n` +
+        `Partisipasi Anda sangat berarti dalam membantu meringankan beban panitia serta mendukung berbagai kebutuhan acara.\n\n` +
+        `Untuk informasi rekening pembayaran, silakan ketik *!iuran*.\n\n` +
+        `Terima kasih atas dukungan dan kerja samanya. 🙏`;
+
+  if (daysLeft >= 30) {
+      return (
+          `${header}\n${divider}\n\n` +
+          `Assalamu'alaikum, {nama}! 😊\n\n` +
+          `📅 *H-{hari} Menuju Reuni Akbar!*\n\n` +
+          `Acara spesial kita semakin dekat!\n` +
+          `🗓️ Tanggal: *{tanggal}*\n\n` +
+          `Pastikan Anda sudah:\n` +
+          `  ✅ Konfirmasi kehadiran\n` +
+          `  ✅ Menyelesaikan iuran\n` +
+          `  ✅ Mengajak teman seangkatan\n\n` +
+          `${infoBayar}\n\n` +
+          `${divider}\n` +
+          `_Ketik *!menu* untuk lihat semua layanan bot._`
+      );
+  } else if (daysLeft >= 14) {
+      return (
+          `${header}\n${divider}\n\n` +
+          `Assalamu'alaikum, {nama}! 🎉\n\n` +
+          `📅 *H-{hari} — ${Math.ceil(daysLeft/7)} Minggu Lagi!*\n\n` +
+          `🗓️ Tanggal: *{tanggal}*\n\n` +
+          `Persiapan sudah sejauh mana? 😄\n` +
+          `Jangan lupa ajak keluarga dan teman-teman!\n\n` +
+          `${infoBayar}\n\n` +
+          `${divider}\n` +
+          `_Ketik *!status* untuk cek status pendaftaran Anda._`
+      );
+  } else if (daysLeft >= 7) {
+      return (
+          `${header}\n${divider}\n\n` +
+          `Assalamu'alaikum, {nama}! 🌟\n\n` +
+          `📅 *H-{hari} — 1 Minggu Lagi!*\n\n` +
+          `🗓️ Tanggal: *{tanggal}*\n\n` +
+          `Waktu hampir tiba! Ini saatnya memastikan:\n` +
+          `  🚗 Transportasi sudah disiapkan\n` +
+          `  👔 Pakaian sudah disiapkan\n` +
+          `  📸 Kamera siap untuk kenangan bersama\n\n` +
+          `${infoBayar}\n\n` +
+          `${divider}\n` +
+          `_Ketik *!menu* untuk bantuan lebih lanjut._`
+      );
+  } else if (daysLeft >= 3) {
+      return (
+          `${header}\n${divider}\n\n` +
+          `Assalamu'alaikum, {nama}! ✨\n\n` +
+          `📅 *H-{hari} — Sebentar Lagi!*\n\n` +
+          `🗓️ Tanggal: *{tanggal}*\n\n` +
+          `3 hari lagi kita bertemu! Jangan sampai terlewat.\n\n` +
+          `${infoBayar}\n\n` +
+          `Untuk pertanyaan, balas pesan ini atau ketik *!menu*.\n\n` +
+          `${divider}\n` +
+          `_Sampai jumpa di Reuni Akbar! 🤝_`
+      );
+  } else {
+      return (
+          `${header}\n${divider}\n\n` +
+          `Assalamu'alaikum, {nama}! 🎊\n\n` +
+          `🥳 *BESOK HARI-H! H-1 Reuni Akbar!*\n\n` +
+          `🗓️ Tanggal: *{tanggal}*\n\n` +
+          `Kami tidak sabar bertemu Anda besok!\n\n` +
+          `📌 *Persiapan terakhir:*\n` +
+          `  ⏰ Hadir tepat waktu ya!\n` +
+          `  🅿️ Info parkir & lokasi: ketik *!info*\n` +
+          `  📋 Rundown acara: ketik *!rundown*\n\n` +
+          `${infoBayar}\n\n` +
+          `${divider}\n` +
+          `_Sampai jumpa besok! Semoga acaranya berkah & meriah! 🌟_`
+      );
+  }
+};
+
+window.generateClientPreviewMessage = (daysLeft, eventDateFormatted, sudahBayar) => {
+  const key = `${daysLeft}_${sudahBayar ? 'lunas' : 'belum_lunas'}`;
+  let template = "";
+  if (window.reminderTemplates && window.reminderTemplates[key] !== undefined && window.reminderTemplates[key].trim() !== "") {
+    template = window.reminderTemplates[key];
+  } else {
+    template = window.getDefaultTemplateText(daysLeft, sudahBayar);
+  }
+  return template
+    .replace(/{nama}/g, "Alumni Test")
+    .replace(/{hari}/g, daysLeft)
+    .replace(/{tanggal}/g, eventDateFormatted);
 };
 
 

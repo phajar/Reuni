@@ -6,3 +6,6 @@ scratch/
 whatsapp-bot/test_logo.js
 *.bat
 whatsapp-bot/*.lock
+.env
+*.env
+whatsapp-bot/.env

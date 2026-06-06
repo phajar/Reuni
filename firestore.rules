@@ -252,8 +252,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if (docId == 'whatsapp_api' && isAuth() && (getRole() == 'creator' || getRole() == 'admin_utama'))
                    || docId == 'sync_state'
-                   || (docId == 'wa_session' && request.resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_keuangan)
-                   || (docId != 'whatsapp_api' && docId != 'sync_state' && docId != 'wa_session' && isAdminUtama());
+                   || (docId == 'wa_bot_roles' && isAuth() && (getRole() in ['creator', 'admin_utama', 'sekretaris', 'bendahara']))
+                   || (docId.startsWith('wa_session') && request.resource.data.bot_token != null)
+                   || (docId == 'event_info' && isAuth() && (getRole() in ['creator', 'admin_utama', 'ketua', 'sekretaris', 'bendahara']))
+                   || (docId != 'whatsapp_api' && docId != 'sync_state' && !docId.startsWith('wa_session') && docId != 'event_info' && isAdminUtama());
     }
 
     // --- RUNDOWN ACARA -----------------------------------------------------

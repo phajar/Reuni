@@ -2,56 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-
-// --- PREVENT DOUBLE INSTANCE RUNNING ---
-const LOCK_FILE = path.join(__dirname, 'whatsapp-bot.lock');
-if (fs.existsSync(LOCK_FILE)) {
-    try {
-        const pid = parseInt(fs.readFileSync(LOCK_FILE, 'utf8'), 10);
-        if (pid) {
-            try {
-                process.kill(pid, 0);
-                console.error(`\x1b[31m[ERROR] Server WhatsApp Bot sudah berjalan di perangkat ini (PID: ${pid}).\x1b[0m`);
-                console.error(`\x1b[31m[ERROR] Tidak dapat menjalankan dua server sekaligus untuk menghindari bentrok data.\x1b[0m`);
-                process.exit(1);
-            } catch (err) {
-                if (err.code === 'EPERM') {
-                    console.error(`\x1b[31m[ERROR] Server WhatsApp Bot sudah berjalan di perangkat ini (PID: ${pid} - Akses Ditolak).\x1b[0m`);
-                    process.exit(1);
-                }
-                console.log(`[WA BOT] Menghapus file lock usang (PID ${pid} tidak aktif).`);
-            }
-        }
-    } catch (readErr) {
-        console.error('[WA BOT] Gagal membaca file lock:', readErr);
-    }
-}
-
-try {
-    fs.writeFileSync(LOCK_FILE, process.pid.toString(), 'utf8');
-} catch (writeErr) {
-    console.error('[WA BOT] Gagal menulis file lock:', writeErr);
-}
-
-function cleanupLock() {
-    try {
-        if (fs.existsSync(LOCK_FILE)) {
-            const pid = parseInt(fs.readFileSync(LOCK_FILE, 'utf8'), 10);
-            if (pid === process.pid) {
-                fs.unlinkSync(LOCK_FILE);
-                console.log('[WA BOT] File lock berhasil dihapus.');
-            }
-        }
-    } catch (err) {
-        // ignore
-    }
-}
-
-process.on('exit', cleanupLock);
-process.on('SIGINT', () => { cleanupLock(); process.exit(0); });
-process.on('SIGTERM', () => { cleanupLock(); process.exit(0); });
-// ----------------------------------------
-
 const pino = require('pino');
 const dns = require('dns');
 
@@ -126,7 +76,6 @@ async function downloadSession(db) {
         if (docSnap.exists()) {
             const data = docSnap.data();
             for (const [filename, content] of Object.entries(data)) {
-                if (filename === 'bot_token') continue;
                 // Sanitize filename to prevent directory traversal
                 const safeFilename = path.basename(filename);
                 const filePath = path.join(AUTH_DIR, safeFilename);
@@ -158,9 +107,6 @@ async function uploadSession(db) {
         }
         
         if (Object.keys(data).length > 0) {
-            if (waApiConfig && waApiConfig.token_keuangan) {
-                data.bot_token = waApiConfig.token_keuangan;
-            }
             const docRef = doc(db, 'settings', 'wa_session');
             await setDoc(docRef, data);
             console.log('[FIRESTORE] Session uploaded successfully.');
@@ -270,17 +216,12 @@ async function connectToWhatsApp() {
         if (isProcessingQueue) return;
         isProcessingQueue = true;
         
-        let isFirst = true;
         while (messageQueue.length > 0) {
             const { resolve, reject, jid, content, options } = messageQueue.shift();
             try {
-                // If it is the first message in an idle queue, send it immediately.
-                // Subsequent messages in the queue will have a 3000ms (3 seconds) delay.
-                if (!isFirst) {
-                    const delay = 3000;
-                    await new Promise(res => setTimeout(res, delay));
-                }
-                isFirst = false;
+                // Randomized delay between 2000ms and 5000ms
+                const delay = Math.floor(Math.random() * 3000) + 2000;
+                await new Promise(res => setTimeout(res, delay));
                 
                 const res = await originalSendMessage(jid, content, options);
                 resolve(res);
@@ -307,10 +248,7 @@ async function connectToWhatsApp() {
     sock.ev.on('messages.upsert', async (chatUpdate) => {
         try {
             const m = chatUpdate.messages[0];
-            if (m) {
-                console.log(`[WA BOT] Pesan masuk terdeteksi: JID=${m.key.remoteJid}, dariSaya=${m.key.fromMe}, tipePesan=${m.message ? Object.keys(m.message)[0] : 'tidak_ada'}`);
-            }
-            if (!m || !m.message) return;
+            if (!m.message) return;
             if (m.key.fromMe) return; // Abaikan pesan dari bot sendiri
             
             const jid = m.key.remoteJid;
@@ -361,6 +299,9 @@ async function connectToWhatsApp() {
             } else if (command === '!backup-db') {
                 console.log(`[WA BOT] Perintah !backup-db dari ${jid}`);
                 await handleBackupDbCommand(jid, m);
+            } else if (command === '!test-reminder' || command.startsWith('!test-reminder ')) {
+                console.log(`[WA BOT] Perintah !test-reminder dari ${jid}`);
+                await handleTestReminderCommand(jid, m, cleanMsg);
             } else if (command === '!menu') {
                 console.log(`[WA BOT] Perintah !menu dari ${jid}`);
                 await handleMenuCommand(jid, m);
@@ -390,7 +331,7 @@ async function connectToWhatsApp() {
 
         if (connection === 'close') {
             qrCode = null;
-            const error = lastDisconnect?.error;
+            const error = lastDisconnect.error;
             const statusCode = error?.output?.statusCode;
             const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
             console.log(`Connection closed: ${error?.message || error}. StatusCode: ${statusCode}. Reconnecting: ${shouldReconnect}`);
@@ -406,11 +347,7 @@ async function connectToWhatsApp() {
                 }
                 try {
                     const docRef = doc(db, 'settings', 'wa_session');
-                    const clearData = {};
-                    if (waApiConfig && waApiConfig.token_keuangan) {
-                        clearData.bot_token = waApiConfig.token_keuangan;
-                    }
-                    await setDoc(docRef, clearData);
+                    await setDoc(docRef, {});
                     console.log('Firestore session cleared.');
                 } catch (e) {
                     console.error('Failed to clear Firestore session:', e);
@@ -455,6 +392,9 @@ async function startServer() {
     
     // 7. Initialize Finance Receipt Listener
     initFinanceReceiptListener(db);
+
+    // 8. Initialize Event Reminder Cron
+    initEventReminderCron(db);
 }
 
 // Start Baileys WhatsApp Connection
@@ -1037,12 +977,8 @@ app.post('/api/reset', authenticateApiKey, async (req, res) => {
         // 3. Clear Firestore session
         try {
             const docRef = doc(db, 'settings', 'wa_session');
-            const clearData = {};
-            if (waApiConfig && waApiConfig.token_keuangan) {
-                clearData.bot_token = waApiConfig.token_keuangan;
-            }
             await Promise.race([
-                setDoc(docRef, clearData),
+                setDoc(docRef, {}),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore write timeout')), 3000))
             ]);
             console.log('[WA] Firestore session cleared.');
@@ -2975,6 +2911,85 @@ async function handleBackupDbCommand(jid, m) {
     }
 }
 
+async function handleTestReminderCommand(jid, m, msgText) {
+    try {
+        let senderJid = '';
+        if (jid && jid.endsWith('@g.us')) {
+            senderJid = m.key.participantPn || m.key.participant || '';
+        } else {
+            senderJid = m.key.senderPn || jid || '';
+        }
+        
+        const senderNumber = senderJid.split('@')[0].split(':')[0].replace(/\D/g, '');
+        if (!senderNumber) {
+            await sock.sendMessage(jid, { text: '❌ Gagal mendeteksi nomor pengirim.' });
+            return;
+        }
+        
+        const adminList = (currentBotConfig.approval_admins || '').split(',').map(s => s.trim().replace(/\D/g, '')).filter(Boolean);
+        const isAuthorized = adminList.includes(senderNumber);
+        if (!isAuthorized) {
+            await sock.sendMessage(jid, { text: '❌ Anda tidak memiliki wewenang untuk menjalankan perintah test reminder.' });
+            return;
+        }
+        
+        // Parse args
+        const words = msgText.trim().split(/\s+/);
+        const arg = words[1] ? words[1].toLowerCase() : '';
+        
+        if (!cachedEventDate) {
+            await sock.sendMessage(jid, { text: '⚠️ Tanggal acara belum diatur di Firestore (`settings/event_info`). Silakan atur tanggal terlebih dahulu di dashboard.' });
+            return;
+        }
+        
+        const eventDate = new Date(cachedEventDate);
+        const eventDateFormatted = eventDate.toLocaleDateString('id-ID', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        
+        if (arg === 'run') {
+            await sock.sendMessage(jid, { text: '⏳ Menjalankan pengecekan real-time reminder hari ini. Mohon tunggu...' });
+            await runEventReminderCheck(db);
+            await sock.sendMessage(jid, { text: '✅ Proses pengecekan selesai. Silakan cek log bot untuk detail broadcast.' });
+            return;
+        }
+        
+        const milestoneNum = parseInt(arg, 10);
+        
+        if (cachedReminderMilestones.includes(milestoneNum)) {
+            const senderName = "Alumni Test";
+            const msgLunas = buildReminderMessage(milestoneNum, senderName, eventDateFormatted, true);
+            const msgBelumLunas = buildReminderMessage(milestoneNum, senderName, eventDateFormatted, false);
+            
+            await sock.sendMessage(jid, { text: `📋 *[PREVIEW REMINDER H-${milestoneNum}]*\nBerikut contoh pesan yang akan diterima alumni:` });
+            
+            await sock.sendMessage(jid, { text: `*--- VERSI SUDAH LUNAS ---*\n\n${msgLunas}` });
+            await sock.sendMessage(jid, { text: `*--- VERSI BELUM LUNAS ---*\n\n${msgBelumLunas}` });
+            return;
+        }
+        
+        // Default menu help
+        let milestoneListText = '';
+        for (const m of cachedReminderMilestones) {
+            milestoneListText += `• *!test-reminder ${m}* : Preview pesan H-${m}\n`;
+        }
+
+        const helpText = 
+            `⚜️ *SIMULASI & TEST REMINDER* ⚜️\n` +
+            `*━━━━━━━━━━━━━━━━━━━━━━━━━━*\n` +
+            `Gunakan perintah ini untuk memicu simulasi pengingat acara (dikirim hanya ke nomor Anda):\n\n` +
+            milestoneListText + `\n` +
+            `• *!test-reminder run* : Jalankan pengecekan real-time hari ini (jika hari ini masuk salah satu milestone, bot akan langsung membroadcast ke semua alumni).\n` +
+            `*━━━━━━━━━━━━━━━━━━━━━━━━━━*\n` +
+            `_Tanggal Acara Terdaftar: *${eventDateFormatted}*_`;
+            
+        await sock.sendMessage(jid, { text: helpText });
+    } catch (err) {
+        console.error('[WA BOT] Gagal memproses test reminder:', err);
+        await sock.sendMessage(jid, { text: `❌ Terjadi kesalahan: ${err.message}` });
+    }
+}
+
 async function handleMenuCommand(jid, m) {
     try {
         let senderJid = '';
@@ -3659,4 +3674,262 @@ function initFinanceReceiptListener(db) {
     }, (err) => {
         console.error('[WA BOT] Error in finance receipts listener:', err);
     });
+}
+
+let eventReminderCronJob = null;
+let cachedEventDate = null; // Simpan event_date dari Firestore
+let cachedReminderMilestones = [30, 14, 7, 3, 1]; // Simpan reminder_milestones dari Firestore
+let cachedReminderTemplates = {}; // Simpan reminder_templates kustom dari Firestore
+
+function initEventReminderCron(db) {
+    console.log('[REMINDER] Initializing Event Reminder Cron...');
+
+    // Pantau event_date dari Firestore settings/event_info secara realtime
+    onSnapshot(doc(db, 'settings', 'event_info'), (snap) => {
+        if (snap.exists()) {
+            const data = snap.data();
+            if (data.event_date && data.event_date !== 'TBD') {
+                cachedEventDate = data.event_date;
+                console.log(`[REMINDER] Event date updated from Firestore: ${cachedEventDate}`);
+            } else {
+                cachedEventDate = null;
+                console.log('[REMINDER] Event date is TBD or not set. Reminder cron will skip.');
+            }
+            
+            if (data.reminder_milestones && Array.isArray(data.reminder_milestones)) {
+                cachedReminderMilestones = data.reminder_milestones.map(Number).filter(n => !isNaN(n));
+                console.log(`[REMINDER] Reminder milestones updated from Firestore: ${cachedReminderMilestones.join(', ')}`);
+            } else {
+                cachedReminderMilestones = [30, 14, 7, 3, 1];
+            }
+
+            if (data.reminder_templates && typeof data.reminder_templates === 'object') {
+                cachedReminderTemplates = data.reminder_templates;
+                console.log('[REMINDER] Custom reminder templates updated from Firestore.');
+            } else {
+                cachedReminderTemplates = {};
+            }
+        }
+    }, (err) => {
+        console.error('[REMINDER] Failed to listen to settings/event_info:', err);
+    });
+
+    // Hentikan cron lama jika ada
+    if (eventReminderCronJob) {
+        eventReminderCronJob.stop();
+    }
+
+    // Cron: setiap hari jam 08:00 WIB (UTC+7 = 01:00 UTC)
+    eventReminderCronJob = cron.schedule('0 1 * * *', async () => {
+        console.log('[REMINDER] Daily event reminder check triggered...');
+        await runEventReminderCheck(db);
+    }, { timezone: 'Asia/Jakarta' });
+
+    console.log('[REMINDER] Event Reminder Cron scheduled: setiap hari jam 08:00 WIB.');
+}
+
+async function runEventReminderCheck(db) {
+    if (!cachedEventDate) {
+        console.log('[REMINDER] No event date set. Skipping reminder check.');
+        return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const eventDate = new Date(cachedEventDate);
+    eventDate.setHours(0, 0, 0, 0);
+
+    const diffMs = eventDate.getTime() - today.getTime();
+    const daysLeft = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    console.log(`[REMINDER] Hari ini: ${today.toLocaleDateString('id-ID')} | Acara: ${eventDate.toLocaleDateString('id-ID')} | Sisa hari: ${daysLeft}`);
+
+    if (!cachedReminderMilestones.includes(daysLeft)) {
+        console.log(`[REMINDER] Hari ini bukan milestone (H-${daysLeft}). Tidak ada reminder dikirim.`);
+        return;
+    }
+
+    // Cek apakah hari ini sudah pernah dikirim untuk milestone ini
+    const todayStr = today.toISOString().split('T')[0]; // e.g. '2026-06-07'
+    const logDocId = `${todayStr}_H-${daysLeft}`;
+    try {
+        const logRef = doc(db, 'reminder_logs', logDocId);
+        const logSnap = await getDoc(logRef);
+        if (logSnap.exists()) {
+            console.log(`[REMINDER] Reminder H-${daysLeft} sudah pernah dikirim hari ini (${logDocId}). Dilewati.`);
+            return;
+        }
+    } catch (e) {
+        console.warn('[REMINDER] Gagal cek reminder_logs, tetap lanjutkan pengiriman:', e.message);
+    }
+
+    console.log(`[REMINDER] 🚀 Mengirim broadcast reminder H-${daysLeft} ke semua alumni...`);
+
+    // Ambil socket broadcast
+    const activeSock = getSocketByRole('broadcast');
+    if (!activeSock) {
+        console.warn('[REMINDER] Tidak ada socket aktif untuk broadcast. Reminder dibatalkan.');
+        return;
+    }
+
+    // Format tanggal acara untuk tampilan
+    const eventDateFormatted = eventDate.toLocaleDateString('id-ID', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    // Ambil semua alumni dari Firestore
+    let allAlumni = [];
+    try {
+        const alumniSnap = await getDocs(collection(db, 'alumni'));
+        alumniSnap.forEach(d => {
+            const a = d.data();
+            if (a.nowa) allAlumni.push({ id: d.id, ...a });
+        });
+        console.log(`[REMINDER] Total alumni dengan nomor WA: ${allAlumni.length}`);
+    } catch (e) {
+        console.error('[REMINDER] Gagal mengambil data alumni:', e);
+        return;
+    }
+
+    let sentCount = 0;
+    let failCount = 0;
+
+    for (const alumni of allAlumni) {
+        try {
+            // Normalisasi nomor WA
+            let cleanPhone = String(alumni.nowa).replace(/\D/g, '');
+            if (cleanPhone.startsWith('08')) {
+                cleanPhone = '628' + cleanPhone.substring(2);
+            } else if (cleanPhone.startsWith('8') && cleanPhone.length <= 12) {
+                cleanPhone = '62' + cleanPhone;
+            }
+            if (!cleanPhone || cleanPhone.length < 10) continue;
+
+            const jid = `${cleanPhone}@s.whatsapp.net`;
+            const namaAlumni = alumni.nama || alumni.name || 'Alumni';
+
+            // Cek apakah alumni sudah bayar
+            const sudahBayar = alumni.status === 'pemasukan' || alumni.payment_status === 'approved' || alumni.sudah_bayar === true;
+
+            // Buat pesan berdasarkan milestone & status bayar
+            const msg = buildReminderMessage(daysLeft, namaAlumni, eventDateFormatted, sudahBayar);
+
+            await activeSock.sendMessage(jid, { text: msg });
+            sentCount++;
+
+            // Delay 1.5 detik antar pesan agar tidak diblokir WhatsApp
+            await new Promise(resolve => setTimeout(resolve, 1500));
+        } catch (e) {
+            failCount++;
+            console.warn(`[REMINDER] Gagal kirim ke ${alumni.nowa}:`, e.message);
+        }
+    }
+
+    // Simpan log ke Firestore agar tidak kirim ulang
+    try {
+        const logRef = doc(db, 'reminder_logs', logDocId);
+        await setDoc(logRef, {
+            milestone: `H-${daysLeft}`,
+            tanggal_kirim: todayStr,
+            tanggal_acara: cachedEventDate,
+            total_alumni: allAlumni.length,
+            berhasil_dikirim: sentCount,
+            gagal: failCount,
+            timestamp: new Date().toISOString()
+        });
+        console.log(`[REMINDER] ✅ Broadcast H-${daysLeft} selesai. Berhasil: ${sentCount}, Gagal: ${failCount}. Log disimpan: ${logDocId}`);
+    } catch (e) {
+        console.error('[REMINDER] Gagal menyimpan reminder_logs:', e.message);
+    }
+}
+
+function buildReminderMessage(daysLeft, namaAlumni, eventDateFormatted, sudahBayar) {
+    const key = `${daysLeft}_${sudahBayar ? 'lunas' : 'belum_lunas'}`;
+    if (cachedReminderTemplates && cachedReminderTemplates[key] !== undefined && cachedReminderTemplates[key].trim() !== "") {
+        let template = cachedReminderTemplates[key];
+        return template
+            .replace(/{nama}/g, namaAlumni)
+            .replace(/{hari}/g, daysLeft)
+            .replace(/{tanggal}/g, eventDateFormatted);
+    }
+
+    const divider = '*━━━━━━━━━━━━━━━━━━━━━━━━━━*';
+    const header = `⚜️ *REUNI AKBAR PP AL-FATAH* ⚜️`;
+    const infoBayar = sudahBayar
+        ? `✅ *Status iuran Anda: LUNAS*\nTerima kasih, sampai jumpa di acara!`
+        : `🙏 Untuk mendukung kelancaran persiapan dan pelaksanaan Reuni Akbar, kami mengharapkan kesediaan seluruh peserta yang belum melakukan kontribusi untuk dapat berpartisipasi sesuai ketentuan yang telah disepakati.\n\n` +
+          `Partisipasi Anda sangat berarti dalam membantu meringankan beban panitia serta mendukung berbagai kebutuhan acara.\n\n` +
+          `Untuk informasi rekening pembayaran, silakan ketik *!iuran*.\n\n` +
+          `Terima kasih atas dukungan dan kerja samanya. 🙏`;
+
+    if (daysLeft >= 30) {
+        return (
+            `${header}\n${divider}\n\n` +
+            `Assalamu'alaikum, *${namaAlumni}*! 😊\n\n` +
+            `📅 *H-${daysLeft} Menuju Reuni Akbar!*\n\n` +
+            `Acara spesial kita semakin dekat!\n` +
+            `🗓️ Tanggal: *${eventDateFormatted}*\n\n` +
+            `Pastikan Anda sudah:\n` +
+            `  ✅ Konfirmasi kehadiran\n` +
+            `  ✅ Menyelesaikan iuran\n` +
+            `  ✅ Mengajak teman seangkatan\n\n` +
+            `${infoBayar}\n\n` +
+            `${divider}\n` +
+            `_Ketik *!menu* untuk lihat semua layanan bot._`
+        );
+    } else if (daysLeft >= 14) {
+        return (
+            `${header}\n${divider}\n\n` +
+            `Assalamu'alaikum, *${namaAlumni}*! 🎉\n\n` +
+            `📅 *H-${daysLeft} — ${Math.ceil(daysLeft/7)} Minggu Lagi!*\n\n` +
+            `🗓️ Tanggal: *${eventDateFormatted}*\n\n` +
+            `Persiapan sudah sejauh mana? 😄\n` +
+            `Jangan lupa ajak keluarga dan teman-teman!\n\n` +
+            `${infoBayar}\n\n` +
+            `${divider}\n` +
+            `_Ketik *!status* untuk cek status pendaftaran Anda._`
+        );
+    } else if (daysLeft >= 7) {
+        return (
+            `${header}\n${divider}\n\n` +
+            `Assalamu'alaikum, *${namaAlumni}*! 🌟\n\n` +
+            `📅 *H-${daysLeft} — 1 Minggu Lagi!*\n\n` +
+            `🗓️ Tanggal: *${eventDateFormatted}*\n\n` +
+            `Waktu hampir tiba! Ini saatnya memastikan:\n` +
+            `  🚗 Transportasi sudah disiapkan\n` +
+            `  👔 Pakaian sudah disiapkan\n` +
+            `  📸 Kamera siap untuk kenangan bersama\n\n` +
+            `${infoBayar}\n\n` +
+            `${divider}\n` +
+            `_Ketik *!menu* untuk bantuan lebih lanjut._`
+        );
+    } else if (daysLeft >= 3) {
+        return (
+            `${header}\n${divider}\n\n` +
+            `Assalamu'alaikum, *${namaAlumni}*! ✨\n\n` +
+            `📅 *H-${daysLeft} — Sebentar Lagi!*\n\n` +
+            `🗓️ Tanggal: *${eventDateFormatted}*\n\n` +
+            `3 hari lagi kita bertemu! Jangan sampai terlewat.\n\n` +
+            `${infoBayar}\n\n` +
+            `Untuk pertanyaan, balas pesan ini atau ketik *!menu*.\n\n` +
+            `${divider}\n` +
+            `_Sampai jumpa di Reuni Akbar! 🤝_`
+        );
+    } else {
+        return (
+            `${header}\n${divider}\n\n` +
+            `Assalamu'alaikum, *${namaAlumni}*! 🎊\n\n` +
+            `🥳 *BESOK HARI-H! H-1 Reuni Akbar!*\n\n` +
+            `🗓️ Tanggal: *${eventDateFormatted}*\n\n` +
+            `Kami tidak sabar bertemu Anda besok!\n\n` +
+            `📌 *Persiapan terakhir:*\n` +
+            `  ⏰ Hadir tepat waktu ya!\n` +
+            `  🅿️ Info parkir & lokasi: ketik *!info*\n` +
+            `  📋 Rundown acara: ketik *!rundown*\n\n` +
+            `${infoBayar}\n\n` +
+            `${divider}\n` +
+            `_Sampai jumpa besok! Semoga acaranya berkah & meriah! 🌟_`
+        );
+    }
 }

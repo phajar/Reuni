@@ -459,6 +459,9 @@
   <div id="modal-review-alumni" class="hidden fixed inset-0 z-[600] flex items-center justify-center p-4">
     <div onclick="window.closeReviewAlumniModal()" class="absolute inset-0 bg-black/70 backdrop-blur-md"></div>
     <div class="glass relative w-full max-w-lg rounded-[2.5rem] p-6 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar modal-enter border border-indigo-500/20">
+      <!-- Drag handle for mobile bottom sheet -->
+      <div class="w-12 h-1 bg-slate-500/40 rounded-full mx-auto mb-4 lg:hidden cursor-pointer" onclick="window.closeReviewAlumniModal()"></div>
+      
       <div class="flex justify-between items-center mb-5">
         <h2 class="text-xl font-black uppercase text-indigo-400 flex items-center gap-2"><i class="fas fa-search-location"></i> Tinjau Data Alumni</h2>
         <button onclick="window.closeReviewAlumniModal()" class="text-slate-400 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white/10"><i class="fas fa-times text-lg"></i></button>
@@ -817,30 +820,40 @@
     <aside id="main-sidebar" class="fixed inset-y-0 left-0 z-[200] w-64 glass p-4 lg:p-6 flex flex-col shadow-[10px_0_40px_rgba(0,0,0,0.5)] lg:shadow-2xl h-screen transform -translate-x-full lg:relative lg:translate-x-0 transition-transform duration-300">
       
       <div class="flex justify-between items-center mb-6 mt-2 lg:block lg:text-center border-b border-white/10 lg:border-none pb-4 lg:pb-0">
-          <div class="font-black italic text-white leading-tight">PANITIA REUNI<br><span class="text-indigo-400 text-sm">AL-FATAH</span></div>
+          <div class="font-black italic text-white leading-tight flex items-center justify-center gap-2">
+              <div class="logo-circle w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-lg flex-shrink-0">
+                  <i class="fas fa-graduation-cap"></i>
+              </div>
+              <div class="brand-text text-left leading-tight hidden lg:block">
+                  PANITIA REUNI<br><span class="text-indigo-400 text-xs">AL-FATAH</span>
+              </div>
+              <div class="brand-text-mobile font-black italic text-white leading-tight lg:hidden">
+                  PANITIA REUNI<br><span class="text-indigo-400 text-sm">AL-FATAH</span>
+              </div>
+          </div>
           <button onclick="window.toggleSidebar()" class="lg:hidden text-slate-400 hover:text-white bg-white/5 w-8 h-8 rounded-lg"><i class="fas fa-times"></i></button>
       </div>
       
       <nav class="flex flex-col w-full space-y-1 overflow-y-auto custom-scrollbar flex-1 pb-6">
         
         <span class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-2 mb-2 px-4">Menu Utama</span>
-        <button onclick="showTab('home')" id="btn-home" class="nav-btn active"><i class="fas fa-th-large text-base w-5 text-center"></i> Beranda</button>
-        <button onclick="showTab('alumni')" id="btn-alumni" class="nav-btn relative"><i class="fas fa-users text-base w-5 text-center"></i> Alumni<span id="badge-alumni" class="hidden absolute right-4 w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span></button>
+        <button onclick="showTab('home')" id="btn-home" class="nav-btn active"><i class="fas fa-th-large text-base w-5 text-center"></i> <span class="nav-label">Beranda</span></button>
+        <button onclick="showTab('alumni')" id="btn-alumni" class="nav-btn relative"><i class="fas fa-users text-base w-5 text-center"></i> <span class="nav-label">Alumni</span><span id="badge-alumni" class="hidden absolute right-4 w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span></button>
 
         <span id="heading-keuangan" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Keuangan & Aset</span>
-        <button onclick="showTab('finance')" id="btn-finance" class="nav-btn"><i class="fas fa-wallet text-base w-5 text-center"></i> Keuangan</button>
-        <button onclick="showTab('logistik')" id="btn-logistik" class="nav-btn"><i class="fas fa-box-open text-base w-5 text-center"></i> Logistik</button>
+        <button onclick="showTab('finance')" id="btn-finance" class="nav-btn"><i class="fas fa-wallet text-base w-5 text-center"></i> <span class="nav-label">Keuangan</span></button>
+        <button onclick="showTab('logistik')" id="btn-logistik" class="nav-btn"><i class="fas fa-box-open text-base w-5 text-center"></i> <span class="nav-label">Logistik</span></button>
 
         <span id="heading-acara" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Acara & Laporan</span>
-        <button onclick="showTab('panitia')" id="btn-panitia" class="nav-btn"><i class="fas fa-id-badge text-base w-5 text-center"></i> Kepanitiaan & Rundown</button>
-        <button onclick="showTab('guestbook')" id="btn-guestbook" class="nav-btn"><i class="fas fa-book-open text-base w-5 text-center"></i> Buku Tamu</button>
-        <button onclick="showTab('rekap')" id="btn-rekap" class="nav-btn"><i class="fas fa-map-marked-alt text-base w-5 text-center"></i> Wilayah & Surat</button>
-        <button onclick="showTab('tugas')" id="btn-tugas" class="nav-btn relative"><i class="fas fa-tasks text-base w-5 text-center"></i> Tugas Panitia<span id="badge-tugas" class="hidden absolute right-4 w-4 h-4 bg-amber-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span></button>
-        <a href="surat-undangan.html" class="nav-btn text-purple-400 flex items-center gap-2 w-full text-left"><i class="fas fa-envelope-open-text text-base w-5 text-center"></i> AI Surat Undangan</a>
+        <button onclick="showTab('panitia')" id="btn-panitia" class="nav-btn"><i class="fas fa-id-badge text-base w-5 text-center"></i> <span class="nav-label">Kepanitiaan & Rundown</span></button>
+        <button onclick="showTab('guestbook')" id="btn-guestbook" class="nav-btn"><i class="fas fa-book-open text-base w-5 text-center"></i> <span class="nav-label">Buku Tamu</span></button>
+        <button onclick="showTab('rekap')" id="btn-rekap" class="nav-btn"><i class="fas fa-map-marked-alt text-base w-5 text-center"></i> <span class="nav-label">Wilayah & Surat</span></button>
+        <button onclick="showTab('tugas')" id="btn-tugas" class="nav-btn relative"><i class="fas fa-tasks text-base w-5 text-center"></i> <span class="nav-label">Tugas Panitia</span><span id="badge-tugas" class="hidden absolute right-4 w-4 h-4 bg-amber-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span></button>
+        <a href="surat-undangan.html" class="nav-btn text-purple-400 flex items-center gap-2 w-full text-left"><i class="fas fa-envelope-open-text text-base w-5 text-center"></i> <span class="nav-label">AI Surat Undangan</span></a>
         <span id="heading-integrasi" class="hidden"></span>
         <span id="heading-sistem" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Sistem & Integrasi</span>
-        <button onclick="showTab('whatsapp')" id="btn-whatsapp" class="nav-btn text-emerald-400 hidden"><i class="fab fa-whatsapp text-base w-5 text-center"></i> WhatsApp Portal</button>
-        <button onclick="openTanyaAI()" id="btn-sidebar-tanya-ai" class="nav-btn text-fuchsia-400 hidden"><i class="fas fa-robot text-base w-5 text-center"></i> Tanya AI</button>
+        <button onclick="showTab('whatsapp')" id="btn-whatsapp" class="nav-btn text-emerald-400 hidden"><i class="fab fa-whatsapp text-base w-5 text-center"></i> <span class="nav-label">WhatsApp Portal</span></button>
+        <button onclick="openTanyaAI()" id="btn-sidebar-tanya-ai" class="nav-btn text-fuchsia-400 hidden"><i class="fas fa-robot text-base w-5 text-center"></i> <span class="nav-label">Tanya AI</span></button>
         <!-- Pusat Pengaturan menu removed from here and moved to Logo -->
       </nav>
 
@@ -866,10 +879,13 @@
           <i class="fas fa-chevron-up text-slate-500 text-[10px] ml-auto"></i>
         </div>
 
-        <!-- Footer Actions (only Theme remains) -->
+        <!-- Footer Actions (Theme & Collapse) -->
         <div class="flex gap-2">
-          <button onclick="toggleTheme()" class="btn-md3 btn-md3-outlined w-full !py-2.5 text-[9px] flex items-center justify-center gap-1.5" title="Ubah Tema">
-            <i id="sidebar-theme-icon" class="fas fa-moon text-sm"></i> <span>Tema</span>
+          <button id="btn-sidebar-collapse" onclick="window.toggleSidebarCollapse()" class="btn-md3 btn-md3-outlined flex-1 !py-2.5 text-[9px] flex items-center justify-center gap-1.5 hidden lg:flex" title="Lipat Menu">
+            <i id="sidebar-collapse-icon" class="fas fa-chevron-left text-sm"></i> <span class="collapse-text">Lipat</span>
+          </button>
+          <button onclick="toggleTheme()" class="btn-md3 btn-md3-outlined flex-1 !py-2.5 text-[9px] flex items-center justify-center gap-1.5" title="Ubah Tema">
+            <i id="sidebar-theme-icon" class="fas fa-moon text-sm"></i> <span class="theme-text">Tema</span>
           </button>
         </div>
       </div>
@@ -952,15 +968,25 @@
                 <p class="text-[9px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1">Pengeluaran <i class="fas fa-arrow-right text-[8px] opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0"></i></p>
                 <div id="stat-out" class="stat-value text-red-500">Rp 0</div>
               </button>
-              <button onclick="showTab('finance')" class="premium-card p-5 md:p-6 border-l-4 border-indigo-500 text-left cursor-pointer group relative overflow-hidden" style="background:none;width:100%">
+              <button onclick="showTab('finance')" class="premium-card p-5 md:p-6 border-l-4 border-indigo-500 text-left cursor-pointer group relative overflow-hidden flex justify-between items-center" style="background:none;width:100%">
                 <div class="absolute inset-0 bg-indigo-500/0 group-hover:bg-indigo-500/5 transition-all duration-300"></div>
-                <p class="text-[9px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1">Saldo Kas <i class="fas fa-arrow-right text-[8px] opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0"></i></p>
-                <div id="stat-balance" class="stat-value text-indigo-500">Rp 0</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[9px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1">Saldo Kas <i class="fas fa-arrow-right text-[8px] opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0"></i></p>
+                  <div id="stat-balance" class="stat-value text-indigo-500">Rp 0</div>
+                </div>
+                <div class="w-16 h-10 ml-2 flex-shrink-0 relative z-[2]">
+                  <canvas id="sparkline-balance" class="w-full h-full"></canvas>
+                </div>
               </button>
-              <button onclick="showTab('alumni')" class="premium-card p-5 md:p-6 border-l-4 border-amber-500 text-left cursor-pointer group relative overflow-hidden" style="background:none;width:100%">
+              <button onclick="showTab('alumni')" class="premium-card p-5 md:p-6 border-l-4 border-amber-500 text-left cursor-pointer group relative overflow-hidden flex justify-between items-center" style="background:none;width:100%">
                 <div class="absolute inset-0 bg-amber-500/0 group-hover:bg-amber-500/5 transition-all duration-300"></div>
-                <p class="text-[9px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1">Total Alumni <i class="fas fa-arrow-right text-[8px] opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0"></i></p>
-                <div id="stat-alumni" class="stat-value text-amber-500">0</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[9px] font-bold text-slate-500 mb-1 uppercase flex items-center gap-1">Total Alumni <i class="fas fa-arrow-right text-[8px] opacity-0 group-hover:opacity-100 transition-all -translate-x-1 group-hover:translate-x-0"></i></p>
+                  <div id="stat-alumni" class="stat-value text-amber-500">0</div>
+                </div>
+                <div class="w-16 h-10 ml-2 flex-shrink-0 relative z-[2]">
+                  <canvas id="sparkline-alumni" class="w-full h-full"></canvas>
+                </div>
               </button>
           </div>
           
@@ -2386,7 +2412,6 @@
                 </div>
               </div>
             </div>
-          </div>
 
         <!-- Scheduled Campaigns (Full Width Card) -->
         <div id="wa-campaigns-card" class="premium-card p-6 space-y-4">
@@ -2570,6 +2595,11 @@
                   <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">WhatsApp Humas / Bantuan (Format: 628xxx)</label>
                   <input type="text" id="set-event-wa-humas" class="input-field mt-1" placeholder="Format: 628xxxxxxxx (Tanpa +, 0, atau spasi)" />
                 </div>
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Jadwal Pengingat (Milestone H-)</label>
+                  <input type="text" id="set-reminder-milestones" class="input-field mt-1" placeholder="Misal: 30, 14, 7, 3, 1 (pisahkan dengan koma)" oninput="window.handleMilestonesChange(this.value)" />
+                  <p class="text-[8px] text-slate-500 mt-1 ml-1">Masukkan angka hari sebelum acara dipisah koma. Bot akan mengirim pengingat otomatis pada hari-hari ini.</p>
+                </div>
                 <div class="pt-3 border-t border-white/10 mt-3">
                   <label class="text-[10px] font-bold text-amber-500 uppercase ml-1 flex items-center gap-1.5">
                     <i class="fas fa-toggle-on"></i> Mode Testing (Nonaktifkan WA)
@@ -2595,8 +2625,83 @@
                     </label>
                   </div>
                 </div>
-                <button type="submit" id="btn-save-event-settings" class="btn-md3 btn-md3-primary w-full mt-4"><i class="fas fa-save mr-2"></i> Simpan Perubahan</button>
-              </form>
+
+              <!-- Live Preview WhatsApp Reminder -->
+              <div class="border-t border-white/10 pt-6 mt-6 space-y-4">
+                <h5 class="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                  <i class="fab fa-whatsapp text-sm"></i> Pratinjau Pesan Pengingat (Live Preview)
+                </h5>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                  Berikut adalah pratinjau pesan pengingat yang akan dikirimkan ke alumni. Ubah milestone dan status pembayaran untuk melihat perubahan pesan.
+                </p>
+                
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                  <!-- Control Panel -->
+                  <div class="w-full md:w-1/2 space-y-4">
+                    <!-- Milestone Selector -->
+                    <div>
+                      <label class="text-[9px] font-bold text-slate-500 uppercase ml-1 block">Pilih Hari Milestone</label>
+                      <div id="preview-milestone-buttons" class="flex flex-wrap gap-2 mt-1">
+                        <!-- Dinamis terisi dari js/app.js -->
+                      </div>
+                    </div>
+                    
+                    <!-- Payment Status Toggle -->
+                    <div>
+                      <label class="text-[9px] font-bold text-slate-500 uppercase ml-1 block">Simulasi Status Pembayaran</label>
+                      <div class="flex items-center gap-2 mt-1.5">
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                          <input type="checkbox" id="preview-payment-status" class="sr-only peer" onchange="window.updateReminderPreviewBubble()">
+                          <div class="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                          <span id="preview-payment-label" class="ml-2 text-xs font-bold text-slate-300">Belum Lunas</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <!-- Textarea Editor -->
+                    <div>
+                      <label class="text-[9px] font-bold text-slate-500 uppercase ml-1 block flex justify-between">
+                        <span>Edit Template Pesan</span>
+                        <span class="text-[8px] text-amber-500 font-normal normal-case">Simpan perubahan dengan klik tombol Simpan Perubahan di bawah</span>
+                      </label>
+                      <textarea id="set-reminder-template-text" class="input-field mt-1.5 h-44 text-xs font-sans resize-none" placeholder="Tulis template pesan di sini..." oninput="window.handleTemplateTextChange(this.value)"></textarea>
+                      <div class="flex flex-wrap gap-1.5 mt-1.5">
+                        <button type="button" class="text-[9px] bg-white/5 hover:bg-white/10 text-slate-300 px-1.5 py-0.5 rounded border border-white/5" onclick="window.insertPlaceholder('{nama}')">{nama}</button>
+                        <button type="button" class="text-[9px] bg-white/5 hover:bg-white/10 text-slate-300 px-1.5 py-0.5 rounded border border-white/5" onclick="window.insertPlaceholder('{hari}')">{hari}</button>
+                        <button type="button" class="text-[9px] bg-white/5 hover:bg-white/10 text-slate-300 px-1.5 py-0.5 rounded border border-white/5" onclick="window.insertPlaceholder('{tanggal}')">{tanggal}</button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- WhatsApp Chat Bubble Mockup -->
+                  <div class="w-full md:w-1/2 flex justify-center bg-slate-950/40 p-4 md:p-6 rounded-2xl border border-white/5 relative overflow-hidden" style="background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-size: cover; min-height: 250px;">
+                    <div class="absolute inset-0 bg-[#0b141a]/95 pointer-events-none"></div>
+                    
+                    <!-- WhatsApp Chat Bubble -->
+                    <div class="relative z-10 w-full max-w-md bg-[#0b141a] rounded-2xl p-3 shadow-lg border border-white/5 flex flex-col space-y-1.5" style="border-radius: 12px 12px 12px 0px; background-color: #0b2027; border: 1px solid #183c48;">
+                      <!-- Sender Info -->
+                      <div class="flex justify-between items-center text-[10px] text-emerald-400 font-black tracking-wider uppercase border-b border-emerald-500/10 pb-1 mb-1">
+                        <span>Reuni Akbar PP Al-Fatah</span>
+                        <span id="wa-preview-milestone-tag" class="text-slate-400 font-normal normal-case">H-30</span>
+                      </div>
+                      
+                      <!-- Message Content -->
+                      <div id="wa-preview-bubble-text" class="text-xs text-[#e9edef] leading-relaxed whitespace-pre-wrap font-sans">
+                        <!-- Live preview content populated via JS -->
+                      </div>
+                      
+                      <!-- Message Footer Info -->
+                      <div class="flex justify-end items-center gap-1 text-[9px] text-[#8696a0] self-end pt-1">
+                        <span>08:00</span>
+                        <i class="fas fa-check-double text-[#53bdeb]"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                
+              <button type="submit" id="btn-save-event-settings" class="btn-md3 btn-md3-primary w-full mt-6"><i class="fas fa-save mr-2"></i> Simpan Perubahan</button>
+            </form>
             </div>
 
             <!-- Sub-Tab 3: Konfigurasi AI -->
@@ -2861,7 +2966,7 @@
 
 <div id="modal-broadcast" class="hidden fixed inset-0 z-[500] flex items-center justify-center p-4">
     <div onclick="closeModal('modal-broadcast')" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-    <div class="glass relative w-full max-w-lg rounded-[2rem] p-8 shadow-2xl border border-emerald-500/20 modal-enter">
+    <div class="glass relative w-full max-w-lg rounded-[2rem] p-8 shadow-2xl border border-emerald-500/20 modal-enter max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex justify-between items-center mb-6">
         <h3 class="text-lg font-black uppercase text-emerald-400"><i class="fas fa-bullhorn mr-2"></i> Broadcast Pesan</h3>
         <button onclick="closeModal('modal-broadcast')" class="text-slate-400 hover:text-white transition-colors"><i class="fas fa-times text-xl"></i></button>

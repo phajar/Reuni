@@ -663,3 +663,385 @@ body.light-theme .settings-sub-btn.active {
     display: none !important;
   }
 }
+
+/* ----------------------------------------------------
+   COLLAPSIBLE SIDEBAR ON DESKTOP
+   ---------------------------------------------------- */
+@media (min-width: 1024px) {
+  #main-sidebar {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    width: 256px;
+  }
+  #main-sidebar.collapsed {
+    width: 76px !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  #main-sidebar.collapsed .brand-text,
+  #main-sidebar.collapsed .nav-label,
+  #main-sidebar.collapsed span[class*="text-[8px]"],
+  #main-sidebar.collapsed .collapse-text,
+  #main-sidebar.collapsed .theme-text,
+  #main-sidebar.collapsed .fa-chevron-up,
+  #main-sidebar.collapsed .flex-1.min-w-0 {
+    display: none !important;
+  }
+  #main-sidebar.collapsed [onclick="window.toggleProfilePopover()"] {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  #main-sidebar.collapsed .mt-auto .flex.gap-2 {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  #main-sidebar.collapsed .btn-md3 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+  }
+  #main-sidebar.collapsed .nav-btn .absolute {
+    right: 4px !important;
+    top: 4px !important;
+  }
+}
+
+/* ----------------------------------------------------
+   SLIDING DETAIL DRAWER (DESKTOP) & BOTTOM SHEET (MOBILE)
+   ---------------------------------------------------- */
+#modal-review-alumni {
+  transition: opacity 0.3s ease;
+}
+
+@media (min-width: 769px) {
+  #modal-review-alumni {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    pointer-events: none !important;
+    background: transparent !important;
+    z-index: 600 !important;
+  }
+  
+  #modal-review-alumni.open {
+    pointer-events: auto !important;
+  }
+  
+  #modal-review-alumni > div:first-child {
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(4px) !important;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+    pointer-events: none !important;
+  }
+  
+  #modal-review-alumni.open > div:first-child {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  
+  #modal-review-alumni > div:last-child {
+    position: relative !important;
+    width: 420px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border-top-left-radius: 30px !important;
+    border-bottom-left-radius: 30px !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    transform: translateX(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  #modal-review-alumni.open > div:last-child {
+    transform: translateX(0) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #modal-review-alumni {
+    position: fixed !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    pointer-events: none !important;
+    background: transparent !important;
+    z-index: 600 !important;
+  }
+  
+  #modal-review-alumni.open {
+    pointer-events: auto !important;
+  }
+  
+  #modal-review-alumni > div:first-child {
+    position: absolute !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(4px) !important;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+    pointer-events: none !important;
+  }
+  
+  #modal-review-alumni.open > div:first-child {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  
+  #modal-review-alumni > div:last-child {
+    position: relative !important;
+    width: 100% !important;
+    max-height: 85vh !important;
+    border-radius: 0 !important;
+    border-top-left-radius: 28px !important;
+    border-top-right-radius: 28px !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    transform: translateY(100%) !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin: 0 !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  #modal-review-alumni.open > div:last-child {
+    transform: translateY(0) !important;
+  }
+}
+
+/* ----------------------------------------------------
+   RESPONSIVE TABLE TO CARD CONVERSION FOR MOBILE
+   ---------------------------------------------------- */
+@media (max-width: 768px) {
+  .modern-table thead {
+    display: none !important;
+  }
+  
+  .modern-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.85rem !important;
+    padding: 0.25rem !important;
+  }
+  
+  .modern-table tbody tr {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    padding: 1.25rem !important;
+    background: rgba(13, 17, 39, 0.65) !important;
+    border: 1px solid rgba(99, 102, 241, 0.08) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  body.light-theme .modern-table tbody tr {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .modern-table tbody tr td {
+    display: block !important;
+    padding: 0 !important;
+    border-bottom: none !important;
+    text-align: left !important;
+    width: 100% !important;
+    background: transparent !important;
+  }
+
+  #request-list tr td:nth-child(1) {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: white !important;
+  }
+  body.light-theme #request-list tr td:nth-child(1) {
+    color: #0f172a !important;
+  }
+  
+  #request-list tr td:nth-child(2)::before {
+    content: "Tahun Lulus: " !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-right: 4px;
+  }
+  #request-list tr td:nth-child(2) {
+    font-size: 11px !important;
+    font-weight: bold !important;
+    color: #818cf8 !important;
+  }
+
+  #request-list tr td:nth-child(3)::before {
+    content: "Domisili: " !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-right: 4px;
+  }
+  #request-list tr td:nth-child(3) {
+    font-size: 11px !important;
+    color: #cbd5e1 !important;
+  }
+  body.light-theme #request-list tr td:nth-child(3) {
+    color: #475569 !important;
+  }
+  
+  #request-list tr td:nth-child(4) {
+    margin-top: 0.5rem !important;
+    border-top: 1px solid rgba(255,255,255,0.05) !important;
+    padding-top: 0.75rem !important;
+  }
+  body.light-theme #request-list tr td:nth-child(4) {
+    border-top-color: rgba(0,0,0,0.05) !important;
+  }
+
+  #request-finance-list tr td:nth-child(1) {
+    font-size: 10px !important;
+    color: #64748b !important;
+    margin-bottom: -4px;
+  }
+  
+  #request-finance-list tr td:nth-child(2) {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: #34d399 !important;
+  }
+
+  #request-finance-list tr td:nth-child(3)::before {
+    content: "Nominal: " !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-right: 4px;
+  }
+  #request-finance-list tr td:nth-child(3) {
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    color: white !important;
+  }
+  body.light-theme #request-finance-list tr td:nth-child(3) {
+    color: #0f172a !important;
+  }
+  
+  #request-finance-list tr td:nth-child(4) {
+    display: none !important;
+  }
+
+  #request-finance-list tr td:nth-child(5) {
+    margin-top: 0.5rem !important;
+    border-top: 1px solid rgba(255,255,255,0.05) !important;
+    padding-top: 0.75rem !important;
+  }
+  body.light-theme #request-finance-list tr td:nth-child(5) {
+    border-top-color: rgba(0,0,0,0.05) !important;
+  }
+
+  .modern-table td .flex, 
+  .modern-table td .grid {
+    width: 100% !important;
+    display: flex !important;
+    gap: 0.5rem !important;
+  }
+  .modern-table td button {
+    flex: 1 !important;
+    padding-top: 0.65rem !important;
+    padding-bottom: 0.65rem !important;
+    justify-content: center !important;
+    font-size: 9px !important;
+  }
+}
+
+/* ----------------------------------------------------
+   SPOTLIGHT HOVER GLOW EFFECT
+   ---------------------------------------------------- */
+.premium-card, .stat-card, .table-container, #main-sidebar .nav-btn {
+  position: relative !important;
+}
+.premium-card::before, .stat-card::before, .table-container::before, #main-sidebar .nav-btn::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: radial-gradient(300px circle at var(--mx, 0px) var(--my, 0px), rgba(99, 102, 241, 0.08), transparent 80%) !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+  border-radius: inherit !important;
+}
+body.light-theme .premium-card::before, 
+body.light-theme .stat-card::before, 
+body.light-theme .table-container::before,
+body.light-theme #main-sidebar .nav-btn::before {
+  background: radial-gradient(300px circle at var(--mx, 0px) var(--my, 0px), rgba(99, 102, 241, 0.04), transparent 80%) !important;
+}
+.premium-card:hover::before, .stat-card:hover::before, .table-container:hover::before, #main-sidebar .nav-btn:hover::before {
+  opacity: 1 !important;
+}
+
+/* ----------------------------------------------------
+   INTERACTIVE GRADUATION RANGE SLIDER
+   ---------------------------------------------------- */
+.timeline-slider-container input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.timeline-slider-container input[type="range"]:focus {
+  outline: none;
+}
+/* Style Thumbs */
+.timeline-slider-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  background: #818cf8;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+  margin-top: -5px;
+  pointer-events: auto;
+  position: relative;
+  z-index: 20;
+}
+.timeline-slider-container input[type="range"]::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #818cf8;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+  pointer-events: auto;
+  position: relative;
+  z-index: 20;
+}
+/* Style Tracks */
+.timeline-slider-container input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 2px;
+}
+.timeline-slider-container input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 2px;
+}

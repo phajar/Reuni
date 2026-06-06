@@ -63,12 +63,17 @@ window.deleteCurrentBot = () => {
     window.startWAServer();
 };
 
-window.saveBotRoles = () => {
+window.saveBotRoles = async () => {
     const bcSelect = document.getElementById('wa-role-broadcast');
     const finSelect = document.getElementById('wa-role-finance');
     if(bcSelect) window.waRoles.broadcast = bcSelect.value;
     if(finSelect) window.waRoles.finance = finSelect.value;
     window.saveBotsData();
+    try {
+        await db.collection('settings').doc('wa_bot_roles').set(window.waRoles);
+    } catch (e) {
+        console.error("Gagal sync peran bot ke Firestore:", e);
+    }
     window.notify('Pengaturan peran bot disimpan', 'success');
 };
 
@@ -79,8 +84,18 @@ window.changeWaSession = (newSessionId) => {
     window.startWAServer();
 };
 
-const initWhatsApp = () => {
+const initWhatsApp = async () => {
   window.renderBotDropdowns();
+  try {
+      const docSnap = await db.collection('settings').doc('wa_bot_roles').get();
+      if (docSnap.exists) {
+          window.waRoles = docSnap.data();
+          localStorage.setItem('wa_roles', JSON.stringify(window.waRoles));
+          window.renderBotDropdowns();
+      }
+  } catch (e) {
+      console.warn("Gagal memuat peran bot dari Firestore:", e);
+  }
   setTimeout(() => {
     if (typeof initWhatsAppEngine === 'function') {
       initWhatsAppEngine();
@@ -232,7 +247,8 @@ window.resetWASession = async () => {
             }
             const res = await fetch(`${cleanLocalUrl}/api/reset`, {
                 method: 'POST',
-                headers: headers
+                headers: headers,
+                body: JSON.stringify({ sessionId: window.currentWaSessionId })
             });
             const data = await res.json();
             window.toggleLoading(false);
@@ -320,7 +336,7 @@ window.requestWaPairing = async () => {
             const res = await fetch(`${cleanLocalUrl}/api/pair`, {
                 method: 'POST',
                 headers: headers,
-                body: JSON.stringify({ phone: phone })
+                body: JSON.stringify({ sessionId: window.currentWaSessionId, phone: phone })
             });
             const data = await res.json();
             window.toggleLoading(false);
@@ -360,13 +376,14 @@ window.sendWhatsAppInternal = async (target, message, fileUrl = null, roleName =
         return true; 
     }
 
+    let targetSessionId = window.currentWaSessionId;
+    if (roleName && window.waRoles[roleName]) {
+        targetSessionId = window.waRoles[roleName];
+    }
+
     // A. JIKA BERJALAN DI LINGKUNGAN APLIKASI (Capacitor NodeJS)
     if (window.Capacitor && window.Capacitor.Plugins.CapacitorNodeJS) {
         return new Promise((resolve, reject) => {
-            let targetSessionId = window.currentWaSessionId;
-            if (roleName && window.waRoles[roleName]) {
-                targetSessionId = window.waRoles[roleName];
-            }
 
             // Random message ID to track response
             const msgId = Date.now().toString();
@@ -493,6 +510,7 @@ window.sendWhatsAppInternal = async (target, message, fileUrl = null, roleName =
                         method: 'POST',
                         headers: sendHeaders,
                         body: JSON.stringify({
+                            sessionId: targetSessionId,
                             phone: cleanPhone,
                             message: message,
                             fileUrl: fileUrl,
@@ -569,6 +587,7 @@ window.sendWhatsAppInternal = async (target, message, fileUrl = null, roleName =
                 method: 'POST',
                 headers: customHeaders,
                 body: JSON.stringify({
+                    sessionId: targetSessionId,
                     phone: cleanPhone,
                     message: message,
                     fileUrl: fileUrl,
@@ -2771,7 +2790,7 @@ window.checkLocalWaStatus = async () => {
         if (localApiKey) {
             headers['Authorization'] = `Bearer ${localApiKey}`;
         }
-        const res = await fetch(`${cleanLocalUrl}/api/status`, { 
+        const res = await fetch(`${cleanLocalUrl}/api/status?sessionId=${window.currentWaSessionId}`, { 
             headers: headers,
             signal: controller.signal 
         });
