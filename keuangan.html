@@ -41,7 +41,7 @@
       animation-play-state: paused;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 </head>
@@ -302,7 +302,8 @@
     let donasiChartInstance = null;
 
     function updateAllKeuangan() {
-      const financeList = state.finance;
+      try {
+        const financeList = state.finance;
       const approvedAlumni = state.alumni.filter(a => a.status === 'approved');
 
       // 1. Hitung total Pemasukan, Pengeluaran, Saldo
@@ -377,7 +378,7 @@
 
       // 4. Render Doughnut Chart (Expenses)
       const pieCanvas = document.getElementById('pieChart');
-      if (pieCanvas && typeof Chart !== 'undefined' && pieCanvas.offsetParent !== null) {
+      if (pieCanvas && typeof Chart !== 'undefined') {
         const catLabels = Object.keys(catExpenses);
         const catValues = Object.values(catExpenses);
 
@@ -415,7 +416,7 @@
 
       // 5. Render Bar Chart (Donasi per Angkatan)
       const donasiCanvas = document.getElementById('chartDonasiAngkatan');
-      if (donasiCanvas && typeof Chart !== 'undefined' && donasiCanvas.offsetParent !== null) {
+      if (donasiCanvas && typeof Chart !== 'undefined') {
         let donasiAngkMap = {};
         
         // Sum donasi
@@ -494,20 +495,20 @@
       }
 
       // 6. Render Leaderboard Angkatan
-      let donasiAngkMap = {};
+      let leaderAngkMap = {};
       financeList.forEach(f => {
         if ((f.status === 'pemasukan' || f.status === 'approved') && f.kategori === 'Donasi') {
           const alumnus = state.alumni.find(x => x.id === f.ref_alumni_id);
           const angkatan = f.angkatan_pembayar || (alumnus ? alumnus.angkatan : null);
           if (angkatan && /^\d{4}$/.test(String(angkatan).trim())) {
             const cleanAng = String(angkatan).trim();
-            donasiAngkMap[cleanAng] = (donasiAngkMap[cleanAng] || 0) + (Number(f.nominal) || 0);
+            leaderAngkMap[cleanAng] = (leaderAngkMap[cleanAng] || 0) + (Number(f.nominal) || 0);
           }
         }
       });
 
-      const leaderData = Object.keys(donasiAngkMap)
-        .map(ang => ({ angkatan: ang, total: donasiAngkMap[ang] }))
+      const leaderData = Object.keys(leaderAngkMap)
+        .map(ang => ({ angkatan: ang, total: leaderAngkMap[ang] }))
         .sort((a, b) => b.total - a.total)
         .slice(0, 5);
 
@@ -536,6 +537,17 @@
 
       // Render timeline table initially
       window.filterKasTable();
+      } catch (err) {
+        console.error("Error in updateAllKeuangan:", err);
+        let errBanner = document.getElementById('debug-err-banner');
+        if (!errBanner) {
+          errBanner = document.createElement('div');
+          errBanner.id = 'debug-err-banner';
+          errBanner.style.cssText = 'background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); padding: 12px; margin: 12px; border-radius: 8px; color: #ef4444; font-size: 11px; font-family: monospace; z-index: 9999; position: relative;';
+          document.body.prepend(errBanner);
+        }
+        errBanner.innerText = "Error updateAllKeuangan: " + err.stack;
+      }
     }
 
     // Filter and search mutasi kas
