@@ -824,14 +824,18 @@ body.light-theme .settings-sub-btn.active {
    RESPONSIVE TABLE TO CARD CONVERSION FOR MOBILE
    ---------------------------------------------------- */
 @media (max-width: 768px) {
+  .modern-table {
+    display: block !important;
+    width: 100% !important;
+  }
+
   .modern-table thead {
     display: none !important;
   }
   
   .modern-table tbody {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.85rem !important;
+    display: block !important;
+    width: 100% !important;
     padding: 0.25rem !important;
   }
   
@@ -844,6 +848,7 @@ body.light-theme .settings-sub-btn.active {
     border: 1px solid rgba(99, 102, 241, 0.08) !important;
     border-radius: 20px !important;
     box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3) !important;
+    margin-bottom: 0.85rem !important;
   }
   
   body.light-theme .modern-table tbody tr {
@@ -858,6 +863,7 @@ body.light-theme .settings-sub-btn.active {
     text-align: left !important;
     width: 100% !important;
     background: transparent !important;
+    box-sizing: border-box !important;
   }
 
   #request-list tr td:nth-child(1) {
@@ -950,6 +956,127 @@ body.light-theme .settings-sub-btn.active {
     border-top-color: rgba(0,0,0,0.05) !important;
   }
 
+  /* Rekap Wilayah List Card Styling on Mobile */
+  #rekap-list tr td:nth-child(1) {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: white !important;
+    margin-bottom: 0.25rem !important;
+  }
+  body.light-theme #rekap-list tr td:nth-child(1) {
+    color: #0f172a !important;
+  }
+  
+  #rekap-list tr td:nth-child(2)::before {
+    content: "Tahun Lulus: " !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-right: 4px;
+  }
+  #rekap-list tr td:nth-child(2) {
+    font-size: 11px !important;
+    font-weight: bold !important;
+    color: #818cf8 !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  #rekap-list tr td:nth-child(3)::before {
+    content: "Alamat: " !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-right: 4px;
+  }
+  #rekap-list tr td:nth-child(3) {
+    font-size: 11px !important;
+    color: #cbd5e1 !important;
+    line-height: 1.4 !important;
+  }
+  body.light-theme #rekap-list tr td:nth-child(3) {
+    color: #475569 !important;
+  }
+  
+  #rekap-list tr td:nth-child(4) {
+    margin-top: 0.5rem !important;
+    border-top: 1px solid rgba(255,255,255,0.05) !important;
+    padding-top: 0.75rem !important;
+  }
+  body.light-theme #rekap-list tr td:nth-child(4) {
+    border-top-color: rgba(0,0,0,0.05) !important;
+  }
+
+  /* Distribusi Surat List Card Styling on Mobile */
+  #surat-list tr td:nth-child(1) {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: white !important;
+    margin-bottom: 0.25rem !important;
+  }
+  body.light-theme #surat-list tr td:nth-child(1) {
+    color: #0f172a !important;
+  }
+  
+  #surat-list tr td:nth-child(2)::before {
+    content: "Alamat: " !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-right: 4px;
+  }
+  #surat-list tr td:nth-child(2) {
+    font-size: 11px !important;
+    color: #cbd5e1 !important;
+    margin-bottom: 0.25rem !important;
+  }
+  body.light-theme #surat-list tr td:nth-child(2) {
+    color: #475569 !important;
+  }
+
+  #surat-list tr td:nth-child(3)::before {
+    content: "No. WA: " !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-right: 4px;
+  }
+  #surat-list tr td:nth-child(3) {
+    font-size: 11px !important;
+    color: #cbd5e1 !important;
+    margin-bottom: 0.25rem !important;
+  }
+  body.light-theme #surat-list tr td:nth-child(3) {
+    color: #475569 !important;
+  }
+
+  #surat-list tr td:nth-child(4)::before {
+    content: "Surat: " !important;
+    color: #64748b !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-right: 4px;
+  }
+  #surat-list tr td:nth-child(4) {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 11px !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  #surat-list tr td:nth-child(5) {
+    margin-top: 0.5rem !important;
+    border-top: 1px solid rgba(255,255,255,0.05) !important;
+    padding-top: 0.75rem !important;
+  }
+  body.light-theme #surat-list tr td:nth-child(5) {
+    border-top-color: rgba(0,0,0,0.05) !important;
+  }
+
   .modern-table td .flex, 
   .modern-table td .grid {
     width: 100% !important;
@@ -958,10 +1085,12 @@ body.light-theme .settings-sub-btn.active {
   }
   .modern-table td button {
     flex: 1 !important;
-    padding-top: 0.65rem !important;
-    padding-bottom: 0.65rem !important;
+    height: 36px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
     justify-content: center !important;
-    font-size: 9px !important;
+    font-size: 10px !important;
   }
 }
 
