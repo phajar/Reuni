@@ -862,13 +862,21 @@
       }
     };
 
+    function safeParseDate(val) {
+      if (!val) return new Date(0);
+      if (typeof val.toDate === 'function') return val.toDate();
+      if (val.seconds !== undefined) return new Date(val.seconds * 1000);
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? new Date(0) : d;
+    }
+
     function renderCard(alumni, payments = []) {
       const firstProof = (payments || []).find(p => p.bukti_url);
       const proofUrl = firstProof ? firstProof.bukti_url : null;
 
       const cfg = STATUS_CONFIG[alumni.status] || STATUS_CONFIG['pending'];
       const tgl = alumni.created_at
-        ? new Date(alumni.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })
+        ? safeParseDate(alumni.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })
         : '-';
 
       const lembagaBadge = alumni.lembaga ? `<span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${alumni.lembaga === 'MA' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'bg-pink-500/20 text-pink-400 border border-pink-500/30'}">${alumni.lembaga}</span>` : '';
@@ -895,7 +903,7 @@
             failed: { text: 'Gagal / Ditolak', badge: 'bg-red-500/20 text-red-400 border-red-500/30', icon: 'fa-times-circle' }
           };
           const s = statusMap[p.status] || { text: p.status, badge: 'bg-slate-500/10 text-slate-300 border-white/10', icon: 'fa-info-circle' };
-          const pDate = p.tanggal || (p.created_at ? new Date(p.created_at).toLocaleString('id-ID') : '-');
+          const pDate = p.tanggal || (p.created_at ? safeParseDate(p.created_at).toLocaleString('id-ID') : '-');
           const displayNominal = p.nominal_original || p.nominal; // Tampilkan nominal asli (sebelum potongan MDR)
           const pNominal = displayNominal ? 'Rp ' + Number(displayNominal).toLocaleString('id-ID').replace(/,/g, '.') : 'Rp 0';
           

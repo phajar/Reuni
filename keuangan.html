@@ -274,11 +274,19 @@
       return "Rp " + (Number(num) || 0).toLocaleString('id-ID').replace(/,/g, '.');
     }
 
+    function safeParseDate(val) {
+      if (!val) return new Date(0);
+      if (typeof val.toDate === 'function') return val.toDate();
+      if (val.seconds !== undefined) return new Date(val.seconds * 1000);
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? new Date(0) : d;
+    }
+
     function formatShortDate(isoString) {
       if (!isoString) return "-";
       try {
-        const d = new Date(isoString);
-        if (isNaN(d.getTime())) return String(isoString);
+        const d = safeParseDate(isoString);
+        if (d.getTime() === 0) return String(isoString);
         return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "2-digit" });
       } catch(e) {
         return String(isoString);
@@ -359,9 +367,7 @@
         } else {
           // Sort donasi terbaru
           const recentDonations = [...approvedDonations].sort((a,b) => {
-            const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
-            const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
-            return dateB - dateA;
+            return safeParseDate(b.created_at) - safeParseDate(a.created_at);
           });
 
           const tickerHtml = recentDonations.slice(0, 10).map(f => {
@@ -576,8 +582,8 @@
 
       // Sort by date/created_at desc
       filtered.sort((a, b) => {
-        const dateA = a.created_at ? new Date(a.created_at) : new Date(a.tanggal || 0);
-        const dateB = b.created_at ? new Date(b.created_at) : new Date(b.tanggal || 0);
+        const dateA = a.created_at ? safeParseDate(a.created_at) : safeParseDate(a.tanggal || 0);
+        const dateB = b.created_at ? safeParseDate(b.created_at) : safeParseDate(b.tanggal || 0);
         return dateB - dateA;
       });
 

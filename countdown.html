@@ -430,7 +430,7 @@
   <!-- SCRIPT: Firebase + Countdown + Guestbook + WallOfFame -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, getDocs, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy, getDocs, where, getCountFromServer, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCfZ9zV6DOuSZoFoFvkW8NCSaxNlmn8R8k",
@@ -445,6 +445,14 @@
 
     // ── Utils ─────────────────────────────────────────────────────────────
     window.formatRupiah = n => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(Number(n)||0);
+    function safeParseDate(val) {
+      if (!val) return new Date(0);
+      if (typeof val.toDate === 'function') return val.toDate();
+      if (val.seconds !== undefined) return new Date(val.seconds * 1000);
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? new Date(0) : d;
+    }
+
     window.escapeHtml = (str) => {
       if (!str) return "";
       return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -511,7 +519,7 @@
           eventDateStr = data.event_date || 'TBD';
           document.getElementById('event-time-display').innerText  = data.event_time  || 'Menunggu Info';
           document.getElementById('event-guest-display').innerText = data.event_guest || 'Menunggu Info';
-          createdAt = data.created_at ? new Date(data.created_at).getTime() : null;
+          createdAt = data.created_at ? safeParseDate(data.created_at).getTime() : null;
         }
 
         if (eventDateStr === 'TBD' || !eventDateStr) {
@@ -690,7 +698,7 @@
       }
     })();
 
-    onSnapshot(query(collection(db,'guestbook'), orderBy('created_at','desc')), snap => {
+    onSnapshot(query(collection(db,'guestbook'), orderBy('created_at','desc'), limit(50)), snap => {
       const c = document.getElementById('guestbook-list');
       if (snap.empty) {
         c.innerHTML = '<div class="text-center text-slate-500 text-xs italic py-8 border border-dashed border-white/10 rounded-2xl">Belum ada pesan.<br>Jadilah yang pertama!</div>';
@@ -698,7 +706,7 @@
       }
       c.innerHTML = snap.docs.map(d => {
         const x = d.data();
-        const time = new Date(x.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+        const time = safeParseDate(x.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
         const safePesan = window.escapeHtml(x.pesan || "");
         const safeNama = window.escapeHtml(x.nama || "");
         const safeAngkatan = window.escapeHtml(x.angkatan || "");

@@ -1649,7 +1649,7 @@ window.loadDataRealtime = () => {
         if (typeof window.renderAllTabs === "function") window.renderAllTabs();
       }
     });
-  db.collection("guestbook").onSnapshot((snap) => {
+  db.collection("guestbook").orderBy("created_at", "desc").limit(100).onSnapshot((snap) => {
     window.STATE.guestbook = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     window.renderGuestbookTable();
   });
@@ -4293,11 +4293,29 @@ window.renderFinanceTable = () => {
           ? f.tanggal.split(",")[0]
           : f.tanggal.toDate().toLocaleDateString("id-ID")
         : "-";
-      let nominalHTML = `${f.status === "pengeluaran" ? "-" : "+"}${window.formatRupiah(f.nominal)}`;
+
+      let statusBadge = "";
+      let colorClass = "text-emerald-400";
+      let sign = "+";
+      
+      if (f.status === "pengeluaran") {
+        colorClass = "text-red-400";
+        sign = "-";
+      } else if (f.status === "pending_payment" || f.status === "pending") {
+        colorClass = "text-amber-400";
+        sign = "";
+        statusBadge = `<div class="text-[8px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider mt-1.5 inline-block"><i class="fas fa-clock mr-1"></i>Pending</div>`;
+      } else if (f.status === "failed" || f.status === "rejected") {
+        colorClass = "text-slate-400 line-through";
+        sign = "";
+        statusBadge = `<div class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-black uppercase tracking-wider mt-1.5 inline-block"><i class="fas fa-times-circle mr-1"></i>Gagal</div>`;
+      }
+
+      let nominalHTML = `${sign}${window.formatRupiah(f.nominal)}`;
       if (f.nominal_original && Number(f.nominal_original) !== Number(f.nominal)) {
         nominalHTML += `<div class="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">MDR: -${window.formatRupiah(Number(f.nominal_original) - Number(f.nominal))} (${window.formatRupiah(f.nominal_original)})</div>`;
       }
-      return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-500">${dStr}</td><td class="p-5"><div class="font-bold">${f.nama_pembayar}</div><div class="text-[8px] text-indigo-500 font-bold uppercase tracking-wider">${f.kategori}</div></td><td class="p-5 font-black ${f.status === "pengeluaran" ? "text-red-400" : "text-emerald-400"}">${nominalHTML}</td><td class="p-5 text-center"><div class="flex justify-center">${act}</div></td></tr>`;
+      return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-500">${dStr}</td><td class="p-5"><div class="font-bold">${f.nama_pembayar}</div><div class="text-[8px] text-indigo-500 font-bold uppercase tracking-wider">${f.kategori}</div>${statusBadge}</td><td class="p-5 font-black ${colorClass}">${nominalHTML}</td><td class="p-5 text-center"><div class="flex justify-center">${act}</div></td></tr>`;
     })
     .join("");
 };
@@ -11303,6 +11321,48 @@ window.logActivity = async (action, details) => {
 };
 
 window.STATE.auditLogs = [];
+
+window.renderAuditLog = () => {
+  const auditLogsList = document.getElementById("audit-logs-list");
+  if (auditLogsList) {
+    auditLogsList.innerHTML = `
+      <tr>
+        <td class="p-4"><div class="skeleton h-4 w-24 rounded"></div></td>
+        <td class="p-4"><div class="skeleton h-4 w-28 rounded"></div></td>
+        <td class="p-4 text-center"><div class="skeleton h-5 w-14 rounded mx-auto"></div></td>
+        <td class="p-4"><div class="skeleton h-4 w-48 rounded"></div></td>
+      </tr>
+      <tr>
+        <td class="p-4"><div class="skeleton h-4 w-20 rounded"></div></td>
+        <td class="p-4"><div class="skeleton h-4 w-32 rounded"></div></td>
+        <td class="p-4 text-center"><div class="skeleton h-5 w-12 rounded mx-auto"></div></td>
+        <td class="p-4"><div class="skeleton h-4 w-60 rounded"></div></td>
+      </tr>
+      <tr>
+        <td class="p-4"><div class="skeleton h-4 w-24 rounded"></div></td>
+        <td class="p-4"><div class="skeleton h-4 w-24 rounded"></div></td>
+        <td class="p-4 text-center"><div class="skeleton h-5 w-16 rounded mx-auto"></div></td>
+        <td class="p-4"><div class="skeleton h-4 w-52 rounded"></div></td>
+      </tr>
+    `;
+  }
+  
+  db.collection("audit_logs")
+    .orderBy("timestamp", "desc")
+    .limit(100)
+    .get()
+    .then((snap) => {
+      window.STATE.auditLogs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      window.renderAuditLogsTable(window.STATE.auditLogs);
+    })
+    .catch((err) => {
+      console.error("[AUDIT] Gagal memuat log:", err);
+      if (auditLogsList) {
+        auditLogsList.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-red-500 font-bold uppercase tracking-wider text-[10px]"><i class="fas fa-exclamation-triangle text-lg mb-2 block"></i>Gagal memuat log aktivitas</td></tr>';
+      }
+    });
+};
+
 window.renderAuditLogsTable = (logs) => {
     const listContainer = document.getElementById("audit-logs-list");
     if (!listContainer) return;
@@ -11905,7 +11965,18 @@ window.openAlumniChangeHistory = async (alumniId, alumniNama) => {
   }
 
   if (titleEl) titleEl.textContent = `Riwayat: ${alumniNama || ''}`;
-  bodyEl.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat riwayat...</td></tr>`;
+  bodyEl.innerHTML = `
+    <tr>
+      <td class="p-3"><div class="skeleton h-4 w-24 rounded"></div></td>
+      <td class="p-3"><div class="skeleton h-4 w-20 rounded"></div></td>
+      <td class="p-3"><div class="skeleton h-4 w-40 rounded"></div></td>
+    </tr>
+    <tr>
+      <td class="p-3"><div class="skeleton h-4 w-20 rounded"></div></td>
+      <td class="p-3"><div class="skeleton h-4 w-24 rounded"></div></td>
+      <td class="p-3"><div class="skeleton h-4 w-48 rounded"></div></td>
+    </tr>
+  `;
   modal.classList.remove('hidden');
 
   try {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reuni-al-fatah-v6';
+const CACHE_NAME = 'reuni-al-fatah-v7';
 const STATIC_ASSETS = [
   './',
   './countdown.html',
@@ -11,6 +11,7 @@ const STATIC_ASSETS = [
   './surat-undangan.html',
   './404.html',
   './css/all.min.css',
+  './css/custom-theme.css',
   './js/lib/tailwindcss.js',
   './js/lib/qrcode.min.js',
   './js/lib/jspdf.umd.min.js',

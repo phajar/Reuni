@@ -710,6 +710,14 @@ try {
         window.closeModal('modal-qris-nominal');
     };
 
+    function safeParseDate(val) {
+      if (!val) return new Date(0);
+      if (typeof val.toDate === 'function') return val.toDate();
+      if (val.seconds !== undefined) return new Date(val.seconds * 1000);
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? new Date(0) : d;
+    }
+
     // 3. FITUR FORMAT RUPIAH OTOMATIS (Diperbarui)
   window.formatRupiahInput = (input) => {
     let val = input.value.replace(/[^,\d]/g, '').toString();
@@ -1219,9 +1227,7 @@ try {
 
         // Sort berdasarkan tanggal terbaru
         approvedDonations.sort((a, b) => {
-            const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
-            const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
-            return dateB - dateA;
+            return safeParseDate(b.created_at) - safeParseDate(a.created_at);
         });
 
         // Hitung total RAB secara dinamis dari Firestore
