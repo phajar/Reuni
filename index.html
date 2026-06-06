@@ -1491,21 +1491,18 @@
 
         <span id="heading-keuangan" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Keuangan & Aset</span>
         <button onclick="showTab('finance')" id="btn-finance" class="nav-btn"><i class="fas fa-wallet text-base w-5 text-center"></i> Keuangan</button>
-        <button onclick="showTab('rab')" id="btn-rab" class="nav-btn"><i class="fas fa-clipboard-list text-base w-5 text-center"></i> RAB</button>
         <button onclick="showTab('logistik')" id="btn-logistik" class="nav-btn"><i class="fas fa-box-open text-base w-5 text-center"></i> Logistik</button>
 
         <span id="heading-acara" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Acara & Laporan</span>
         <button onclick="showTab('rundown')" id="btn-rundown" class="nav-btn"><i class="fas fa-list-ol text-base w-5 text-center"></i> Rundown</button>
         <button onclick="showTab('panitia')" id="btn-panitia" class="nav-btn"><i class="fas fa-id-badge text-base w-5 text-center"></i> Panitia</button>
         <button onclick="showTab('guestbook')" id="btn-guestbook" class="nav-btn"><i class="fas fa-book-open text-base w-5 text-center"></i> Buku Tamu</button>
-        <button onclick="showTab('rekap')" id="btn-rekap" class="nav-btn"><i class="fas fa-map-marked-alt text-base w-5 text-center"></i> Wilayah</button>
-        <button onclick="showTab('surat')" id="btn-surat" class="nav-btn hidden"><i class="fas fa-envelope text-base w-5 text-center"></i> Distribusi Surat</button>
+        <button onclick="showTab('rekap')" id="btn-rekap" class="nav-btn"><i class="fas fa-map-marked-alt text-base w-5 text-center"></i> Wilayah & Surat</button>
         <button onclick="showTab('tugas')" id="btn-tugas" class="nav-btn relative"><i class="fas fa-tasks text-base w-5 text-center"></i> Tugas Panitia<span id="badge-tugas" class="hidden absolute right-4 w-4 h-4 bg-amber-500 rounded-full text-[8px] flex items-center justify-center text-white">0</span></button>
         <a href="surat-undangan.html" class="nav-btn text-purple-400 flex items-center gap-2 w-full text-left"><i class="fas fa-envelope-open-text text-base w-5 text-center"></i> AI Surat Undangan</a>
         <span id="heading-integrasi" class="hidden"></span>
         <span id="heading-sistem" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Sistem & Integrasi</span>
-        <button onclick="showTab('whatsapp')" id="btn-whatsapp" class="nav-btn text-emerald-400 hidden"><i class="fab fa-whatsapp text-base w-5 text-center"></i> WhatsApp Center</button>
-        <button onclick="showTab('wa-groups')" id="btn-wa-groups" class="nav-btn text-indigo-400 hidden"><i class="fas fa-users-cog text-base w-5 text-center"></i> Grup & Channel WA</button>
+        <button onclick="showTab('whatsapp')" id="btn-whatsapp" class="nav-btn text-emerald-400 hidden"><i class="fab fa-whatsapp text-base w-5 text-center"></i> WhatsApp Portal</button>
         <!-- Pusat Pengaturan menu removed from here and moved to Logo -->
       </nav>
 
@@ -1985,173 +1982,124 @@
         </div>
       </div>
 
-      <div id="tab-rab" class="tab-content hidden space-y-4">
-        <div class="flex flex-col lg:flex-row justify-between gap-4">
-            <div class="flex flex-wrap gap-2 items-center">
-                <button onclick="openModalRAB()" class="btn-md3 btn-md3-primary"><i class="fas fa-plus mr-2"></i> Tambah Item RAB</button>
-                <button onclick="exportRABToPDF()" class="btn-md3 btn-md3-amber-tonal"><i class="fas fa-file-pdf mr-2"></i> Cetak RAB PDF</button>
-                <div class="relative">
-                  <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                  <input type="text" id="search-rab-input" oninput="window.searchRAB(this.value)" placeholder="Cari item RAB..." class="input-field pl-9 w-40 text-xs" />
-                </div>
-            </div>
-            <div class="glass px-6 py-2 rounded-2xl border border-indigo-500/30 flex items-center justify-between min-w-[250px] shadow-sm">
-                <span class="text-[10px] text-slate-400 font-bold uppercase mr-2">Total Anggaran:</span>
-                <span class="text-lg font-black text-indigo-400" id="rab-total-display">Rp 0</span>
-            </div>
-        </div>
-        <div class="table-container">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left modern-table">
-                    <thead>
-                        <tr><th class="p-5">Nama Keperluan</th><th class="p-5">Anggaran</th><th class="p-5 text-center">Status</th><th class="p-5 text-center">Aksi</th></tr>
-                    </thead>
-                    <tbody id="rab-list" class="divide-y divide-white/5 text-sm">
-                        <!-- Skeleton Loading rows -->
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-36 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-24 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-5 w-20 rounded-full mx-auto"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-28 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-5 w-20 rounded-full mx-auto"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="flex justify-between items-center mt-4 px-2">
-            <span id="page-info-rab" class="text-[10px] text-slate-400 font-bold uppercase">Halaman 1</span>
-            <div class="flex gap-2">
-                <button type="button" onclick="changeRABPage(-1)" class="btn-md3 btn-md3-outlined px-4 py-1.5 text-xs font-bold text-slate-300 shadow-sm">&lt; Prev</button>
-                <button type="button" onclick="changeRABPage(1)" class="btn-md3 btn-md3-outlined px-4 py-1.5 text-xs font-bold text-slate-300 shadow-sm">Next &gt;</button>
-            </div>
-        </div>
+
+      <div id="tab-rekap" class="tab-content hidden space-y-6">
+          <!-- Sub-Tab Navigation for Wilayah & Surat -->
+          <div class="flex border-b border-white/10 gap-6 px-1">
+              <button id="subbtn-rekap-wilayah" onclick="window.switchRekapSubTab('wilayah')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-indigo-500 text-white transition-all">
+                  <i class="fas fa-map-marked-alt mr-1.5 text-indigo-400"></i> Rekap Wilayah
+              </button>
+              <button id="subbtn-rekap-surat" onclick="window.switchRekapSubTab('surat')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                  <i class="fas fa-envelope mr-1.5 text-purple-400"></i> Distribusi Surat
+              </button>
+          </div>
+
+          <!-- Sub-Tab Content 1: Rekap Wilayah -->
+          <div id="subtab-rekap-wilayah" class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <div class="relative">
+                      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                      <input type="text" id="search-wilayah-input" oninput="applyWilayahFilter()" class="input-field pl-9 text-xs" placeholder="Cari nama/angkatan/alamat..." />
+                  </div>
+                  <select id="filter-kab" onchange="applyWilayahFilter('kab')" class="input-field"><option value="">Semua Kabupaten</option></select>
+                  <select id="filter-kec" onchange="applyWilayahFilter('kec')" class="input-field"><option value="">Semua Kecamatan</option></select>
+                  <select id="filter-desa" onchange="applyWilayahFilter('desa')" class="input-field"><option value="">Semua Desa</option></select>
+                  <div class="flex gap-2">
+                      <button onclick="scanDuplicatesAI()" class="btn-md3 btn-md3-fuchsia flex-1 text-[10px]"><i class="fas fa-magic mr-1"></i> Deteksi Ganda</button>
+                      <button onclick="openModal('modal-export')" class="btn-md3 btn-md3-emerald flex-1 text-[10px]"><i class="fas fa-file-export mr-1"></i> Export Data</button>
+                      <button onclick="resetWilayahFilters()" class="btn-md3 btn-md3-outlined flex-1 text-[10px]"><i class="fas fa-times mr-1"></i> Reset</button>
+                  </div>
+              </div>
+              <div class="flex justify-between items-center px-1">
+                  <span id="wilayah-filter-count" class="text-[10px] font-bold text-indigo-400"></span>
+              </div>
+              <div class="table-container">
+                  <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left modern-table">
+                        <thead>
+                            <tr><th class="p-5">Nama Alumni</th><th class="p-5 text-center">Tahun Lulus</th><th class="p-5">Alamat Lengkap</th><th class="p-5 text-center">Aksi</th></tr>
+                        </thead>
+                        <tbody id="rekap-list" class="divide-y divide-white/5 text-sm">
+                            <!-- Skeleton Loading rows -->
+                            <tr>
+                                <td class="p-5"><div class="skeleton h-4 w-28 rounded"></div></td>
+                                <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
+                                <td class="p-5"><div class="skeleton h-3.5 w-44 rounded"></div></td>
+                                <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                            </tr>
+                            <tr>
+                                <td class="p-5"><div class="skeleton h-4 w-32 rounded"></div></td>
+                                <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
+                                <td class="p-5"><div class="skeleton h-3.5 w-36 rounded"></div></td>
+                                <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Sub-Tab Content 2: Distribusi Surat -->
+          <div id="subtab-rekap-surat" class="hidden space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <div class="relative">
+                      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                      <input type="text" id="search-surat-input" oninput="applySuratFilter()" class="input-field pl-9 text-xs" placeholder="Cari nama/angkatan/alamat..." />
+                  </div>
+                  <select id="filter-surat-kab" onchange="applySuratFilter('kab')" class="input-field text-xs"><option value="">Semua Kabupaten</option></select>
+                  <select id="filter-surat-kec" onchange="applySuratFilter('kec')" class="input-field text-xs"><option value="">Semua Kecamatan</option></select>
+                  <select id="filter-surat-desa" onchange="applySuratFilter('desa')" class="input-field text-xs"><option value="">Semua Desa</option></select>
+                  <select id="filter-surat-status" onchange="applySuratFilter()" class="input-field text-xs">
+                      <option value="">Semua Status Surat</option>
+                      <option value="belum">Belum Diterima</option>
+                      <option value="sudah">Sudah Diterima</option>
+                  </select>
+              </div>
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center px-1 gap-2">
+                  <span id="surat-filter-count" class="text-[10px] font-bold text-indigo-400"></span>
+                  <div class="flex flex-wrap gap-2">
+                      <button onclick="window.exportSuratExcel()" class="btn-md3 btn-md3-emerald-tonal py-1.5 px-3 text-xs" title="Ekspor ke Excel"><i class="fas fa-file-excel mr-1"></i> Ekspor Excel</button>
+                      <button onclick="window.exportSuratPDF()" class="btn-md3 btn-md3-tonal py-1.5 px-3 text-xs" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Ekspor ke PDF"><i class="fas fa-file-pdf mr-1 text-red-400"></i> Ekspor PDF</button>
+                      <button onclick="openModalAlumni()" class="btn-md3 btn-md3-primary py-1.5 px-3 text-xs"><i class="fas fa-plus mr-1"></i> Tambah Alumni</button>
+                  </div>
+              </div>
+              <div class="table-container">
+                  <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left modern-table">
+                        <thead>
+                            <tr>
+                                <th class="p-5">Nama Alumni</th>
+                                <th class="p-5">Alamat Lengkap</th>
+                                <th class="p-5">WhatsApp</th>
+                                <th class="p-5 text-center">Status Surat</th>
+                                <th class="p-5 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="surat-list" class="divide-y divide-white/5 text-sm">
+                            <!-- Skeleton Loading rows -->
+                            <tr>
+                                <td class="p-5">
+                                    <div class="skeleton h-4 w-28 rounded"></div>
+                                    <div class="skeleton h-3 w-16 rounded mt-1"></div>
+                                </td>
+                                <td class="p-5"><div class="skeleton h-3.5 w-44 rounded"></div></td>
+                                <td class="p-5"><div class="skeleton h-3.5 w-28 rounded"></div></td>
+                                <td class="p-5 text-center"><div class="skeleton h-5 w-20 rounded-full mx-auto"></div></td>
+                                <td class="p-5 text-center">
+                                    <div class="flex justify-center gap-1.5">
+                                        <div class="skeleton h-7 w-7 rounded-lg"></div>
+                                        <div class="skeleton h-7 w-7 rounded-lg"></div>
+                                        <div class="skeleton h-7 w-7 rounded-lg"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                  </div>
+              </div>
+          </div>
       </div>
 
-      <div id="tab-rekap" class="tab-content hidden space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div class="relative">
-                  <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                  <input type="text" id="search-wilayah-input" oninput="applyWilayahFilter()" class="input-field pl-9 text-xs" placeholder="Cari nama/angkatan/alamat..." />
-              </div>
-              <select id="filter-kab" onchange="applyWilayahFilter('kab')" class="input-field"><option value="">Semua Kabupaten</option></select>
-              <select id="filter-kec" onchange="applyWilayahFilter('kec')" class="input-field"><option value="">Semua Kecamatan</option></select>
-              <select id="filter-desa" onchange="applyWilayahFilter('desa')" class="input-field"><option value="">Semua Desa</option></select>
-              <div class="flex gap-2">
-                  <button onclick="scanDuplicatesAI()" class="btn-md3 btn-md3-fuchsia flex-1 text-[10px]"><i class="fas fa-magic mr-1"></i> Deteksi Ganda</button>
-                  <button onclick="openModal('modal-export')" class="btn-md3 btn-md3-emerald flex-1 text-[10px]"><i class="fas fa-file-export mr-1"></i> Export Data</button>
-                  <button onclick="resetWilayahFilters()" class="btn-md3 btn-md3-outlined flex-1 text-[10px]"><i class="fas fa-times mr-1"></i> Reset</button>
-              </div>
-          </div>
-          <div class="flex justify-between items-center px-1">
-              <span id="wilayah-filter-count" class="text-[10px] font-bold text-indigo-400"></span>
-          </div>
-          <div class="table-container">
-              <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left modern-table">
-                    <thead>
-                        <tr><th class="p-5">Nama Alumni</th><th class="p-5 text-center">Tahun Lulus</th><th class="p-5">Alamat Lengkap</th><th class="p-5 text-center">Aksi</th></tr>
-                    </thead>
-                    <tbody id="rekap-list" class="divide-y divide-white/5 text-sm">
-                        <!-- Skeleton Loading rows -->
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-28 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-44 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-32 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-36 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                    </tbody>
-                </table>
-              </div>
-          </div>
-      </div>
-
-      <!-- TAB DISTRIBUSI SURAT -->
-      <div id="tab-surat" class="tab-content hidden space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div class="relative">
-                  <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                  <input type="text" id="search-surat-input" oninput="applySuratFilter()" class="input-field pl-9 text-xs" placeholder="Cari nama/angkatan/alamat..." />
-              </div>
-              <select id="filter-surat-kab" onchange="applySuratFilter('kab')" class="input-field text-xs"><option value="">Semua Kabupaten</option></select>
-              <select id="filter-surat-kec" onchange="applySuratFilter('kec')" class="input-field text-xs"><option value="">Semua Kecamatan</option></select>
-              <select id="filter-surat-desa" onchange="applySuratFilter('desa')" class="input-field text-xs"><option value="">Semua Desa</option></select>
-              <select id="filter-surat-status" onchange="applySuratFilter()" class="input-field text-xs">
-                  <option value="">Semua Status Surat</option>
-                  <option value="belum">Belum Diterima</option>
-                  <option value="sudah">Sudah Diterima</option>
-              </select>
-          </div>
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center px-1 gap-2">
-              <span id="surat-filter-count" class="text-[10px] font-bold text-indigo-400"></span>
-              <div class="flex flex-wrap gap-2">
-                  <button onclick="window.exportSuratExcel()" class="btn-md3 btn-md3-emerald-tonal py-1.5 px-3 text-xs" title="Ekspor ke Excel"><i class="fas fa-file-excel mr-1"></i> Ekspor Excel</button>
-                  <button onclick="window.exportSuratPDF()" class="btn-md3 btn-md3-tonal py-1.5 px-3 text-xs" style="color:#ef4444; border-color:rgba(239,68,68,0.2)" title="Ekspor ke PDF"><i class="fas fa-file-pdf mr-1 text-red-400"></i> Ekspor PDF</button>
-                  <button onclick="openModalAlumni()" class="btn-md3 btn-md3-primary py-1.5 px-3 text-xs"><i class="fas fa-plus mr-1"></i> Tambah Alumni</button>
-              </div>
-          </div>
-          <div class="table-container">
-              <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left modern-table">
-                    <thead>
-                        <tr>
-                            <th class="p-5">Nama Alumni</th>
-                            <th class="p-5">Alamat Lengkap</th>
-                            <th class="p-5">WhatsApp</th>
-                            <th class="p-5 text-center">Status Surat</th>
-                            <th class="p-5 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="surat-list" class="divide-y divide-white/5 text-sm">
-                        <!-- Skeleton Loading rows -->
-                        <tr>
-                            <td class="p-5">
-                                <div class="skeleton h-4 w-28 rounded"></div>
-                                <div class="skeleton h-3 w-16 rounded mt-1"></div>
-                            </td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-44 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-28 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-5 w-20 rounded-full mx-auto"></div></td>
-                            <td class="p-5 text-center">
-                                <div class="flex justify-center gap-1.5">
-                                    <div class="skeleton h-7 w-7 rounded-lg"></div>
-                                    <div class="skeleton h-7 w-7 rounded-lg"></div>
-                                    <div class="skeleton h-7 w-7 rounded-lg"></div>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="p-5">
-                                <div class="skeleton h-4 w-32 rounded"></div>
-                                <div class="skeleton h-3 w-20 rounded mt-1"></div>
-                            </td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-36 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-3.5 w-24 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-5 w-20 rounded-full mx-auto"></div></td>
-                            <td class="p-5 text-center">
-                                <div class="flex justify-center gap-1.5">
-                                    <div class="skeleton h-7 w-7 rounded-lg"></div>
-                                    <div class="skeleton h-7 w-7 rounded-lg"></div>
-                                    <div class="skeleton h-7 w-7 rounded-lg"></div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-              </div>
-          </div>
-      </div>
 
       <!-- TAB TUGAS PANITIA -->
       <div id="tab-tugas" class="tab-content hidden space-y-4">
@@ -2222,63 +2170,125 @@
         </div>
       </div>
 
-      <div id="tab-finance" class="tab-content hidden space-y-4">
-          <div class="flex flex-col lg:flex-row justify-between gap-4">
-              <div class="flex gap-2">
-                  <button onclick="openModalFinance()" class="btn-md3 btn-md3-emerald"><i class="fas fa-plus mr-2"></i> Tambah Transaksi</button>
-                  <button id="btn-payment-settings" onclick="openPaymentSettings()" class="hidden btn-md3 btn-md3-amber-tonal"><i class="fas fa-university mr-2"></i> Atur Rekening</button>
-              </div>
-              <div class="flex flex-wrap items-center gap-2">
-                <div class="relative">
-                  <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                  <input type="text" id="search-finance-input" oninput="window.searchFinance(this.value)" placeholder="Cari keterangan..." class="input-field pl-9 w-44 text-xs" />
-                </div>
-                <select id="fin-type-filter" class="input-field text-xs w-auto py-2" onchange="applyFinanceFilter()">
-                    <option value="all">Semua Tipe</option><option value="pemasukan">Masuk</option><option value="pengeluaran">Keluar</option>
-                </select>
-                <button id="btn-send-laporan-wa" onclick="window.openModalLaporanWA()" class="btn-md3 btn-md3-emerald-tonal px-4 hidden" title="Kirim Laporan ke Grup WA"><i class="fab fa-whatsapp"></i> Kirim Laporan</button>
-                <button onclick="window.exportOfficialLPJPDF()" class="btn-md3 btn-md3-danger px-4" title="Cetak Laporan LPJ Resmi Al-Fatah"><i class="fas fa-print mr-1"></i> LPJ Resmi</button>
-                <button onclick="exportFinanceToPDF()" class="btn-md3 btn-md3-outlined px-4" title="Export Laporan PDF"><i class="fas fa-file-pdf"></i> PDF</button>
-              </div>
-          </div>
-          <div class="table-container">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left modern-table">
-                    <thead>
-                        <tr>
-                            <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortFinance('tanggal')">Tanggal <i id="sort-fin-tanggal" class="fas fa-sort sort-icon ml-1"></i></th>
-                            <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortFinance('nama_pembayar')">Keterangan <i id="sort-fin-nama_pembayar" class="fas fa-sort sort-icon ml-1"></i></th>
-                            <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortFinance('nominal')">Nominal <i id="sort-fin-nominal" class="fas fa-sort sort-icon ml-1"></i></th>
-                            <th class="p-5 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="finance-list" class="divide-y divide-white/5 text-sm">
-                        <!-- Skeleton Loading rows -->
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-32 mb-1 rounded"></div><div class="skeleton h-3 w-16 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-24 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-40 mb-1 rounded"></div><div class="skeleton h-3 w-20 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+      <div id="tab-finance" class="tab-content hidden space-y-6">
+          <!-- Sub-Tab Navigation for Keuangan -->
+          <div class="flex border-b border-white/10 gap-6 px-1">
+              <button id="subbtn-finance-kas" onclick="window.switchFinanceSubTab('kas')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-indigo-500 text-white transition-all">
+                  <i class="fas fa-wallet mr-1.5 text-indigo-400"></i> Kas & Donasi
+              </button>
+              <button id="subbtn-finance-rab" onclick="window.switchFinanceSubTab('rab')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                  <i class="fas fa-clipboard-list mr-1.5 text-amber-400"></i> Rencana Anggaran (RAB)
+              </button>
           </div>
 
-        <div class="flex justify-between items-center mt-4 px-2">
-            <span id="page-info-fin" class="text-[10px] text-slate-400 font-bold uppercase">Halaman 1</span>
-            <div class="flex gap-2">
-                <button type="button" onclick="changeFinancePage(-1)" class="btn-md3 btn-md3-outlined px-4 py-1.5 text-xs font-bold text-slate-300 shadow-sm">&lt; Prev</button>
-                <button type="button" onclick="changeFinancePage(1)" class="btn-md3 btn-md3-outlined px-4 py-1.5 text-xs font-bold text-slate-300 shadow-sm">Next &gt;</button>
-            </div>
-        </div>
+          <!-- Sub-Tab Content 1: Kas & Donasi -->
+          <div id="subtab-finance-kas" class="space-y-4">
+              <div class="flex flex-col lg:flex-row justify-between gap-4">
+                  <div class="flex gap-2">
+                      <button onclick="openModalFinance()" class="btn-md3 btn-md3-emerald"><i class="fas fa-plus mr-2"></i> Tambah Transaksi</button>
+                      <button id="btn-payment-settings" onclick="openPaymentSettings()" class="hidden btn-md3 btn-md3-amber-tonal"><i class="fas fa-university mr-2"></i> Atur Rekening</button>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="relative">
+                      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                      <input type="text" id="search-finance-input" oninput="window.searchFinance(this.value)" placeholder="Cari keterangan..." class="input-field pl-9 w-44 text-xs" />
+                    </div>
+                    <select id="fin-type-filter" class="input-field text-xs w-auto py-2" onchange="applyFinanceFilter()">
+                        <option value="all">Semua Tipe</option><option value="pemasukan">Masuk</option><option value="pengeluaran">Keluar</option>
+                    </select>
+                    <button id="btn-send-laporan-wa" onclick="window.openModalLaporanWA()" class="btn-md3 btn-md3-emerald-tonal px-4 hidden" title="Kirim Laporan ke Grup WA"><i class="fab fa-whatsapp"></i> Kirim Laporan</button>
+                    <button onclick="window.exportOfficialLPJPDF()" class="btn-md3 btn-md3-danger px-4" title="Cetak Laporan LPJ Resmi Al-Fatah"><i class="fas fa-print mr-1"></i> LPJ Resmi</button>
+                    <button onclick="exportFinanceToPDF()" class="btn-md3 btn-md3-outlined px-4" title="Export Laporan PDF"><i class="fas fa-file-pdf"></i> PDF</button>
+                  </div>
+              </div>
+              <div class="table-container">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left modern-table">
+                        <thead>
+                            <tr>
+                                <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortFinance('tanggal')">Tanggal <i id="sort-fin-tanggal" class="fas fa-sort sort-icon ml-1"></i></th>
+                                <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortFinance('nama_pembayar')">Keterangan <i id="sort-fin-nama_pembayar" class="fas fa-sort sort-icon ml-1"></i></th>
+                                <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortFinance('nominal')">Nominal <i id="sort-fin-nominal" class="fas fa-sort sort-icon ml-1"></i></th>
+                                <th class="p-5 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finance-list" class="divide-y divide-white/5 text-sm">
+                            <!-- Skeleton Loading rows -->
+                            <tr>
+                                <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
+                                <td class="p-5"><div class="skeleton h-4 w-32 mb-1 rounded"></div><div class="skeleton h-3 w-16 rounded"></div></td>
+                                <td class="p-5"><div class="skeleton h-4 w-24 rounded"></div></td>
+                                <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                            </tr>
+                            <tr>
+                                <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
+                                <td class="p-5"><div class="skeleton h-4 w-40 mb-1 rounded"></div><div class="skeleton h-3 w-20 rounded"></div></td>
+                                <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
+                                <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+              </div>
+              <div class="flex justify-between items-center mt-4 px-2">
+                  <span id="page-info-fin" class="text-[10px] text-slate-400 font-bold uppercase">Halaman 1</span>
+                  <div class="flex gap-2">
+                      <button type="button" onclick="changeFinancePage(-1)" class="btn-md3 btn-md3-outlined px-4 py-1.5 text-xs font-bold text-slate-300 shadow-sm">&lt; Prev</button>
+                      <button type="button" onclick="changeFinancePage(1)" class="btn-md3 btn-md3-outlined px-4 py-1.5 text-xs font-bold text-slate-300 shadow-sm">Next &gt;</button>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Sub-Tab Content 2: Rencana Anggaran (RAB) -->
+          <div id="subtab-finance-rab" class="hidden space-y-4">
+              <div class="flex flex-col lg:flex-row justify-between gap-4">
+                  <div class="flex flex-wrap gap-2 items-center">
+                      <button onclick="openModalRAB()" class="btn-md3 btn-md3-primary"><i class="fas fa-plus mr-2"></i> Tambah Item RAB</button>
+                      <button onclick="exportRABToPDF()" class="btn-md3 btn-md3-amber-tonal"><i class="fas fa-file-pdf mr-2"></i> Cetak RAB PDF</button>
+                      <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="text" id="search-rab-input" oninput="window.searchRAB(this.value)" placeholder="Cari item RAB..." class="input-field pl-9 w-40 text-xs" />
+                      </div>
+                  </div>
+                  <div class="glass px-6 py-2 rounded-2xl border border-indigo-500/30 flex items-center justify-between min-w-[250px] shadow-sm">
+                      <span class="text-[10px] text-slate-400 font-bold uppercase mr-2">Total Anggaran:</span>
+                      <span class="text-lg font-black text-indigo-400" id="rab-total-display">Rp 0</span>
+                  </div>
+              </div>
+              <div class="table-container">
+                  <div class="overflow-x-auto custom-scrollbar">
+                      <table class="w-full text-left modern-table">
+                          <thead>
+                              <tr><th class="p-5">Nama Keperluan</th><th class="p-5">Anggaran</th><th class="p-5 text-center">Status</th><th class="p-5 text-center">Aksi</th></tr>
+                          </thead>
+                          <tbody id="rab-list" class="divide-y divide-white/5 text-sm">
+                              <!-- Skeleton Loading rows -->
+                              <tr>
+                                  <td class="p-5"><div class="skeleton h-4 w-36 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-4 w-24 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-5 w-20 rounded-full mx-auto"></div></td>
+                                  <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                              </tr>
+                              <tr>
+                                  <td class="p-5"><div class="skeleton h-4 w-28 rounded"></div></td>
+                                  <td class="p-5"><div class="skeleton h-4 w-20 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-5 w-20 rounded-full mx-auto"></div></td>
+                                  <td class="p-5 text-center"><div class="flex justify-center gap-1.5"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
+                              </tr>
+                          </tbody>
+                      </table>
+                  </div>
+              </div>
+              <div class="flex justify-between items-center mt-4 px-2">
+                  <span id="page-info-rab" class="text-[10px] text-slate-400 font-bold uppercase">Halaman 1</span>
+                  <div class="flex gap-2">
+                      <button type="button" onclick="changeRABPage(-1)" class="btn-md3 btn-md3-outlined px-4 py-1.5 text-xs font-bold text-slate-300 shadow-sm">&lt; Prev</button>
+                      <button type="button" onclick="changeRABPage(1)" class="btn-md3 btn-md3-outlined px-4 py-1.5 text-xs font-bold text-slate-300 shadow-sm">Next &gt;</button>
+                  </div>
+              </div>
+          </div>
       </div>
+
 <div id="tab-guestbook" class="tab-content hidden space-y-4">
         <div class="table-container">
             <div class="overflow-x-auto custom-scrollbar">
@@ -2907,7 +2917,315 @@
                   <i class="fas fa-plus"></i> Tambah ke Daftar
                 </button>
               </div>
+          <!-- TAB SETTINGS: Pengaturan & Sistem -->
+          <!-- TAB SETTINGS: Pengaturan & Sistem (Pusat Pengaturan Terpadu) -->
+          <div id="tab-whatsapp" class="tab-content hidden space-y-6">
+            <!-- Sub-Tab Navigation for WhatsApp Portal -->
+            <div class="flex border-b border-white/10 gap-6 px-1">
+              <button id="subbtn-whatsapp-center" onclick="window.switchWhatsappSubTab('center')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-indigo-500 text-white transition-all">
+                <i class="fab fa-whatsapp mr-1.5 text-emerald-400"></i> WhatsApp Center
+              </button>
+              <button id="subbtn-whatsapp-groups" onclick="window.switchWhatsappSubTab('groups')" class="text-xs font-bold uppercase tracking-wider pb-3 border-b-2 border-transparent text-slate-400 hover:text-white transition-all">
+                <i class="fas fa-users-cog mr-1.5 text-indigo-400"></i> Grup & Channel WA
+              </button>
+            </div>
 
+            <!-- Sub-Tab Content 1: WhatsApp Center -->
+            <div id="subtab-whatsapp-center" class="space-y-6">
+              <!-- Header Panel -->
+              <div class="premium-card p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl shadow-lg border border-emerald-500/20">
+                    <i class="fab fa-whatsapp"></i>
+                  </div>
+                  <div>
+                    <h3 id="wa-header-title" class="text-sm font-black uppercase text-white tracking-wider">WhatsApp Gateway</h3>
+                    <p id="wa-header-desc" class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Manajemen Koneksi Bot Server & API Gateway</p>
+                    <div id="wa-active-provider-info" class="text-[10px] text-indigo-400 font-bold uppercase mt-2.5 flex items-center gap-1.5">
+                      <i class="fas fa-info-circle animate-pulse"></i>
+                      <span>WhatsApp Aktif: Mendeteksi...</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Status Chips -->
+                <div id="wa-status-chips" class="flex flex-wrap gap-2">
+                  <div id="wa-node-status" class="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+                    <div class="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
+                    <span class="font-bold uppercase text-[9px] tracking-wider">NodeJS Loading</span>
+                  </div>
+                  <div id="wa-local-api-status" class="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+                    <div id="wa-local-dot" class="w-2 h-2 rounded-full bg-slate-500"></div>
+                    <span id="wa-local-text" class="font-bold uppercase text-[9px] tracking-wider">API LOKAL: CHECKING</span>
+                  </div>
+                  <div id="wa-connection-status" class="flex items-center gap-2 bg-black/30 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-slate-300">
+                    <i class="fab fa-whatsapp text-emerald-400"></i>
+                    <span class="font-bold uppercase text-[9px] tracking-wider">OFFLINE</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Segmented Control for Local vs Cloud Mode -->
+              <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 max-w-md">
+                <button onclick="window.switchWaModeTab('local')" id="btn-wa-mode-local" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer bg-indigo-600 text-white shadow-md">
+                  <i class="fas fa-server mr-1.5"></i> Server HP Lokal
+                </button>
+                <button onclick="window.switchWaModeTab('cloud')" id="btn-wa-mode-cloud" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200">
+                  <i class="fas fa-cloud mr-1.5"></i> API Gateway Cloud
+                </button>
+              </div>
+
+              <!-- WA Mode 1: Local NodeJS Bot Server -->
+              <div id="wa-mode-local-content" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left Column: Bot Connection Console -->
+                <div class="space-y-6">
+                  <!-- QR Code & Status Panel -->
+                  <div class="premium-card p-6 flex flex-col items-center text-center space-y-4">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 w-full border-b border-white/5 pb-2 text-left"><i class="fas fa-qrcode mr-1.5 text-indigo-400"></i> Koneksi QR Code</h4>
+                    
+                    <div id="wa-qr-container" class="w-64 h-64 bg-slate-900/55 rounded-3xl border border-white/10 flex items-center justify-center relative overflow-hidden group shadow-inner">
+                      <div id="wa-qr-code" class="p-2 bg-white rounded-2xl shadow-xl transition-all duration-300">
+                        <!-- Dynamically injected canvas or placeholder -->
+                        <div class="w-56 h-56 flex flex-col items-center justify-center text-slate-500">
+                          <i class="fas fa-qrcode text-5xl mb-3 animate-pulse"></i>
+                          <p class="text-[10px] font-bold uppercase tracking-wider">QR Code Belum Dimuat</p>
+                        </div>
+                      </div>
+                      
+                      <!-- Connection Success overlay -->
+                      <div id="wa-connected-overlay" class="hidden absolute inset-0 bg-[#060813]/90 flex flex-col items-center justify-center p-6 text-center transition-all duration-300">
+                        <div class="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-4xl mb-4 border border-emerald-500/20 shadow-lg shadow-emerald-500/10 scale-in">
+                          <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h5 class="text-sm font-black text-white leading-tight">WhatsApp Terkoneksi!</h5>
+                        <p class="text-[10px] text-emerald-400 font-bold uppercase mt-1">Bot Siap Mengirim Pesan</p>
+                        
+                        <div class="mt-6 w-full space-y-2 text-[10px] text-slate-400 font-medium">
+                          <div class="flex justify-between border-b border-white/5 pb-1"><span>Nama Device:</span><span id="wa-device-name" class="font-bold text-slate-200">-</span></div>
+                          <div class="flex justify-between"><span>Nomor Bot:</span><span id="wa-device-number" class="font-bold text-slate-200">-</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- QR Helper Text -->
+                    <div class="text-[10px] text-slate-400 font-medium leading-relaxed max-w-sm">
+                      <p id="wa-qr-instruction">1. Buka WhatsApp di ponsel Anda.<br>2. Ketuk Menu atau Pengaturan &gt; Perangkat Tertaut.<br>3. Klik Hubungkan Perangkat dan arahkan kamera ke kode QR di atas.</p>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="w-full flex gap-2 pt-2 border-t border-white/5">
+                      <button onclick="window.startWaBotServer()" class="btn-md3 btn-md3-primary flex-1"><i class="fas fa-play mr-1.5"></i> Nyalakan Bot</button>
+                      <button onclick="window.stopWaBotServer()" class="btn-md3 btn-md3-danger-tonal flex-1"><i class="fas fa-power-off mr-1.5"></i> Putus Bot</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Column: Settings & Diagnostics -->
+                <div class="space-y-6">
+                  <!-- Server settings -->
+                  <div class="premium-card p-6 flex flex-col space-y-4">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 border-b border-white/5 pb-2"><i class="fas fa-cog mr-1.5 text-indigo-400"></i> Konfigurasi Koneksi Lokal</h4>
+                    
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">URL Server Bot NodeJS Lokal</label>
+                        <div class="flex gap-2">
+                          <div class="relative flex-1">
+                            <input type="text" id="set-wa-local-url" placeholder="Contoh: http://localhost:8000" class="input-field text-xs py-2.5 pl-3" />
+                          </div>
+                          <button onclick="window.saveWaLocalConfig()" class="btn-md3 btn-md3-outlined px-4 py-2 text-xs font-bold shadow-sm">Simpan</button>
+                        </div>
+                        <p class="text-[8px] text-slate-500 mt-1.5 font-semibold leading-tight">Masukkan alamat server nodejs bot lokal Anda. Kosongkan jika server bot berjalan di port default (http://localhost:8000).</p>
+                      </div>
+                      
+                      <div class="pt-2 border-t border-white/5 flex justify-between items-center">
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Log Aktivitas Server</span>
+                        <button onclick="window.clearWaLocalLogs()" class="text-slate-500 hover:text-slate-300 font-bold uppercase tracking-wider text-[8px]">Hapus Log</button>
+                      </div>
+                      <div id="wa-local-logs" class="bg-black/60 border border-white/5 rounded-2xl p-4 font-mono text-[9px] text-slate-400 h-40 overflow-y-auto custom-scrollbar whitespace-pre-wrap select-text leading-relaxed">
+                        <!-- Injected via JS -->
+                        [Sistem] Menunggu server bot dijalankan...
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- WA Mode 2: Cloud API Gateway (Fonnte/Waba) -->
+              <div id="wa-mode-cloud-content" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left Column: Cloud Provider settings -->
+                <div class="space-y-6">
+                  <div class="premium-card p-6 flex flex-col space-y-4">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 border-b border-white/5 pb-2"><i class="fas fa-cloud-upload-alt mr-1.5 text-indigo-400"></i> Pengaturan Cloud API Gateway</h4>
+                    
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Penyedia API Gateway</label>
+                        <select id="set-wa-cloud-provider" onchange="window.toggleWaCloudProviderFields()" class="input-field text-xs py-2.5">
+                          <option value="fonnte">Fonnte (Direkomendasikan)</option>
+                          <option value="starsender">StarSender</option>
+                          <option value="custom">Custom API (HTTP Post)</option>
+                        </select>
+                      </div>
+                      
+                      <div id="field-cloud-token">
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Token API / Api Key</label>
+                        <input type="password" id="set-wa-cloud-token" placeholder="Masukkan token API gateway Anda" class="input-field text-xs py-2.5" />
+                      </div>
+                      
+                      <div id="field-cloud-url" class="hidden">
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Custom Endpoint URL</label>
+                        <input type="text" id="set-wa-cloud-url" placeholder="Contoh: https://api.domain.com/send-message" class="input-field text-xs py-2.5" />
+                      </div>
+                      
+                      <div class="pt-2">
+                        <button onclick="window.saveWaCloudConfig()" class="btn-md3 btn-md3-primary w-full"><i class="fas fa-save mr-1.5"></i> Simpan Konfigurasi Cloud</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Right Column: Cloud Diagnostics -->
+                <div class="space-y-6">
+                  <div class="premium-card p-6 flex flex-col space-y-4">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 border-b border-white/5 pb-2"><i class="fas fa-info-circle mr-1.5 text-indigo-400"></i> Informasi Gateway Cloud</h4>
+                    
+                    <div id="wa-cloud-info-panel" class="space-y-3 text-[10px] text-slate-400 font-medium">
+                      <div class="flex justify-between border-b border-white/5 pb-1"><span>Status Akun:</span><span id="wa-cloud-status" class="font-bold text-yellow-400">MEMUAT...</span></div>
+                      <div class="flex justify-between border-b border-white/5 pb-1"><span>Nama Pengguna:</span><span id="wa-cloud-user" class="font-bold text-slate-200">-</span></div>
+                      <div class="flex justify-between border-b border-white/5 pb-1"><span>Nomor Terhubung:</span><span id="wa-cloud-device" class="font-bold text-slate-200">-</span></div>
+                      <div class="flex justify-between border-b border-white/5 pb-1"><span>Kedaluwarsa Paket:</span><span id="wa-cloud-expired" class="font-bold text-slate-200">-</span></div>
+                      <div class="flex justify-between"><span>Kuota Pesan Hari Ini:</span><span id="wa-cloud-quota" class="font-bold text-slate-200">-</span></div>
+                      
+                      <div class="pt-4 border-t border-white/5 flex gap-2">
+                        <button onclick="window.checkWaCloudStatus()" class="btn-md3 btn-md3-outlined w-full py-2 text-[10px] font-bold"><i class="fas fa-sync mr-1.5"></i> Perbarui Status</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Campaign Section (Always Visible at bottom of Whatsapp Center) -->
+              <div class="premium-card p-6 flex flex-col space-y-4">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                  <h4 class="text-xs font-black uppercase tracking-wider text-white"><i class="fas fa-calendar-alt mr-1.5 text-indigo-400"></i> Kampanye Broadcast Terjadwal</h4>
+                </div>
+                
+                <div class="overflow-x-auto custom-scrollbar">
+                  <table class="w-full text-left modern-table">
+                    <thead class="bg-white/5 text-[9px] font-black text-slate-500 uppercase">
+                      <tr>
+                        <th class="p-3">Nama Kampanye</th>
+                        <th class="p-3">Waktu Rencana</th>
+                        <th class="p-3 text-center">Pesan</th>
+                        <th class="p-3 text-center">Target (P/F/T)</th>
+                        <th class="p-3 text-center">Status</th>
+                        <th class="p-3 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="wa-campaigns-list" class="divide-y divide-white/5 text-xs text-slate-300">
+                      <!-- Dynamically populated via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-Tab Content 2: Grup & Channel WA -->
+            <div id="subtab-whatsapp-groups" class="hidden space-y-6">
+              <!-- Segmented Control Tabs (MD3 style) for Groups/Channels vs Sync -->
+              <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 max-w-md">
+                <button onclick="window.switchGroupTab('registered')" id="tab-btn-registered" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer bg-indigo-600 text-white shadow-md">
+                  <i class="fas fa-list-ul mr-1.5"></i> Grup Terdaftar
+                </button>
+                <button onclick="window.switchGroupTab('sync')" id="tab-btn-sync" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200">
+                  <i class="fab fa-whatsapp mr-1.5"></i> Sinkronisasi WA
+                </button>
+              </div>
+
+              <!-- Content: Registered Groups -->
+              <div id="tab-content-registered" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Left Column: List of Registered Groups & Channels -->
+                <div class="space-y-6">
+                  <!-- Registered Groups Card -->
+                  <div class="premium-card p-6 flex flex-col space-y-4">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center justify-between border-b border-white/5 pb-2">
+                      <span class="flex items-center gap-1.5"><i class="fas fa-users"></i> Grup Terdaftar</span>
+                      <span id="registered-groups-count" class="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">0</span>
+                    </h4>
+                    <div id="wa-groups-list" class="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                      <p class="text-xs text-slate-500 text-center italic py-4">Belum ada grup terdaftar.</p>
+                    </div>
+                  </div>
+
+                  <!-- Registered Channels Card -->
+                  <div class="premium-card p-6 flex flex-col space-y-4">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center justify-between border-b border-white/5 pb-2">
+                      <span class="flex items-center gap-1.5"><i class="fas fa-bullhorn"></i> Saluran / Channel Terdaftar</span>
+                      <span id="registered-channels-count" class="text-[9px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-bold">0</span>
+                    </h4>
+                    <div id="wa-channels-list" class="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                      <p class="text-xs text-slate-500 text-center italic py-4">Belum ada saluran terdaftar.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Column: Add Group/Channel Form -->
+                <div class="premium-card p-6 flex flex-col space-y-4">
+                  <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5 border-b border-white/5 pb-2">
+                    <i class="fas fa-plus-circle text-indigo-400"></i> Tambah Grup / Channel Baru
+                  </h4>
+                  <div class="text-[10px] text-amber-400 font-bold bg-amber-400/10 p-3 rounded-xl border border-amber-400/20 flex items-start gap-2">
+                    <i class="fas fa-info-circle mt-0.5 text-xs"></i>
+                    <span>ID wajib berakhiran <strong>@g.us</strong> (grup) atau <strong>@newsletter</strong> (channel)</span>
+                  </div>
+                  <form onsubmit="window.handleWaGroupSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="set-wagroup-id" />
+                    <div class="space-y-3">
+                      <div>
+                        <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Nama Grup / Channel</label>
+                        <input type="text" id="set-wagroup-name" class="input-field text-xs py-3 px-4 w-full mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="Nama Grup / Channel" required />
+                      </div>
+                      <div>
+                        <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">ID JID (@g.us atau @newsletter)</label>
+                        <input type="text" id="set-wagroup-jid" class="input-field text-xs py-3 px-4 w-full mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="ID JID (@g.us atau @newsletter)" required />
+                      </div>
+                    </div>
+                    <button type="submit" class="btn-md3 btn-md3-primary w-full mt-4">
+                      <i class="fas fa-save mr-1.5"></i> Simpan Grup / Channel
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Content: WhatsApp Sync -->
+              <div id="tab-content-sync" class="hidden premium-card p-6 flex flex-col space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
+                  <div class="flex gap-3 flex-wrap">
+                    <button onclick="window.fetchGroupsFromWA()" id="btn-fetch-wa-groups" class="btn-md3 btn-md3-emerald flex-1 min-w-[140px]">
+                      <i class="fas fa-users text-sm mr-1.5"></i> Ambil Grup WA
+                    </button>
+                    <button onclick="window.fetchChannelsFromWA()" id="btn-fetch-wa-channels" class="btn-md3 btn-md3-purple flex-1 min-w-[140px]">
+                      <i class="fas fa-bullhorn text-sm mr-1.5"></i> Ambil Channel
+                    </button>
+                    <button onclick="window.importSelectedWaGroups()" id="btn-import-wa-groups" class="btn-md3 btn-md3-primary flex-1 min-w-[140px] hidden">
+                      <i class="fas fa-download text-xs mr-1.5"></i> Impor Terpilih (<span id="selected-sync-count">0</span>)
+                    </button>
+                  </div>
+                  
+                  <div class="relative">
+                    <input type="text" id="wa-groups-search" oninput="window.filterWaGroups()" class="input-field py-2.5 pl-9 pr-3 text-xs w-full bg-black/40 border border-white/10 text-slate-200" placeholder="Cari nama grup..." />
+                    <i class="fas fa-search absolute left-3 top-3.5 text-[10px] text-slate-500"></i>
+                  </div>
+                </div>
+
+                <div id="wa-sync-groups-list" class="space-y-2 mb-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1 min-h-[150px]">
+                  <div class="flex flex-col items-center justify-center py-12 text-center text-slate-500">
+                    <i class="fab fa-whatsapp text-slate-600 text-3xl mb-2"></i>
+                    <p class="text-xs italic">Silakan klik "Ambil Grup" atau "Ambil Channel" untuk menyinkronkan data.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -2938,125 +3256,7 @@
 
       </div>
 
-      <!-- TAB WA GROUPS: Kelola Grup & Channel WA -->
-      <div id="tab-wa-groups" class="tab-content hidden space-y-6">
-        
-        <!-- Header Panel -->
-        <div class="premium-card p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl shadow-lg border border-indigo-500/20">
-              <i class="fas fa-users-cog"></i>
-            </div>
-            <div>
-              <h3 class="text-sm font-black uppercase text-white tracking-wider">Grup & Channel WA</h3>
-              <p class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Kelola target broadcast grup atau channel WhatsApp</p>
-            </div>
-          </div>
-        </div>
 
-        <!-- Segmented Control Tabs (MD3 style) -->
-        <div class="flex bg-black/40 p-1.5 rounded-2xl border border-white/5 max-w-md">
-          <button onclick="switchGroupTab('registered')" id="tab-btn-registered" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer bg-indigo-600 text-white shadow-md">
-            <i class="fas fa-list-ul mr-1.5"></i> Grup Terdaftar
-          </button>
-          <button onclick="switchGroupTab('sync')" id="tab-btn-sync" class="flex-1 py-2.5 text-center text-xs font-bold rounded-xl transition-all cursor-pointer text-slate-400 hover:text-slate-200">
-            <i class="fab fa-whatsapp mr-1.5"></i> Sinkronisasi WA
-          </button>
-        </div>
-
-        <!-- Content: Registered Groups -->
-        <div id="tab-content-registered" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Left Column: List of Registered Groups & Channels -->
-          <div class="space-y-6">
-            <!-- Registered Groups Card -->
-            <div class="premium-card p-6 flex flex-col space-y-4">
-              <h4 class="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center justify-between border-b border-white/5 pb-2">
-                <span class="flex items-center gap-1.5"><i class="fas fa-users"></i> Grup Terdaftar</span>
-                <span id="registered-groups-count" class="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-bold">0</span>
-              </h4>
-              <div id="wa-groups-list" class="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
-                <p class="text-xs text-slate-500 text-center italic py-4">Belum ada grup terdaftar.</p>
-              </div>
-            </div>
-
-            <!-- Registered Channels Card -->
-            <div class="premium-card p-6 flex flex-col space-y-4">
-              <h4 class="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center justify-between border-b border-white/5 pb-2">
-                <span class="flex items-center gap-1.5"><i class="fas fa-bullhorn"></i> Saluran / Channel Terdaftar</span>
-                <span id="registered-channels-count" class="text-[9px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-bold">0</span>
-              </h4>
-              <div id="wa-channels-list" class="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
-                <p class="text-xs text-slate-500 text-center italic py-4">Belum ada saluran terdaftar.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Column: Add Group/Channel Form -->
-          <div class="premium-card p-6 flex flex-col space-y-4">
-            <h4 class="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5 border-b border-white/5 pb-2">
-              <i class="fas fa-plus-circle text-indigo-400"></i> Tambah Grup / Channel Baru
-            </h4>
-            <div class="text-[10px] text-amber-400 font-bold bg-amber-400/10 p-3 rounded-xl border border-amber-400/20 flex items-start gap-2">
-              <i class="fas fa-info-circle mt-0.5 text-xs"></i>
-              <span>ID wajib berakhiran <strong>@g.us</strong> (grup) atau <strong>@newsletter</strong> (channel)</span>
-            </div>
-            <form onsubmit="handleWaGroupSubmit(event)" class="space-y-4">
-              <input type="hidden" id="set-wagroup-id" />
-              <div class="space-y-3">
-                <div>
-                  <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Nama Grup / Channel</label>
-                  <input type="text" id="set-wagroup-name" class="input-field text-xs py-3 px-4 w-full mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="Nama Grup / Channel" required />
-                </div>
-                <div>
-                  <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">ID JID (@g.us atau @newsletter)</label>
-                  <input type="text" id="set-wagroup-jid" class="input-field text-xs py-3 px-4 w-full mt-1 bg-black/40 border border-white/10 text-slate-200" placeholder="ID JID (@g.us atau @newsletter)" required />
-                </div>
-              </div>
-              <button type="submit" class="btn-md3 btn-md3-primary w-full mt-4">
-                <i class="fas fa-save mr-1.5"></i> Simpan Grup / Channel
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <!-- Content: WhatsApp Sync -->
-        <div id="tab-content-sync" class="hidden premium-card p-6 flex flex-col space-y-4">
-          <div class="flex gap-3 flex-wrap">
-            <button onclick="fetchGroupsFromWA()" id="btn-fetch-wa-groups" class="btn-md3 btn-md3-emerald flex-1 min-w-[140px]">
-              <i class="fas fa-users text-sm mr-1.5"></i> Ambil Grup WA
-            </button>
-            <button onclick="window.fetchChannelsFromWA()" id="btn-fetch-wa-channels" class="btn-md3 btn-md3-purple flex-1 min-w-[140px]">
-              <i class="fas fa-bullhorn text-sm mr-1.5"></i> Ambil Channel
-            </button>
-            <button onclick="importSelectedWaGroups()" id="btn-import-wa-groups" class="btn-md3 btn-md3-primary flex-1 min-w-[140px] hidden">
-              <i class="fas fa-download text-xs mr-1.5"></i> Impor Terpilih (<span id="selected-sync-count">0</span>)
-            </button>
-          </div>
-
-          <div class="text-[10px] text-slate-400 mb-2 font-bold px-1 flex justify-between items-center">
-            <span class="flex items-center gap-1.5"><i class="fas fa-list text-slate-500"></i> Daftar Grup / Channel di WhatsApp Anda:</span>
-            <button onclick="toggleSelectAllSyncGroups()" id="btn-select-all-sync" class="text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-wider text-[9px] hidden">
-              Pilih Semua
-            </button>
-          </div>
-          
-          <!-- SEARCH BAR UNTUK GRUP WA -->
-          <div id="wa-groups-search-container" class="hidden mb-3">
-            <div class="relative">
-              <input type="text" id="wa-groups-search" oninput="window.filterWaGroups()" class="input-field py-2.5 pl-9 pr-3 text-xs w-full bg-black/40 border border-white/10 text-slate-200" placeholder="Cari nama grup..." />
-              <i class="fas fa-search absolute left-3 top-3.5 text-[10px] text-slate-500"></i>
-            </div>
-          </div>
-
-          <div id="wa-sync-groups-list" class="space-y-2 mb-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-1 min-h-[150px]">
-            <div class="flex flex-col items-center justify-center py-12 text-center text-slate-500">
-              <i class="fab fa-whatsapp text-slate-600 text-3xl mb-2"></i>
-              <p class="text-xs italic">Silakan klik "Ambil Grup" atau "Ambil Channel" untuk menyinkronkan data.</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
 
       <!-- TAB SETTINGS: Pengaturan & Sistem -->
       <!-- TAB SETTINGS: Pengaturan & Sistem (Pusat Pengaturan Terpadu) -->
@@ -3989,10 +4189,6 @@
             <i class="fas fa-wallet text-indigo-400 text-sm mb-1"></i>
             <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Kas Keuangan</span>
           </div>
-          <div id="btn-mobile-rab" onclick="window.switchMobileTab('rab')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
-            <i class="fas fa-file-invoice-dollar text-amber-400 text-sm mb-1"></i>
-            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Anggaran RAB</span>
-          </div>
           <div id="btn-mobile-logistik" onclick="window.switchMobileTab('logistik')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
             <i class="fas fa-box text-fuchsia-400 text-sm mb-1"></i>
             <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Logistik</span>
@@ -4020,11 +4216,7 @@
           </div>
           <div onclick="window.switchMobileTab('rekap')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
             <i class="fas fa-map-marked-alt text-teal-400 text-sm mb-1"></i>
-            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Wilayah</span>
-          </div>
-          <div id="btn-mobile-surat" onclick="window.switchMobileTab('surat')" class="hidden flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
-            <i class="fas fa-envelope text-indigo-400 text-sm mb-1"></i>
-            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Surat</span>
+            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Wilayah & Surat</span>
           </div>
           <a href="surat-undangan.html" class="flex flex-col items-center justify-center p-3 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center min-h-[72px]" style="text-decoration: none;">
             <i class="fas fa-envelope-open-text text-purple-400 text-sm mb-1"></i>
@@ -4041,7 +4233,7 @@
         <div class="grid grid-cols-3 gap-2">
           <div id="btn-mobile-whatsapp" onclick="window.switchMobileTab('whatsapp')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
             <i class="fab fa-whatsapp text-green-400 text-sm mb-1"></i>
-            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">WhatsApp Center</span>
+            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">WhatsApp Portal</span>
           </div>
           <div id="btn-mobile-settings" onclick="window.switchMobileTab('settings'); window.toggleMobileMoreSheet(false);" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px] relative">
             <i class="fas fa-sliders-h text-indigo-400 text-sm mb-1"></i>

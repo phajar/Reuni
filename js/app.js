@@ -402,6 +402,119 @@ window.switchSettingsSubTab = (subTabName) => {
       if (typeof window.renderAuditLog === 'function') window.renderAuditLog();
   }
 };
+
+window.switchFinanceSubTab = (subTabId) => {
+  const isKas = subTabId === 'kas';
+  const kasBtn = document.getElementById("subbtn-finance-kas");
+  const rabBtn = document.getElementById("subbtn-finance-rab");
+  const kasContent = document.getElementById("subtab-finance-kas");
+  const rabContent = document.getElementById("subtab-finance-rab");
+
+  if (isKas) {
+    if (kasBtn) {
+      kasBtn.classList.remove("border-transparent", "text-slate-400");
+      kasBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (rabBtn) {
+      rabBtn.classList.remove("border-indigo-500", "text-white");
+      rabBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (kasContent) kasContent.classList.remove("hidden");
+    if (rabContent) rabContent.classList.add("hidden");
+    if (typeof window.renderFinanceTable === 'function') window.renderFinanceTable();
+  } else {
+    if (rabBtn) {
+      rabBtn.classList.remove("border-transparent", "text-slate-400");
+      rabBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (kasBtn) {
+      kasBtn.classList.remove("border-indigo-500", "text-white");
+      kasBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (rabContent) rabContent.classList.remove("hidden");
+    if (kasContent) kasContent.classList.add("hidden");
+    if (typeof window.renderRABTable === 'function') window.renderRABTable();
+  }
+};
+
+window.switchRekapSubTab = (subTabId) => {
+  const isWilayah = subTabId === 'wilayah';
+  const wilayahBtn = document.getElementById("subbtn-rekap-wilayah");
+  const suratBtn = document.getElementById("subbtn-rekap-surat");
+  const wilayahContent = document.getElementById("subtab-rekap-wilayah");
+  const suratContent = document.getElementById("subtab-rekap-surat");
+
+  if (isWilayah) {
+    if (wilayahBtn) {
+      wilayahBtn.classList.remove("border-transparent", "text-slate-400");
+      wilayahBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (suratBtn) {
+      suratBtn.classList.remove("border-indigo-500", "text-white");
+      suratBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (wilayahContent) wilayahContent.classList.remove("hidden");
+    if (suratContent) suratContent.classList.add("hidden");
+    if (typeof window.renderRekapWilayah === 'function') window.renderRekapWilayah();
+  } else {
+    if (suratBtn) {
+      suratBtn.classList.remove("border-transparent", "text-slate-400");
+      suratBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (wilayahBtn) {
+      wilayahBtn.classList.remove("border-indigo-500", "text-white");
+      wilayahBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (suratContent) suratContent.classList.remove("hidden");
+    if (wilayahContent) wilayahContent.classList.add("hidden");
+    if (typeof window.renderDistribusiSurat === 'function') window.renderDistribusiSurat();
+  }
+};
+
+window.switchWhatsappSubTab = (subTabId) => {
+  const isCenter = subTabId === 'center';
+  const centerBtn = document.getElementById("subbtn-whatsapp-center");
+  const groupsBtn = document.getElementById("subbtn-whatsapp-groups");
+  const centerContent = document.getElementById("subtab-whatsapp-center");
+  const groupsContent = document.getElementById("subtab-whatsapp-groups");
+
+  if (isCenter) {
+    if (centerBtn) {
+      centerBtn.classList.remove("border-transparent", "text-slate-400");
+      centerBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (groupsBtn) {
+      groupsBtn.classList.remove("border-indigo-500", "text-white");
+      groupsBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (centerContent) centerContent.classList.remove("hidden");
+    if (groupsContent) groupsContent.classList.add("hidden");
+    
+    if (typeof window.openWASettingsWeb === 'function') {
+        window.openWASettingsWeb();
+    } else if (typeof window.loadWaApiSettingsIntoTab === 'function') {
+        window.loadWaApiSettingsIntoTab();
+    }
+    if (typeof window.checkLocalWaStatus === 'function') {
+        window.checkLocalWaStatus();
+    }
+  } else {
+    if (groupsBtn) {
+      groupsBtn.classList.remove("border-transparent", "text-slate-400");
+      groupsBtn.classList.add("border-indigo-500", "text-white");
+    }
+    if (centerBtn) {
+      centerBtn.classList.remove("border-indigo-500", "text-white");
+      centerBtn.classList.add("border-transparent", "text-slate-400");
+    }
+    if (groupsContent) groupsContent.classList.remove("hidden");
+    if (centerContent) centerContent.classList.add("hidden");
+    
+    if (typeof window.loadWaGroups === 'function') {
+        window.loadWaGroups();
+    }
+  }
+};
 window.openImageModal = (url) => {
   if (!url || url === "null" || url === "undefined")
     return window.notify("Tidak ada bukti gambar.", "error");
@@ -559,6 +672,52 @@ window.toggleSidebar = () => {
 
 // FUNGSI GANTI TAB
 window.showTab = (tabId) => {
+  // REDIRECTS FOR MERGED TABS
+  if (tabId === 'rab') {
+      window.showTab('finance');
+      window.switchFinanceSubTab('rab');
+      return;
+  }
+  if (tabId === 'surat') {
+      window.showTab('rekap');
+      window.switchRekapSubTab('surat');
+      return;
+  }
+  if (tabId === 'wa-groups') {
+      window.showTab('whatsapp');
+      window.switchWhatsappSubTab('groups');
+      return;
+  }
+
+  // DEFAULT SUB-TAB ACTIVATION ON PARENT SELECT
+  if (tabId === 'finance') {
+      const rabContent = document.getElementById("subtab-finance-rab");
+      const rabActive = rabContent && !rabContent.classList.contains("hidden");
+      if (rabActive) {
+          window.switchFinanceSubTab('rab');
+      } else {
+          window.switchFinanceSubTab('kas');
+      }
+  }
+  if (tabId === 'rekap') {
+      const suratContent = document.getElementById("subtab-rekap-surat");
+      const suratActive = suratContent && !suratContent.classList.contains("hidden");
+      if (suratActive) {
+          window.switchRekapSubTab('surat');
+      } else {
+          window.switchRekapSubTab('wilayah');
+      }
+  }
+  if (tabId === 'whatsapp') {
+      const groupsContent = document.getElementById("subtab-whatsapp-groups");
+      const groupsActive = groupsContent && !groupsContent.classList.contains("hidden");
+      if (groupsActive) {
+          window.switchWhatsappSubTab('groups');
+      } else {
+          window.switchWhatsappSubTab('center');
+      }
+  }
+
   document
     .querySelectorAll(".tab-content")
     .forEach((el) => el.classList.add("hidden"));
@@ -576,12 +735,6 @@ window.showTab = (tabId) => {
       }
       if (typeof window.checkLocalWaStatus === 'function') {
           window.checkLocalWaStatus();
-      }
-  }
-
-  if (tabId === 'wa-groups') {
-      if (typeof window.loadWaGroups === 'function') {
-          window.loadWaGroups();
       }
   }
   
@@ -988,14 +1141,13 @@ auth.onAuthStateChanged(async (user) => {
     showElement("btn-finance", canFinance);
     showElement("btn-mobile-finance", canFinance);
     const canRAB = ["creator", "admin_utama", "bendahara", "sekretaris", "ketua"].includes(r);
-    showElement("btn-rab", canRAB);
-    showElement("btn-mobile-rab", canRAB);
+    showElement("subbtn-finance-rab", canRAB);
 
     // 3. WhatsApp Center (Dinamis: Server di HP, API di Web)
     const canWA = ["creator", "admin_utama", "sekretaris", "bendahara"].includes(r);
     showElement("btn-whatsapp", canWA);
     showElement("btn-mobile-whatsapp", canWA);
-    showElement("btn-wa-groups", canWA);
+    showElement("subbtn-whatsapp-groups", canWA);
     showElement("subbtn-logo-whatsapp", canWA);
     showElement("subbtn-settings-whatsapp", canWA);
     showElement("subbtn-mobile-settings-whatsapp", canWA);
@@ -1037,8 +1189,7 @@ auth.onAuthStateChanged(async (user) => {
 
     // 5.5. Distribusi Surat (Letter Distribution)
     const canSurat = ["creator", "admin_utama", "sekretaris", "bendahara", "ketua", "koordinator_wilayah", "korwil_kabupaten", "korwil_kecamatan", "korwil_desa"].includes(r);
-    showElement("btn-surat", canSurat);
-    showElement("btn-mobile-surat", canSurat);
+    showElement("subbtn-rekap-surat", canSurat);
 
     // 6. Sembunyikan Header Kategori Sidebar jika tidak ada tombol di bawahnya
     // Kategori Keuangan & Aset
