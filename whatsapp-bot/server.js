@@ -64,8 +64,16 @@ let connectionUser = null;
 let lastSyncHash = '';
 const regSessions = new Map(); // key: sender JID, value: { step, data: {} }
 
+let firestoreSyncEnabled = true;
+
 // Helper to download session from Firestore
 async function downloadSession(db) {
+    if (!firestoreSyncEnabled) return;
+    const credsPath = path.join(AUTH_DIR, 'creds.json');
+    if (fs.existsSync(credsPath)) {
+        console.log('[FIRESTORE] Local session credentials (creds.json) already exist. Skipping Firestore download to prevent session corruption.');
+        return;
+    }
     if (!fs.existsSync(AUTH_DIR)) {
         fs.mkdirSync(AUTH_DIR, { recursive: true });
     }
@@ -76,23 +84,35 @@ async function downloadSession(db) {
         
         if (docSnap.exists()) {
             const data = docSnap.data();
+            let fileCount = 0;
             for (const [filename, content] of Object.entries(data)) {
+                if (filename === 'bot_token') continue;
                 // Sanitize filename to prevent directory traversal
                 const safeFilename = path.basename(filename);
                 const filePath = path.join(AUTH_DIR, safeFilename);
                 fs.writeFileSync(filePath, Buffer.from(content, 'base64'));
+                fileCount++;
             }
-            console.log('[FIRESTORE] Session downloaded successfully.');
+            if (fileCount > 0) {
+                console.log('[FIRESTORE] Session downloaded successfully.');
+            } else {
+                console.log('[FIRESTORE] Session doc exists but contains no session files.');
+            }
         } else {
             console.log('[FIRESTORE] No session found, starting fresh.');
         }
     } catch (e) {
-        console.error('[FIRESTORE] Error downloading session:', e);
+        console.error('[FIRESTORE] Error downloading session:', e.message || e);
+        if (e.code === 'permission-denied') {
+            console.warn('[FIRESTORE] Read permission denied for settings/wa_session. Disabling Firestore session sync.');
+            firestoreSyncEnabled = false;
+        }
     }
 }
 
 // Helper to upload session to Firestore
 async function uploadSession(db) {
+    if (!firestoreSyncEnabled) return;
     if (!fs.existsSync(AUTH_DIR)) return;
     try {
         console.log('[FIRESTORE] Uploading session files...');
@@ -114,7 +134,11 @@ async function uploadSession(db) {
             console.log('[FIRESTORE] Session uploaded successfully.');
         }
     } catch (e) {
-        console.error('[FIRESTORE] Error uploading session:', e);
+        console.error('[FIRESTORE] Error uploading session:', e.message || e);
+        if (e.code === 'permission-denied') {
+            console.warn('[FIRESTORE] Write permission denied for settings/wa_session. Disabling Firestore session sync.');
+            firestoreSyncEnabled = false;
+        }
     }
 }
 
@@ -4226,7 +4250,11 @@ function initCampaignSchedulerCron(db) {
                 }
             }
         } catch (err) {
-            console.error('[SCHEDULER] Cron check failed:', err);
+            if (err.code === 'permission-denied') {
+                console.warn('[SCHEDULER] Firestore permission denied for wa_campaigns. Please deploy the local firestore.rules to Firebase Console to enable the otonom server-side scheduler.');
+            } else {
+                console.error('[SCHEDULER] Cron check failed:', err);
+            }
         }
     });
 }
