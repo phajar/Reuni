@@ -1118,7 +1118,8 @@
 
     // ── MODULE: DONASI & PEMBAYARAN ──
     window.setDonasiMethod = (method) => {
-      document.getElementById('metode-pembayaran').value = method;
+      const inputMetode = document.getElementById('metode-pembayaran');
+      if (inputMetode) inputMetode.value = method;
       
       const manualBtn = document.getElementById('btn-method-manual');
       const onlineBtn = document.getElementById('btn-method-online');
@@ -1166,7 +1167,7 @@
       // 2. Fetch manual accounts
       const container = document.getElementById('rekening-list-inner');
       try {
-        const querySnap = await getDocs(collection(db, "settings_payments"));
+        const querySnap = await getDocs(collection(db, "payment_accounts"));
         if (querySnap.empty) {
           container.innerHTML = '<div class="col-span-full text-center text-slate-500 text-xs italic py-6">Belum ada akun bank terdaftar.</div>';
           return;
