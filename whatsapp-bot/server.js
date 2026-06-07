@@ -360,10 +360,6 @@ async function connectToWhatsApp() {
                 isHandled = true;
                 console.log(`[WA BOT] Perintah !status dari ${jid}`);
                 await handleStatusCommand(jid, m);
-            } else if (command === '!undangan') {
-                isHandled = true;
-                console.log(`[WA BOT] Perintah !undangan dari ${jid}`);
-                await handleUndanganCommand(jid, m);
             } else if (command === '!info') {
                 isHandled = true;
                 console.log(`[WA BOT] Perintah !info dari ${jid}`);
@@ -3032,8 +3028,21 @@ async function handleTestReminderCommand(jid, m, msgText) {
             
             await sock.sendMessage(jid, { text: `📋 *[PREVIEW REMINDER H-${milestoneNum}]*\nBerikut contoh pesan yang akan diterima alumni:` });
             
-            await sock.sendMessage(jid, { text: `*--- VERSI SUDAH LUNAS ---*\n\n${msgLunas}` });
-            await sock.sendMessage(jid, { text: `*--- VERSI BELUM LUNAS ---*\n\n${msgBelumLunas}` });
+            try {
+                const cardBuffer = await generateInvitationCard(senderName, "2010", "MA");
+                await sock.sendMessage(jid, { 
+                    image: cardBuffer, 
+                    caption: `*--- VERSI SUDAH LUNAS ---*\n\n${msgLunas}` 
+                });
+                await sock.sendMessage(jid, { 
+                    image: cardBuffer, 
+                    caption: `*--- VERSI BELUM LUNAS ---*\n\n${msgBelumLunas}` 
+                });
+            } catch (cardErr) {
+                console.error(`[REMINDER PREVIEW] Gagal membuat kartu gambar preview, fallback ke teks:`, cardErr);
+                await sock.sendMessage(jid, { text: `*--- VERSI SUDAH LUNAS ---*\n\n${msgLunas}` });
+                await sock.sendMessage(jid, { text: `*--- VERSI BELUM LUNAS ---*\n\n${msgBelumLunas}` });
+            }
             return;
         }
         
@@ -3082,7 +3091,6 @@ async function handleMenuCommand(jid, m) {
                       `🔹 *!iuran* : Cara iuran & QRIS dinamis\n` +
                       `🔹 *!konfirmasi [nominal] [nomor_wa_tujuan]* : Lapor bukti transfer\n` +
                       `🔹 *!status* : Cek status pendaftaran & iuran Anda\n` +
-                      `🔹 *!undangan* : Dapatkan link undangan digital personal\n` +
                       `🔹 *!info* : Info lokasi, Google Maps, & area parkir\n` +
                       `🔹 *!rundown* : Jadwal & susunan rundown acara reuni\n` +
                       `🔹 *!menu* : Tampilkan menu ringkas ini\n` +
@@ -3234,8 +3242,6 @@ async function handleHelpCommand(jid, m) {
                       `👉 Contoh Orang Lain: *!konfirmasi 150000 082130445019*\n\n` +
                       `📊 *!status*\n` +
                       `Mengecek status akun pendaftaran, kehadiran, dan status/nominal pembayaran iuran donasi Anda.\n\n` +
-                      `✉️ *!undangan*\n` +
-                      `Mendapatkan link surat undangan digital resmi personal Anda.\n\n` +
                       `📍 *!info*\n` +
                       `Menampilkan informasi lokasi acara, link Google Maps, serta panduan parkir & akses masuk.\n\n` +
                       `🗓️ *!rundown*\n` +
@@ -3368,84 +3374,6 @@ async function handleStatusCommand(jid, m) {
     }
 }
 
-async function handleUndanganCommand(jid, m) {
-    try {
-        let senderJid = '';
-        if (jid && jid.endsWith('@g.us')) {
-            senderJid = m.key.participantPn || m.key.participant || '';
-        } else {
-            senderJid = m.key.senderPn || jid || '';
-        }
-        
-        const senderNumber = senderJid.split('@')[0].split(':')[0].replace(/\D/g, '');
-        if (!senderNumber) {
-            await sock.sendMessage(jid, { text: '⚠️ Gagal mendeteksi nomor WhatsApp Anda.' });
-            return;
-        }
-        
-        function normalizeWA(raw) {
-            if (!raw) return "";
-            let num = raw.replace(/\D/g, '');
-            if (num.startsWith('620')) {
-                num = '62' + num.slice(3);
-            }
-            if (num.startsWith('0')) {
-                num = '62' + num.slice(1);
-            } else if (num.startsWith('8')) {
-                num = '62' + num;
-            }
-            return num;
-        }
-        
-        const cleanPhone = normalizeWA(senderNumber);
-        
-        const phoneFormats = [
-            cleanPhone,
-            '0' + cleanPhone.slice(2),
-            cleanPhone.slice(2)
-        ];
-        
-        const alumniCol = collection(db, 'alumni');
-        const q = query(alumniCol, where('nowa', 'in', phoneFormats));
-        const snap = await getDocs(q);
-        
-        if (snap.empty) {
-            const msgNotRegistered = `*⚠️ AJUKAN UNDANGAN REUNI*\n` +
-                                     `──────────────────────\n` +
-                                     `Nomor WhatsApp Anda (*+${cleanPhone}*) belum terdaftar di sistem alumni.\n\n` +
-                                     `Silakan ketik *daftar* untuk mendaftar terlebih dahulu agar sistem dapat membuat link undangan digital personal untuk Anda.`;
-            await sock.sendMessage(jid, { text: msgNotRegistered });
-            return;
-        }
-        
-        const alumnusData = snap.docs[0].data();
-        const inviteLink = `https://phajar.github.io/Reuni/surat-undangan.html?nama=${encodeURIComponent(alumnusData.nama)}&angkatan=${encodeURIComponent(alumnusData.angkatan)}&lembaga=${encodeURIComponent(alumnusData.lembaga || '')}`;
-        
-        const msg = `*💌 SURAT UNDANGAN DIGITAL PERSONAL*\n` +
-                    `*━━━━━━━━━━━━━━━━━━━━━━━━━━*\n` +
-                    `Halo *${alumnusData.nama}* (Angkatan ${alumnusData.angkatan || '-'}),\n\n` +
-                    `Berikut adalah surat undangan resmi personal Anda untuk menghadiri Reuni Akbar AL-FATAH:\n\n` +
-                    `👉 *Tautan Undangan Web*:\n${inviteLink}\n\n` +
-                    `Silakan buka tautan di atas untuk melihat surat resmi formal, mengunduh PDF resmi, atau mencetak surat undangan Anda.\n\n` +
-                    `*━━━━━━━━━━━━━━━━━━━━━━━━━━*\n` +
-                    `_Sistem Bot Reuni Akbar PP AL-FATAH_`;
-                    
-        try {
-            console.log(`[WA BOT] Generating invitation card image for ${alumnusData.nama}`);
-            const cardBuffer = await generateInvitationCard(alumnusData.nama, alumnusData.angkatan, alumnusData.lembaga);
-            await sock.sendMessage(jid, { 
-                image: cardBuffer, 
-                caption: msg 
-            });
-        } catch (imgErr) {
-            console.error('[WA BOT] Gagal membuat kartu gambar, fallback ke teks:', imgErr);
-            await sock.sendMessage(jid, { text: msg });
-        }
-    } catch (err) {
-        console.error('[WA BOT] Gagal memproses perintah !undangan:', err);
-        await sock.sendMessage(jid, { text: '⚠️ Terjadi kesalahan saat membuat undangan Anda. Silakan hubungi panitia.' });
-    }
-}
 
 function generateVisualReportSvg(inC, outC, saldo, transactions, logoBase64 = '', ketuaData = null, bendaharaData = null) {
     const formatRupiahSvg = (val) => {
@@ -3997,7 +3925,16 @@ async function runEventReminderCheck(db) {
             // Buat pesan berdasarkan milestone & status bayar
             const msg = buildReminderMessage(daysLeft, namaAlumni, eventDateFormatted, sudahBayar);
 
-            await activeSock.sendMessage(jid, { text: msg });
+            try {
+                const cardBuffer = await generateInvitationCard(namaAlumni, alumni.angkatan, alumni.lembaga);
+                await activeSock.sendMessage(jid, { 
+                    image: cardBuffer, 
+                    caption: msg 
+                });
+            } catch (cardErr) {
+                console.error(`[REMINDER] Gagal membuat kartu gambar untuk ${namaAlumni}, fallback ke teks:`, cardErr);
+                await activeSock.sendMessage(jid, { text: msg });
+            }
             sentCount++;
 
             // Delay 1.5 detik antar pesan agar tidak diblokir WhatsApp
