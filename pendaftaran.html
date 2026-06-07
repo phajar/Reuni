@@ -9,13 +9,35 @@
   <script src="js/lib/tailwindcss.js"></script>
   <link rel="stylesheet" href="css/all.min.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap');
     :root { --bg: #060813; }
     body { background-color: var(--bg); color: #e2e8f0; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
-    .glass { background: rgba(14,18,37,0.70); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
-    .input-field { width:100%; padding:16px 20px; border-radius:16px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); color:white; outline:none; transition:all 0.3s; font-size:14px; }
-    .input-field:focus { border-color:#6366f1; background:rgba(99,102,241,0.05); box-shadow:0 0 0 4px rgba(99,102,241,0.1); }
-    .input-field.error { border-color:rgba(239,68,68,0.6)!important; box-shadow:0 0 0 4px rgba(239,68,68,0.1)!important; }
+    
+    .glass { 
+      background: rgba(14, 18, 37, 0.65); 
+      backdrop-filter: blur(24px); 
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.06); 
+    }
+    
+    .input-field { 
+      width: 100%; 
+      padding: 14px 20px; 
+      border-radius: 16px; 
+      background: rgba(255, 255, 255, 0.03); 
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      color: white; 
+      outline: none; 
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      font-size: 13px; 
+    }
+    .input-field:focus { 
+      border-color: #6366f1; 
+      background: rgba(99, 102, 241, 0.04); 
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15); 
+    }
+    
+    .input-field.error { border-color:rgba(239,68,68,0.6)!important; box-shadow:0 0 0 4px rgba(239,68,68,0.15)!important; }
     .input-field.success { border-color:rgba(16,185,129,0.6)!important; }
     .bg-gradient-animate { background:linear-gradient(-45deg,#4f46e5,#0ea5e9,#3b82f6,#6366f1); background-size:400% 400%; animation:gradientBG 15s ease infinite; }
     @keyframes gradientBG { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
@@ -23,6 +45,9 @@
     .reveal { opacity:0; transform:translateY(24px); transition:opacity 0.6s ease, transform 0.6s ease; }
     .reveal.visible { opacity:1; transform:translateY(0); }
     .field-hint { font-size:10px; margin-top:4px; margin-left:4px; font-weight:700; }
+    
+    #particle-canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+    
     /* Confetti Canvas */
     #confetti-canvas { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9998; }
     /* Success screen animation */
@@ -46,12 +71,13 @@
 </head>
 <body class="min-h-screen flex flex-col relative text-slate-300">
 
+  <!-- Background Particle -->
+  <canvas id="particle-canvas"></canvas>
+  <div class="fixed top-[-10%] left-[-20%] w-[600px] h-[600px] bg-indigo-600/15 blur-[150px] rounded-full pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-10%] right-[-20%] w-[500px] h-[500px] bg-emerald-600/10 blur-[130px] rounded-full pointer-events-none z-0"></div>
+
   <!-- Confetti Canvas -->
   <canvas id="confetti-canvas"></canvas>
-
-  <!-- Ambient -->
-  <div class="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/30 blur-[120px] rounded-full pointer-events-none z-0"></div>
-  <div class="fixed bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/20 blur-[120px] rounded-full pointer-events-none z-0"></div>
 
 
   <div id="toast-container" class="fixed top-5 right-5 left-5 z-[9999] pointer-events-none flex flex-col gap-2 items-end"></div>
@@ -1369,6 +1395,52 @@
       drawConfetti();
     };
   })();
+  </script>
+
+  <!-- SCRIPT: Background Particles -->
+  <script>
+    (function() {
+      const canvas = document.getElementById('particle-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      const PARTICLE_COUNT = 40;
+
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      window.addEventListener('resize', resize);
+      resize();
+
+      function rand(min, max) { return Math.random() * (max - min) + min; }
+
+      function createParticle() {
+        return {
+          x: rand(0, canvas.width),
+          y: rand(0, canvas.height),
+          r: rand(0.5, 2),
+          dx: rand(-0.1, 0.1),
+          dy: rand(-0.3, -0.1),
+          alpha: rand(0.1, 0.4),
+          color: Math.random() > 0.5 ? '99,102,241' : '16,185,129'
+        };
+      }
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(createParticle());
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+          ctx.fill();
+          p.x += p.dx;
+          p.y += p.dy;
+          p.alpha -= 0.0003;
+          if (p.y < -10 || p.alpha <= 0) particles[i] = createParticle();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
   </script>
 
   <!-- Shared Floating Nav -->
