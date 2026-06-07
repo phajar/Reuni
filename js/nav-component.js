@@ -32,23 +32,23 @@
         <i class="fas fa-user-plus text-lg relative z-10"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider relative z-10 mt-1">Daftar</span>
       </a>
-      <a href="cek-status.html"  data-nav="cek-status.html"  class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-amber-400 hover:bg-white/5 relative">
+      <a href="portal.html#status"  data-nav="portal.html#status"  class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-amber-400 hover:bg-white/5 relative">
         <i class="fas fa-search text-lg relative z-10"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider relative z-10 mt-1">Status</span>
       </a>
-      <a href="Rundown.html"     data-nav="Rundown.html"     class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-purple-400 hover:bg-white/5 relative">
+      <a href="portal.html#jadwal"     data-nav="portal.html#jadwal"     class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-purple-400 hover:bg-white/5 relative">
         <i class="fas fa-list-ol text-lg relative z-10"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider relative z-10 mt-1">Jadwal</span>
       </a>
-      <a href="pembayaran.html"  data-nav="pembayaran.html"  class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-emerald-400 hover:bg-white/5 relative">
+      <a href="portal.html#donasi"  data-nav="portal.html#donasi"  class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-emerald-400 hover:bg-white/5 relative">
         <i class="fas fa-hand-holding-heart text-lg relative z-10"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider relative z-10 mt-1">Donasi</span>
       </a>
-      <a href="keuangan.html"    data-nav="keuangan.html"    class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-cyan-400 hover:bg-white/5 relative">
+      <a href="portal.html#laporan"    data-nav="portal.html#laporan"    class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-cyan-400 hover:bg-white/5 relative">
         <i class="fas fa-wallet text-lg relative z-10"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider relative z-10 mt-1">Laporan</span>
       </a>
-      <a href="dokumentasi.html" data-nav="dokumentasi.html" class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-pink-400 hover:bg-white/5 relative">
+      <a href="portal.html#galeri" data-nav="portal.html#galeri" class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-pink-400 hover:bg-white/5 relative">
         <i class="fas fa-camera text-lg relative z-10"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider relative z-10 mt-1">Galeri</span>
       </a>
