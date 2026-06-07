@@ -227,7 +227,7 @@ async function connectToWhatsApp() {
         version: waVersion,
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
-        browser: Browsers.ubuntu('Chrome'),
+        browser: ['Windows', 'Chrome', '122.0.0.0'],
         connectTimeoutMs: 60000, // Extend timeout to 60 seconds
         defaultQueryTimeoutMs: 60000,
         keepAliveIntervalMs: 30000
@@ -292,60 +292,94 @@ async function connectToWhatsApp() {
             const cleanMsg = msgText.trim();
             const command = cleanMsg.toLowerCase();
             
+            let isHandled = false;
+            
             // Cek pendaftaran alumni interaktif via chat bot
             if (regSessions.has(jid)) {
                 await handleRegistrationFlow(jid, cleanMsg, m);
+                try {
+                    await sock.readMessages([m.key]);
+                } catch (readErr) {
+                    console.error('[WA BOT] Gagal menandai pesan sebagai dibaca:', readErr.message);
+                }
                 return;
             }
 
             if (command === '!daftar' || command === 'daftar' || command === 'registrasi') {
                 console.log(`[WA BOT] Perintah pendaftaran dari ${jid}`);
                 await startRegistrationFlow(jid, m);
+                try {
+                    await sock.readMessages([m.key]);
+                } catch (readErr) {
+                    console.error('[WA BOT] Gagal menandai pesan sebagai dibaca:', readErr.message);
+                }
                 return;
             }
             
             if (command === '!saldo') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !saldo dari ${jid}`);
                 await handleSaldoCommand(jid);
             } else if (command === '!laporan') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !laporan dari ${jid}`);
                 await handleLaporanCommand(jid);
             } else if (command === '!iuran') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !iuran dari ${jid}`);
                 await handleIuranCommand(jid);
             } else if (command.startsWith('!konfirmasi')) {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !konfirmasi dari ${jid}`);
                 await handleKonfirmasiCommand(jid, m, cleanMsg);
             } else if (command.startsWith('!setuju-alumni') || command.startsWith('!approve-alumni')) {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !setuju-alumni/!approve-alumni dari ${jid}`);
                 await handleApproveAlumniCommand(jid, m, cleanMsg);
             } else if (command.startsWith('!setuju') || command.startsWith('!approve')) {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !setuju/!approve dari ${jid}`);
                 await handleApproveCommand(jid, m, cleanMsg);
             } else if (command === '!backup-db') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !backup-db dari ${jid}`);
                 await handleBackupDbCommand(jid, m);
             } else if (command === '!test-reminder' || command.startsWith('!test-reminder ')) {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !test-reminder dari ${jid}`);
                 await handleTestReminderCommand(jid, m, cleanMsg);
             } else if (command === '!menu') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !menu dari ${jid}`);
                 await handleMenuCommand(jid, m);
             } else if (command === '!help') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !help dari ${jid}`);
                 await handleHelpCommand(jid, m);
             } else if (command === '!status') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !status dari ${jid}`);
                 await handleStatusCommand(jid, m);
             } else if (command === '!undangan') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !undangan dari ${jid}`);
                 await handleUndanganCommand(jid, m);
             } else if (command === '!info') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !info dari ${jid}`);
                 await handleInfoCommand(jid, m);
             } else if (command === '!rundown') {
+                isHandled = true;
                 console.log(`[WA BOT] Perintah !rundown dari ${jid}`);
                 await handleRundownCommand(jid, m);
+            }
+            
+            if (isHandled) {
+                try {
+                    await sock.readMessages([m.key]);
+                } catch (readErr) {
+                    console.error('[WA BOT] Gagal menandai pesan sebagai dibaca:', readErr.message);
+                }
             }
         } catch (err) {
             console.error('[WA BOT] Gagal memproses pesan masuk:', err);
