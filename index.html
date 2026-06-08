@@ -48,6 +48,31 @@
     window._loadXLSX = function() {
       return window._lazyLoad('js/lib/xlsx.full.min.js');
     };
+
+    // Theme initialization
+    window.isLightMode = localStorage.getItem('af_theme') === 'light';
+    window.toggleTheme = () => {
+      window.isLightMode = !window.isLightMode;
+      localStorage.setItem('af_theme', window.isLightMode ? 'light' : 'dark');
+      applyTheme();
+    };
+    function applyTheme() {
+      const themeIcon = document.getElementById('theme-icon-index');
+      if (window.isLightMode) {
+        document.body.classList.add('light-theme');
+        if (themeIcon) themeIcon.className = 'fas fa-sun';
+      } else {
+        document.body.classList.remove('light-theme');
+        if (themeIcon) themeIcon.className = 'fas fa-moon';
+      }
+    }
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'af_theme') {
+        window.isLightMode = e.newValue === 'light';
+        applyTheme();
+      }
+    });
+    document.addEventListener('DOMContentLoaded', applyTheme);
   </script>
 
   <link rel="stylesheet" href="css/custom-theme.css">
@@ -654,10 +679,24 @@
         
         <div class="grid grid-cols-2 gap-4">
           <div id="fin-nominal-container" class="col-span-1"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nominal</label><input type="number" name="nominal" id="fin-nominal" class="input-field" required /></div>
-          <div id="fin-status-container" class="col-span-1"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Status</label><select name="status" id="fin-status" class="input-field"><option value="pemasukan">Pemasukan</option><option value="pengeluaran">Pengeluaran</option></select></div>
+          <div id="fin-status-container" class="col-span-1"><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Status</label><select name="status" id="fin-status" class="input-field" onchange="if(window.toggleFinanceFields)window.toggleFinanceFields()"><option value="pemasukan">Pemasukan</option><option value="pengeluaran">Pengeluaran</option></select></div>
         </div>
         
-        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kategori</label><select name="kategori" id="fin-kategori" class="input-field"><option value="Donasi">Donasi</option><option value="Iuran Bulanan">Iuran Bulanan</option><option value="Operasional">Operasional</option><option value="Lainnya">Lainnya</option></select></div>
+        <div><label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Kategori</label><select name="kategori" id="fin-kategori" class="input-field" onchange="if(window.toggleFinanceFields)window.toggleFinanceFields()"><option value="Donasi">Donasi</option><option value="Iuran Bulanan">Iuran Bulanan</option><option value="Operasional">Operasional</option><option value="Lainnya">Lainnya</option></select></div>
+
+        <div id="fin-detail-purchase-container" class="hidden border border-white/5 bg-black/20 p-4 rounded-2xl space-y-3">
+          <p class="text-[10px] font-black uppercase text-indigo-400">Rincian Pembelian (Opsional)</p>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Banyaknya</label>
+              <input type="number" name="jumlah" id="fin-jumlah" class="input-field text-xs placeholder-slate-600" placeholder="Misal: 100" />
+            </div>
+            <div>
+              <label class="text-[9px] font-bold text-slate-500 uppercase ml-1">Satuan</label>
+              <input type="text" name="satuan" id="fin-satuan" class="input-field text-xs placeholder-slate-600" placeholder="Misal: lembar" />
+            </div>
+          </div>
+        </div>
         
         <div class="grid grid-cols-2 gap-4">
           <div class="col-span-1">
@@ -846,7 +885,6 @@
 
         <span id="heading-acara" class="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-5 mb-2 px-4 border-t border-white/5 pt-4">Acara & Laporan</span>
         <button onclick="showTab('panitia')" id="btn-panitia" class="nav-btn"><i class="fas fa-id-badge text-base w-5 text-center"></i> <span class="nav-label">Kepanitiaan & Rundown</span></button>
-        <button onclick="showTab('guestbook')" id="btn-guestbook" class="nav-btn"><i class="fas fa-book-open text-base w-5 text-center"></i> <span class="nav-label">Buku Tamu</span></button>
         <button onclick="showTab('rekap')" id="btn-rekap" class="nav-btn"><i class="fas fa-map-marked-alt text-base w-5 text-center"></i> <span class="nav-label">Wilayah & Surat</span></button>
         <button onclick="showTab('tugas')" id="btn-tugas" class="nav-btn relative"><i class="fas fa-tasks text-base w-5 text-center"></i> <span class="nav-label">Tugas Panitia</span><span id="badge-tugas" class="hidden absolute right-4 w-4 h-4 bg-amber-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span></button>
         <a href="surat-undangan.html" class="nav-btn text-purple-400 flex items-center gap-2 w-full text-left"><i class="fas fa-envelope-open-text text-base w-5 text-center"></i> <span class="nav-label">AI Surat Undangan</span></a>
@@ -951,7 +989,10 @@
           </div>
           
           <div class="flex items-center gap-2 lg:pr-20">
-              <a href="countdown.html" target="_blank" class="btn-md3 btn-md3-outlined py-2 px-3 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm text-emerald-400 hover:text-emerald-300" style="text-decoration: none;"><i class="fas fa-globe"></i> Halaman Publik</a>
+              <button id="btn-theme" onclick="window.toggleTheme()" class="btn-md3 btn-md3-outlined py-2 px-3 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm" title="Ubah Tema">
+                <i id="theme-icon-index" class="fas fa-moon"></i>
+              </button>
+              <a href="portal.html" target="_blank" class="btn-md3 btn-md3-outlined py-2 px-3 text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm text-emerald-400 hover:text-emerald-300" style="text-decoration: none;"><i class="fas fa-globe"></i> Halaman Publik</a>
               <button onclick="openSettings()" class="hidden md:flex btn-md3 btn-md3-outlined py-2 px-3 text-[10px] font-bold uppercase tracking-wider items-center gap-2 shadow-sm"><i class="fas fa-user-cog"></i> Edit Profil</button>
           </div>
         </header>
@@ -1005,6 +1046,22 @@
               <div class="flex items-center gap-3">
                   <div class="w-2.5 h-2.5 rounded-full bg-slate-500" id="home-wa-status-dot"></div>
                   <span class="text-[10px] font-black uppercase tracking-wider text-slate-400" id="home-wa-status-label">Offline</span>
+              </div>
+          </div>
+
+          <!-- RSVP Statistics Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="premium-card p-5 border-l-4 border-emerald-500 text-left">
+                <p class="text-[9px] font-bold text-slate-500 mb-1 uppercase">RSVP Hadir</p>
+                <div id="stat-rsvp-hadir" class="text-2xl font-black text-emerald-500">0</div>
+              </div>
+              <div class="premium-card p-5 border-l-4 border-amber-500 text-left">
+                <p class="text-[9px] font-bold text-slate-500 mb-1 uppercase">RSVP Ragu-Ragu</p>
+                <div id="stat-rsvp-ragu" class="text-2xl font-black text-amber-500">0</div>
+              </div>
+              <div class="premium-card p-5 border-l-4 border-rose-500 text-left">
+                <p class="text-[9px] font-bold text-slate-500 mb-1 uppercase">RSVP Berhalangan</p>
+                <div id="stat-rsvp-absen" class="text-2xl font-black text-rose-500">0</div>
               </div>
           </div>
           
@@ -1222,6 +1279,7 @@
                                   <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortAlumni('nama')">Profil <i id="sort-alm-nama" class="fas fa-sort sort-icon ml-1"></i></th>
                                   <th class="p-5 text-center cursor-pointer hover:text-indigo-400" onclick="sortAlumni('angkatan')">Tahun Lulus <i id="sort-alm-angkatan" class="fas fa-sort sort-icon ml-1"></i></th>
                                   <th class="p-5 cursor-pointer hover:text-indigo-400" onclick="sortAlumni('kabupaten')">Lokasi <i id="sort-alm-kabupaten" class="fas fa-sort sort-icon ml-1"></i></th>
+                                  <th class="p-5 text-center cursor-pointer hover:text-indigo-400" onclick="sortAlumni('rsvp')">RSVP <i id="sort-alm-rsvp" class="fas fa-sort sort-icon ml-1"></i></th>
                                   <th class="p-5 text-center cursor-pointer hover:text-indigo-400" onclick="sortAlumni('totalDonasi')">Donasi <i id="sort-alm-totalDonasi" class="fas fa-sort sort-icon ml-1"></i></th>
                                   <th class="p-5 text-center whitespace-nowrap">Aksi</th>
                               </tr>
@@ -1233,6 +1291,7 @@
                                   <td class="p-5"><div class="skeleton h-4 w-28 mb-2 rounded"></div><div class="skeleton h-3 w-20 rounded"></div></td>
                                   <td class="p-5 text-center"><div class="skeleton h-4 w-8 rounded"></div></td>
                                   <td class="p-5"><div class="skeleton h-3.5 w-24 rounded"></div></td>
+                                  <td class="p-5 text-center"><div class="skeleton h-4 w-12 rounded animate-pulse bg-white/5"></div></td>
                                   <td class="p-5 text-center"><div class="skeleton h-4 w-16 mb-1 rounded"></div><div class="skeleton h-3 w-10 rounded"></div></td>
                                   <td class="p-5 text-center"><div class="flex justify-center gap-1"><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div><div class="skeleton h-7 w-7 rounded-lg"></div></div></td>
                               </tr>
@@ -1717,31 +1776,6 @@
           </div>
       </div>
 
-<div id="tab-guestbook" class="tab-content hidden space-y-4">
-        <div class="table-container">
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-left modern-table">
-                    <thead>
-                        <tr>
-                            <th class="p-5">Waktu Kirim</th>
-                            <th class="p-5">Alumni</th>
-                            <th class="p-5">Isi Pesan / Komentar</th>
-                            <th class="p-5 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="guestbook-admin-list" class="divide-y divide-white/5 text-sm">
-                        <!-- Skeleton Loading rows -->
-                        <tr>
-                            <td class="p-5"><div class="skeleton h-4 w-24 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-28 rounded"></div></td>
-                            <td class="p-5"><div class="skeleton h-4 w-full mb-1.5 rounded"></div><div class="skeleton h-3.5 w-2/3 rounded"></div></td>
-                            <td class="p-5 text-center"><div class="skeleton h-7 w-12 rounded-lg mx-auto"></div></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-      </div>
       <div id="tab-logistik" class="tab-content hidden space-y-4">
         <div class="flex flex-col lg:flex-row justify-between gap-4">
             <button onclick="window.openModalLogistik()" class="btn-md3 btn-md3-primary"><i class="fas fa-plus mr-2"></i> Tambah Donasi Barang</button>
@@ -2587,13 +2621,15 @@
             </div>
 
             <!-- Sub-Tab 2: Info Acara -->
-            <div id="subtab-settings-event" class="settings-sub-content hidden premium-card p-6 md:p-8 space-y-6">
-              <div class="flex justify-between items-center pb-4 border-b border-white/5">
-                <h4 class="text-sm font-black uppercase text-amber-400 tracking-wider flex items-center gap-2">
-                  <i class="fas fa-calendar-check"></i>
-                  <span>Pengaturan Acara</span>
-                </h4>
-              </div>
+            <div id="subtab-settings-event" class="settings-sub-content hidden space-y-6">
+              <!-- Card 1: Pengaturan Acara -->
+              <div class="premium-card p-6 md:p-8 space-y-6">
+                <div class="flex justify-between items-center pb-4 border-b border-white/5">
+                  <h4 class="text-sm font-black uppercase text-amber-400 tracking-wider flex items-center gap-2">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Pengaturan Acara</span>
+                  </h4>
+                </div>
               <form onsubmit="handleUpdateEventInfo(event)" class="space-y-4">
                 <div>
                   <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Tanggal Acara</label>
@@ -2731,6 +2767,83 @@
                 
               <button type="submit" id="btn-save-event-settings" class="btn-md3 btn-md3-primary w-full mt-6"><i class="fas fa-save mr-2"></i> Simpan Perubahan</button>
             </form>
+            </div>
+
+            <!-- Card 2: Pengumuman Portal (Live Banner) -->
+            <div class="premium-card p-6 md:p-8 space-y-6">
+              <div class="flex justify-between items-center pb-4 border-b border-white/5">
+                <h4 class="text-sm font-black uppercase text-indigo-400 tracking-wider flex items-center gap-2">
+                  <i class="fas fa-bullhorn"></i>
+                  <span>Pengumuman Portal (Live Banner)</span>
+                </h4>
+              </div>
+              <form onsubmit="window.handleUpdateAnnouncement(event)" class="space-y-4">
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Status Pengumuman</label>
+                  <div class="flex items-center gap-2 mt-1.5">
+                    <label class="relative inline-flex items-center cursor-pointer select-none">
+                      <input type="checkbox" id="set-announce-active" class="sr-only peer">
+                      <div class="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                      <span id="set-announce-active-label" class="ml-2 text-xs font-bold text-slate-300">Nonaktif</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Isi Pengumuman</label>
+                  <textarea id="set-announce-text" class="input-field mt-1 h-20 resize-none text-xs p-3 leading-relaxed custom-scrollbar" placeholder="Ketik pesan pengumuman yang akan tampil di bagian atas Portal Alumni..." required></textarea>
+                </div>
+                <button type="submit" class="btn-md3 btn-md3-primary w-full"><i class="fas fa-save mr-2"></i> Simpan &amp; Publikasikan</button>
+              </form>
+            </div>
+
+            <!-- Card 3: Polling & Voting Alumni -->
+            <div class="premium-card p-6 md:p-8 space-y-6 mt-6">
+              <div class="flex justify-between items-center pb-4 border-b border-white/5">
+                <h4 class="text-sm font-black uppercase text-indigo-400 tracking-wider flex items-center gap-2">
+                  <i class="fas fa-poll"></i>
+                  <span>Manajemen Polling &amp; Voting Alumni</span>
+                </h4>
+              </div>
+              
+              <!-- Form Polling Baru -->
+              <form onsubmit="window.handleCreatePoll(event)" class="space-y-4">
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Pertanyaan Polling</label>
+                  <input type="text" id="set-poll-question" class="input-field mt-1" placeholder="Cth: Apakah setuju iuran konsumsi sebesar Rp 150.000?" required />
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Opsi Pilihan (Pisahkan dengan Koma)</label>
+                  <input type="text" id="set-poll-options" class="input-field mt-1" placeholder="Cth: Setuju, Ragu-Ragu, Tidak Setuju" required />
+                  <p class="text-[8px] text-slate-500 mt-1 ml-1">Masukkan opsi jawaban dipisahkan dengan tanda koma.</p>
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Status Polling</label>
+                  <div class="flex items-center gap-2 mt-1.5">
+                    <label class="relative inline-flex items-center cursor-pointer select-none">
+                      <input type="checkbox" id="set-poll-active" class="sr-only peer" onchange="document.getElementById('set-poll-active-label').textContent = this.checked ? 'Aktif (Tampilkan di Portal)' : 'Nonaktif (Sembunyikan dari Portal)'">
+                      <div class="w-9 h-5 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 peer-checked:after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                      <span id="set-poll-active-label" class="ml-2 text-xs font-bold text-slate-300">Nonaktif (Sembunyikan dari Portal)</span>
+                    </label>
+                  </div>
+                </div>
+                <button type="submit" class="btn-md3 btn-md3-primary w-full"><i class="fas fa-plus mr-2"></i> Terapkan Polling Baru</button>
+              </form>
+              
+              <!-- Hasil Polling Aktif -->
+              <div id="admin-active-poll-box" class="hidden border-t border-white/10 pt-6 mt-6 space-y-4">
+                <div class="flex justify-between items-center">
+                  <h5 class="text-xs font-black uppercase tracking-wider text-emerald-400">
+                    <i class="fas fa-chart-bar mr-1"></i> Hasil Polling Berjalan
+                  </h5>
+                  <button type="button" onclick="window.deactivateActivePoll()" class="text-[9px] bg-red-500/10 hover:bg-red-500 border border-red-500/30 hover:border-red-500 text-red-400 hover:text-white px-2.5 py-1 rounded-xl font-black uppercase tracking-wider transition-all">Nonaktifkan Polling</button>
+                </div>
+                
+                <h4 id="admin-poll-question-title" class="text-xs font-black text-white uppercase tracking-wide">-</h4>
+                <div id="admin-poll-results-container" class="space-y-4">
+                  <!-- Dinamis diisi JS -->
+                </div>
+              </div>
+            </div>
             </div>
 
             <!-- Sub-Tab 3: Konfigurasi AI -->
@@ -3448,7 +3561,7 @@
           <i class="fas fa-user-shield text-[10px]"></i> Administrasi
         </h4>
         <div class="grid grid-cols-3 gap-2">
-          <a href="countdown.html" target="_blank" class="flex flex-col items-center justify-center p-3 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center min-h-[72px]" style="text-decoration: none;">
+          <a href="portal.html" target="_blank" class="flex flex-col items-center justify-center p-3 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center min-h-[72px]" style="text-decoration: none;">
             <i class="fas fa-globe text-indigo-400 text-sm mb-1"></i>
             <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Halaman Publik</span>
           </a>
@@ -3485,10 +3598,6 @@
           <div id="btn-mobile-panitia" onclick="window.switchMobileTab('panitia')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
             <i class="fas fa-id-card text-blue-400 text-sm mb-1"></i>
             <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Panitia & Rundown</span>
-          </div>
-          <div onclick="window.switchMobileTab('guestbook')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
-            <i class="fas fa-book text-pink-400 text-sm mb-1"></i>
-            <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Buku Tamu</span>
           </div>
           <div onclick="window.switchMobileTab('rekap')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
             <i class="fas fa-map-marked-alt text-teal-400 text-sm mb-1"></i>

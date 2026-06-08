@@ -1,7 +1,7 @@
-const CACHE_NAME = 'reuni-al-fatah-v7';
+const CACHE_NAME = 'reuni-al-fatah-v30';
 const STATIC_ASSETS = [
   './',
-  './countdown.html',
+  './portal.html',
   './Rundown.html',
   './pendaftaran.html',
   './pembayaran.html',
@@ -69,13 +69,16 @@ self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
 
   // Skip caching for Firebase write calls, Cloudinary uploads, region APIs, or non-GET requests
+  // Also bypass Service Worker for cross-port localhost requests (like WhatsApp Bot on port 7860)
   if (
     event.request.method !== 'GET' ||
     requestUrl.origin.includes('firestore') ||
     requestUrl.origin.includes('cloudinary') ||
     requestUrl.origin.includes('emsifa') ||
     requestUrl.origin.includes('allorigins') ||
-    requestUrl.origin.includes('corsproxy')
+    requestUrl.origin.includes('corsproxy') ||
+    requestUrl.pathname.includes('/api/') ||
+    (requestUrl.hostname === 'localhost' && requestUrl.port !== self.location.port)
   ) {
     return;
   }

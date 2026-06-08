@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premium Layout Labs - Alumni PP Al-Fatah</title>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dark-theme">
+
+  <!-- Nebula Aurora Glow Backgrounds -->
+  <div class="glow-blob blob-1"></div>
+  <div class="glow-blob blob-2"></div>
+  <div class="glow-blob blob-3"></div>
+
+  <!-- App Wrapper (Sidebar + Main) -->
+  <div class="app-wrapper">
+    
+    <!-- 1. Collapsible Sidebar Navigation -->
+    <aside id="app-sidebar" class="sidebar glass">
+      <div class="sidebar-brand">
+        <div class="logo-circle">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <span class="brand-name font-display">AL-FATAH</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" title="Dashboard">
+          <i class="fas fa-chart-line"></i>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" title="Daftar Alumni" onclick="return false;">
+          <i class="fas fa-users"></i>
+          <span class="nav-label">Data Alumni</span>
+          <span class="nav-badge">12</span>
+        </a>
+        <a href="#" class="nav-item" title="Laporan Keuangan" onclick="return false;">
+          <i class="fas fa-wallet"></i>
+          <span class="nav-label">Keuangan</span>
+        </a>
+        <a href="#" class="nav-item" title="Buku Tamu" onclick="return false;">
+          <i class="fas fa-book-open"></i>
+          <span class="nav-label">Buku Tamu</span>
+        </a>
+        <a href="#" class="nav-item" title="WhatsApp Portal" onclick="return false;">
+          <i class="fab fa-whatsapp"></i>
+          <span class="nav-label">WA Portal</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar Collapse Toggle Button -->
+      <button id="sidebar-toggle" class="sidebar-collapse-btn" onclick="toggleSidebar()" title="Sembunyikan Menu">
+        <i class="fas fa-chevron-left"></i>
+        <span class="nav-label">Lipat Menu</span>
+      </button>
+    </aside>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+      
+      <!-- Top Header -->
+      <header class="app-header glass">
+        <div class="header-left">
+          <!-- Mobile Menu Trigger (Bottom Nav covers it, but kept for header spacing) -->
+          <h1 class="header-page-title">Pusat Verifikasi & Data</h1>
+        </div>
+        
+        <div class="header-right">
+          <!-- Theme Switcher -->
+          <button id="theme-toggle-btn" class="theme-toggle" onclick="toggleTheme()" title="Ganti Tema">
+            <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path id="moon-path" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Sub-grid of Stats -->
+      <div class="dashboard-grid mini-grid mb-6">
+        <div class="premium-card glass stat-card">
+          <span class="stat-label">Alumni Terdaftar</span>
+          <span class="stat-num text-indigo">1,482</span>
+        </div>
+        <div class="premium-card glass stat-card">
+          <span class="stat-label">Menunggu Verifikasi</span>
+          <span class="stat-num text-amber">12</span>
+        </div>
+        <div class="premium-card glass stat-card">
+          <span class="stat-label">Total Donasi Kas</span>
+          <span class="stat-num text-emerald">Rp 48.9M</span>
+        </div>
+      </div>
+
+      <!-- Main Data Area (Alumni Table / Card Feed) -->
+      <div class="premium-card glass table-card p-0 overflow-visible">
+        <div class="card-header-row p-6 border-b">
+          <div>
+            <h3 class="card-title"><i class="fas fa-user-check text-indigo mr-2"></i>Verifikasi Pendaftar Baru</h3>
+            <p class="card-desc">Klik baris alumni untuk membuka laci panel detail (Slide Drawer).</p>
+          </div>
+        </div>
+
+        <!-- 2. Responsive Table Viewport (Desktop) -->
+        <div class="table-responsive-wrapper hidden-mobile">
+          <table class="w-full text-left modern-table">
+            <thead>
+              <tr>
+                <th>Nama Alumni</th>
+                <th class="text-center">Angkatan</th>
+                <th>Domisili</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="alumni-table-body">
+              <tr class="clickable-row" onclick="openDetails('alm-1')">
+                <td class="font-bold">Zainal Arifin <span class="badge-tag tag-ma">MA</span></td>
+                <td class="text-center font-bold text-indigo">2018</td>
+                <td class="text-xs text-slate-400">Tegalwaru, Purwakarta</td>
+                <td class="text-center"><span class="badge-status pending">Pending</span></td>
+                <td class="text-center">
+                  <button class="action-circle-btn text-emerald" onclick="event.stopPropagation(); approveItem('alm-1')"><i class="fas fa-check"></i></button>
+                  <button class="action-circle-btn text-red" onclick="event.stopPropagation(); rejectItem('alm-1')"><i class="fas fa-times"></i></button>
+                </td>
+              </tr>
+              <tr class="clickable-row" onclick="openDetails('alm-2')">
+                <td class="font-bold">Fatimah Zahra <span class="badge-tag tag-mts">MTS</span></td>
+                <td class="text-center font-bold text-indigo">2020</td>
+                <td class="text-xs text-slate-400">Cihampelas, Bandung Barat</td>
+                <td class="text-center"><span class="badge-status pending">Pending</span></td>
+                <td class="text-center">
+                  <button class="action-circle-btn text-emerald" onclick="event.stopPropagation(); approveItem('alm-2')"><i class="fas fa-check"></i></button>
+                  <button class="action-circle-btn text-red" onclick="event.stopPropagation(); rejectItem('alm-2')"><i class="fas fa-times"></i></button>
+                </td>
+              </tr>
+              <tr class="clickable-row" onclick="openDetails('alm-3')">
+                <td class="font-bold">M. Rizky Ramadhan <span class="badge-tag tag-ma">MA</span></td>
+                <td class="text-center font-bold text-indigo">2016</td>
+                <td class="text-xs text-slate-400">Jatiluhur, Purwakarta</td>
+                <td class="text-center"><span class="badge-status pending">Pending</span></td>
+                <td class="text-center">
+                  <button class="action-circle-btn text-emerald" onclick="event.stopPropagation(); approveItem('alm-3')"><i class="fas fa-check"></i></button>
+                  <button class="action-circle-btn text-red" onclick="event.stopPropagation(); rejectItem('alm-3')"><i class="fas fa-times"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 3. Responsive Card Feed Viewport (Mobile) -->
+        <div class="mobile-card-feed visible-mobile" id="alumni-card-feed">
+          <div class="mobile-data-card glass" onclick="openDetails('alm-1')">
+            <div class="card-top">
+              <span class="card-name">Zainal Arifin <span class="badge-tag tag-ma">MA</span></span>
+              <span class="badge-status pending">Pending</span>
+            </div>
+            <div class="card-details">
+              <span><i class="fas fa-graduation-cap"></i> Angkatan Lulus 2018</span>
+              <span><i class="fas fa-map-marker-alt"></i> Tegalwaru, Purwakarta</span>
+            </div>
+            <div class="card-actions-row">
+              <button class="btn btn-emerald-outlined flex-1 py-2 text-[10px]" onclick="event.stopPropagation(); approveItem('alm-1')"><i class="fas fa-check mr-1"></i> Setujui</button>
+              <button class="btn btn-red-outlined flex-1 py-2 text-[10px]" onclick="event.stopPropagation(); rejectItem('alm-1')"><i class="fas fa-times mr-1"></i> Tolak</button>
+            </div>
+          </div>
+
+          <div class="mobile-data-card glass" onclick="openDetails('alm-2')">
+            <div class="card-top">
+              <span class="card-name">Fatimah Zahra <span class="badge-tag tag-mts">MTS</span></span>
+              <span class="badge-status pending">Pending</span>
+            </div>
+            <div class="card-details">
+              <span><i class="fas fa-graduation-cap"></i> Angkatan Lulus 2020</span>
+              <span><i class="fas fa-map-marker-alt"></i> Cihampelas, Bandung Barat</span>
+            </div>
+            <div class="card-actions-row">
+              <button class="btn btn-emerald-outlined flex-1 py-2 text-[10px]" onclick="event.stopPropagation(); approveItem('alm-2')"><i class="fas fa-check mr-1"></i> Setujui</button>
+              <button class="btn btn-red-outlined flex-1 py-2 text-[10px]" onclick="event.stopPropagation(); rejectItem('alm-2')"><i class="fas fa-times mr-1"></i> Tolak</button>
+            </div>
+          </div>
+
+          <div class="mobile-data-card glass" onclick="openDetails('alm-3')">
+            <div class="card-top">
+              <span class="card-name">M. Rizky Ramadhan <span class="badge-tag tag-ma">MA</span></span>
+              <span class="badge-status pending">Pending</span>
+            </div>
+            <div class="card-details">
+              <span><i class="fas fa-graduation-cap"></i> Angkatan Lulus 2016</span>
+              <span><i class="fas fa-map-marker-alt"></i> Jatiluhur, Purwakarta</span>
+            </div>
+            <div class="card-actions-row">
+              <button class="btn btn-emerald-outlined flex-1 py-2 text-[10px]" onclick="event.stopPropagation(); approveItem('alm-3')"><i class="fas fa-check mr-1"></i> Setujui</button>
+              <button class="btn btn-red-outlined flex-1 py-2 text-[10px]" onclick="event.stopPropagation(); rejectItem('alm-3')"><i class="fas fa-times mr-1"></i> Tolak</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 4. Sliding Right Details Panel (Desktop) -->
+  <aside id="desktop-detail-panel" class="detail-drawer glass hidden-mobile">
+    <div class="drawer-header">
+      <h3 class="drawer-title"><i class="fas fa-id-card mr-2 text-indigo"></i>Detail Pendaftar</h3>
+      <button class="close-drawer-btn" onclick="closeDetails()"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <div class="drawer-content" id="drawer-alumni-content">
+      <!-- Dinamis diisi lewat JavaScript -->
+    </div>
+  </aside>
+
+  <!-- 5. Native Bottom Sheet Modal (Mobile Drawer) -->
+  <div id="mobile-bottom-sheet" class="bottom-sheet visible-mobile">
+    <div class="bottom-sheet-overlay" onclick="closeDetails()"></div>
+    <div class="bottom-sheet-content glass">
+      <!-- Drag Handle -->
+      <div class="bottom-sheet-handle" onclick="closeDetails()"></div>
+      
+      <div class="drawer-header">
+        <h3 class="drawer-title"><i class="fas fa-id-card mr-2 text-indigo"></i>Detail Pendaftar</h3>
+        <button class="close-drawer-btn" onclick="closeDetails()"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div class="drawer-content" id="sheet-alumni-content">
+        <!-- Dinamis diisi lewat JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <div class="mobile-bottom-bar visible-mobile">
+    <div class="bottom-nav-item active">
+      <i class="fas fa-chart-line"></i>
+      <span>Beranda</span>
+    </div>
+    <div class="bottom-nav-item">
+      <i class="fas fa-users"></i>
+      <span>Alumni</span>
+    </div>
+    <div class="bottom-nav-item">
+      <i class="fas fa-wallet"></i>
+      <span>Keuangan</span>
+    </div>
+    <div class="bottom-nav-item">
+      <i class="fas fa-bars"></i>
+      <span>Menu</span>
+    </div>
+  </div>
+
+  <script>
+    // Demo Database
+    const alumniDB = {
+      'alm-1': {
+        nama: 'Zainal Arifin',
+        lembaga: 'MA',
+        angkatan: 2018,
+        nowa: '085712345678',
+        domisili: 'Tegalwaru, Purwakarta',
+        alamat: 'Kp. Tegalwaru RT 04/RW 02, Kec. Tegalwaru',
+        status: 'pending',
+        pembayaran: 'Rp 200.000',
+        bukti: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?auto=format&fit=crop&w=400&q=80'
+      },
+      'alm-2': {
+        nama: 'Fatimah Zahra',
+        lembaga: 'MTS',
+        angkatan: 2020,
+        nowa: '081298765432',
+        domisili: 'Cihampelas, Bandung Barat',
+        alamat: 'Jl. Cihampelas Raya No. 45, Desa Cihampelas',
+        status: 'pending',
+        pembayaran: 'Rp 150.000',
+        bukti: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?auto=format&fit=crop&w=400&q=80'
+      },
+      'alm-3': {
+        nama: 'M. Rizky Ramadhan',
+        lembaga: 'MA',
+        angkatan: 2016,
+        nowa: '089988887777',
+        domisili: 'Jatiluhur, Purwakarta',
+        alamat: 'Kp. Servis RT 12/RW 04, Kec. Jatiluhur',
+        status: 'pending',
+        pembayaran: 'Rp 250.000',
+        bukti: 'https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?auto=format&fit=crop&w=400&q=80'
+      }
+    };
+
+    // Sidebar Toggle
+    function toggleSidebar() {
+      const sidebar = document.getElementById('app-sidebar');
+      const toggleBtn = document.getElementById('sidebar-toggle');
+      
+      sidebar.classList.toggle('collapsed');
+      
+      if (sidebar.classList.contains('collapsed')) {
+        toggleBtn.innerHTML = '<i class="fas fa-chevron-right"></i><span class="nav-label">Lipat Menu</span>';
+      } else {
+        toggleBtn.innerHTML = '<i class="fas fa-chevron-left"></i><span class="nav-label">Lipat Menu</span>';
+      }
+    }
+
+    // Detail Panel Actions (Responsive logic)
+    function openDetails(id) {
+      const item = alumniDB[id];
+      if (!item) return;
+
+      const isMobile = window.innerWidth <= 768;
+      const htmlContent = `
+        <div class="drawer-profile-summary">
+          <div class="profile-avatar"><i class="fas fa-user"></i></div>
+          <div class="profile-meta">
+            <h4>${item.nama}</h4>
+            <span class="badge-tag tag-${item.lembaga.toLowerCase()}">${item.lembaga}</span>
+            <span class="badge-tag bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold ml-1">Lulus ${item.angkatan}</span>
+          </div>
+        </div>
+
+        <div class="drawer-detail-grid">
+          <div class="detail-section">
+            <span class="detail-sec-title">Informasi Domisili</span>
+            <div class="detail-row"><span class="lbl">Kab/Kota</span><b>${item.domisili.split(',')[1] || item.domisili}</b></div>
+            <div class="detail-row"><span class="lbl">Alamat Lengkap</span><b>${item.alamat}</b></div>
+          </div>
+          
+          <div class="detail-section">
+            <span class="detail-sec-title">Kontak & Pembayaran</span>
+            <div class="detail-row"><span class="lbl">WhatsApp</span><a href="https://wa.me/${item.nowa}" target="_blank" class="text-indigo font-bold hover:underline">+62 ${item.nowa}</a></div>
+            <div class="detail-row"><span class="lbl">Nominal Donasi</span><b class="text-emerald">${item.pembayaran}</b></div>
+          </div>
+
+          <div class="detail-section">
+            <span class="detail-sec-title">Lampiran Struk Transfer</span>
+            <div class="receipt-preview-box" onclick="window.open('${item.bukti}', '_blank')">
+              <img src="${item.bukti}" alt="Struk Transfer" class="receipt-img" />
+              <div class="receipt-overlay"><i class="fas fa-search-plus"></i> Klik untuk Memperbesar</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer-footer-actions">
+          <button class="btn btn-primary btn-glow flex-1" onclick="approveItem('${id}')"><i class="fas fa-check mr-1"></i> Verifikasi Setuju</button>
+          <button class="btn btn-red-outlined" onclick="rejectItem('${id}')"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      `;
+
+      if (isMobile) {
+        document.getElementById('sheet-alumni-content').innerHTML = htmlContent;
+        document.getElementById('mobile-bottom-sheet').classList.add('open');
+      } else {
+        document.getElementById('drawer-alumni-content').innerHTML = htmlContent;
+        document.getElementById('desktop-detail-panel').classList.add('open');
+        document.querySelector('.main-content').classList.add('drawer-open');
+      }
+    }
+
+    function closeDetails() {
+      document.getElementById('desktop-detail-panel').classList.remove('open');
+      document.getElementById('mobile-bottom-sheet').classList.remove('open');
+      document.querySelector('.main-content').classList.remove('drawer-open');
+    }
+
+    function approveItem(id) {
+      alert(`Alumni "${alumniDB[id].nama}" berhasil disetujui!`);
+      closeDetails();
+    }
+
+    function rejectItem(id) {
+      if (confirm(`Apakah Anda yakin ingin menolak pendaftaran "${alumniDB[id].nama}"?`)) {
+        closeDetails();
+      }
+    }
+
+    // Theme Toggle Functionality
+    function toggleTheme() {
+      const body = document.body;
+      const icon = document.getElementById('theme-icon');
+      
+      if (body.classList.contains('dark-theme')) {
+        body.classList.remove('dark-theme');
+        body.classList.add('light-theme');
+        icon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.72" x2="5.64" y2="18.3"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+      } else {
+        body.classList.remove('light-theme');
+        body.classList.add('dark-theme');
+        icon.innerHTML = '<path id="moon-path" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+      }
+    }
+  </script>
+</body>
+</html>

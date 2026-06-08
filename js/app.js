@@ -976,7 +976,6 @@ window.showTab = (tabId) => {
     rekap: "Rekap Wilayah",
     requests: "Verifikasi",
     finance: "Keuangan",
-    guestbook: "Buku Tamu",
     logistik: "Donasi Barang",
     whatsapp: "WhatsApp Gateway",
     "wa-groups": "Grup & Channel WA",
@@ -1633,7 +1632,6 @@ window.dirtyTabs = {
   finance: true,
   rekap: true,
   panitia: true,
-  guestbook: true,
   logistik: true,
   whatsapp: true,
   settings: true
@@ -1697,8 +1695,6 @@ window.renderActiveTab = (tabId) => {
     } else if (tabId === 'panitia') {
       window.renderPanitiaTable();
       window.renderRundownTable();
-    } else if (tabId === 'guestbook') {
-      window.renderGuestbookTable();
     }
   } catch (e) {
     console.error(`Error rendering active tab ${tabId}:`, e);
@@ -1714,7 +1710,7 @@ window.loadDataRealtime = () => {
   if (window.STATE.listenersRegistered) return;
   window.STATE.listenersRegistered = true;
 
-  db.collection("settings")
+    db.collection("settings")
     .doc("event_info")
     .onSnapshot((docSnap) => {
       if (docSnap.exists) {
@@ -1730,10 +1726,21 @@ window.loadDataRealtime = () => {
         if (typeof window.renderAllTabs === "function") window.renderAllTabs();
       }
     });
-  db.collection("guestbook").orderBy("created_at", "desc").limit(100).onSnapshot((snap) => {
-    window.STATE.guestbook = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    window.renderGuestbookTable();
-  });
+  db.collection("settings")
+    .doc("announcements")
+    .onSnapshot((docSnap) => {
+      if (docSnap.exists) {
+        const data = docSnap.data();
+        const activeCb = document.getElementById("set-announce-active");
+        const label = document.getElementById("set-announce-active-label");
+        const textInput = document.getElementById("set-announce-text");
+        if (activeCb) {
+          activeCb.checked = data.active === true;
+          if (label) label.textContent = data.active ? "Aktif" : "Nonaktif";
+        }
+        if (textInput) textInput.value = data.text || "";
+      }
+    });
   db.collection("users").onSnapshot((snap) => {
     window.STATE.users = snap.docs.map((d) => ({ uid: d.id, ...d.data() }));
     if (
@@ -1791,7 +1798,7 @@ window.loadDataRealtime = () => {
 
   window.triggerAlumniCloudinaryUpload = async () => {
     try {
-        console.log("[Cloudinary JSON Upload] Fetching fresh approved alumni list from Firestore...");
+        console.log("[Firestore Cache] Fetching fresh approved alumni list from Firestore...");
         const snap = await db.collection("alumni").where("status", "==", "approved").get();
         const approvedAlumni = snap.docs.map(d => ({
             id: d.id,
@@ -1803,68 +1810,43 @@ window.loadDataRealtime = () => {
         }));
         
         const jsonString = JSON.stringify(approvedAlumni);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        
-        const formData = new FormData();
-        formData.append("file", blob, 'alumni.json');
-        formData.append("upload_preset", "Reuniakbar");
-        formData.append("public_id", "alumni.json");
-        formData.append("resource_type", "raw");
-        
-        const response = await fetch("https://api.cloudinary.com/v1_1/dowih3wr7/raw/upload", {
-            method: "POST",
-            body: formData
+        await db.collection("settings").doc("alumni_cache").set({
+            data: jsonString,
+            updated_at: Date.now()
         });
-        const resData = await response.json();
-        console.log("[Cloudinary JSON Upload] Success alumni.json:", resData.secure_url);
+        console.log("[Firestore Cache] Success saving alumni_cache.");
     } catch (e) {
-        console.error("[Cloudinary JSON Upload] Error alumni.json:", e);
+        console.error("[Firestore Cache] Error saving alumni_cache:", e);
     }
   };
 
   window.triggerAlumniAllCloudinaryUpload = async () => {
     try {
-        console.log("[Cloudinary JSON Upload] Fetching all alumni list from Firestore...");
+        console.log("[Firestore Cache] Fetching all alumni list from Firestore...");
         const snap = await db.collection("alumni").get();
         const allAlumni = snap.docs.map(d => ({
             id: d.id,
             nama: d.data().nama,
             angkatan: d.data().angkatan,
             nowa: d.data().nowa || "",
-            status: d.data().status || "pending",
-            created_at: d.data().created_at || "",
-            alamat: d.data().alamat || "",
-            desa: d.data().desa || "",
-            kecamatan: d.data().kecamatan || "",
-            kabupaten: d.data().kabupaten || "",
-            provinsi: d.data().provinsi || "",
             lembaga: d.data().lembaga || "",
-            bukti_transfer_alumni: d.data().bukti_transfer_alumni || ""
+            kabupaten: d.data().kabupaten || ""
         }));
         
         const jsonString = JSON.stringify(allAlumni);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        
-        const formData = new FormData();
-        formData.append("file", blob, 'alumni_all.json');
-        formData.append("upload_preset", "Reuniakbar");
-        formData.append("public_id", "alumni_all.json");
-        formData.append("resource_type", "raw");
-        
-        const response = await fetch("https://api.cloudinary.com/v1_1/dowih3wr7/raw/upload", {
-            method: "POST",
-            body: formData
+        await db.collection("settings").doc("alumni_all_cache").set({
+            data: jsonString,
+            updated_at: Date.now()
         });
-        const resData = await response.json();
-        console.log("[Cloudinary JSON Upload] Success alumni_all.json:", resData.secure_url);
+        console.log("[Firestore Cache] Success saving alumni_all_cache.");
     } catch (e) {
-        console.error("[Cloudinary JSON Upload] Error alumni_all.json:", e);
+        console.error("[Firestore Cache] Error saving alumni_all_cache:", e);
     }
   };
 
   window.triggerFinanceCloudinaryUpload = async () => {
     try {
-        console.log("[Cloudinary JSON Upload] Fetching all finance records from Firestore...");
+        console.log("[Firestore Cache] Fetching all finance records from Firestore...");
         const snap = await db.collection("finance").get();
         const allFinance = snap.docs.map(d => ({
             id: d.id,
@@ -1879,26 +1861,18 @@ window.loadDataRealtime = () => {
             bukti_hash: d.data().bukti_hash || "",
             tanggal: d.data().tanggal || "",
             created_at: d.data().created_at || "",
-            payment_method: d.data().payment_method || "Manual"
+            payment_method: d.data().payment_method || "Manual",
+            anonim: d.data().anonim || false
         }));
         
         const jsonString = JSON.stringify(allFinance);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        
-        const formData = new FormData();
-        formData.append("file", blob, 'finance.json');
-        formData.append("upload_preset", "Reuniakbar");
-        formData.append("public_id", "finance.json");
-        formData.append("resource_type", "raw");
-        
-        const response = await fetch("https://api.cloudinary.com/v1_1/dowih3wr7/raw/upload", {
-            method: "POST",
-            body: formData
+        await db.collection("settings").doc("finance_cache").set({
+            data: jsonString,
+            updated_at: Date.now()
         });
-        const resData = await response.json();
-        console.log("[Cloudinary JSON Upload] Success finance.json:", resData.secure_url);
+        console.log("[Firestore Cache] Success saving finance_cache.");
     } catch (e) {
-        console.error("[Cloudinary JSON Upload] Error finance.json:", e);
+        console.error("[Firestore Cache] Error saving finance_cache:", e);
     }
   };
 
@@ -2186,6 +2160,178 @@ window.loadDataRealtime = () => {
     window.STATE.logistik = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     window.renderLogistikTable();
   });
+
+  // ── POLLING LISTENERS FOR ADMIN ──
+  let adminActivePollListener = null;
+  let adminAllVotesListener = null;
+
+  const pollsQuery = db.collection("polls").where("active", "==", true).limit(1);
+  pollsQuery.onSnapshot((pollsSnap) => {
+    const adminActivePollBox = document.getElementById("admin-active-poll-box");
+    if (pollsSnap.empty) {
+      if (adminActivePollBox) adminActivePollBox.classList.add("hidden");
+      
+      const setQuestion = document.getElementById("set-poll-question");
+      const setOptions = document.getElementById("set-poll-options");
+      const setActive = document.getElementById("set-poll-active");
+      const setActiveLabel = document.getElementById("set-poll-active-label");
+      
+      if (setQuestion) setQuestion.value = "";
+      if (setOptions) setOptions.value = "";
+      if (setActive) {
+        setActive.checked = false;
+        if (setActiveLabel) setActiveLabel.textContent = "Nonaktif (Sembunyikan dari Portal)";
+      }
+      return;
+    }
+
+    if (adminActivePollBox) adminActivePollBox.classList.remove("hidden");
+    const pollDoc = pollsSnap.docs[0];
+    const pollId = pollDoc.id;
+    const pollData = pollDoc.data();
+
+    const setQuestion = document.getElementById("set-poll-question");
+    const setOptions = document.getElementById("set-poll-options");
+    const setActive = document.getElementById("set-poll-active");
+    const setActiveLabel = document.getElementById("set-poll-active-label");
+
+    if (setQuestion) setQuestion.value = pollData.question || "";
+    if (setOptions) setOptions.value = (pollData.options || []).join(", ");
+    if (setActive) {
+      setActive.checked = pollData.active === true;
+      if (setActiveLabel) setActiveLabel.textContent = pollData.active ? "Aktif (Tampilkan di Portal)" : "Nonaktif (Sembunyikan dari Portal)";
+    }
+
+    const titleEl = document.getElementById("admin-poll-question-title");
+    if (titleEl) titleEl.textContent = pollData.question || "-";
+
+    const votesQuery = db.collection("poll_votes").where("pollId", "==", pollId);
+    if (adminAllVotesListener) adminAllVotesListener();
+    adminAllVotesListener = votesQuery.onSnapshot((votesSnap) => {
+      const votes = votesSnap.docs.map(d => d.data());
+      window.renderAdminPollResults(pollData, votes);
+    }, (err) => {
+      console.error("Admin votes listener failed:", err);
+    });
+  }, (err) => {
+    console.error("Admin active poll listener failed:", err);
+  });
+};
+
+window.renderAdminPollResults = (pollData, votes) => {
+  const container = document.getElementById("admin-poll-results-container");
+  if (!container) return;
+
+  const options = pollData.options || [];
+  const totalVotes = votes.length;
+  
+  const counts = {};
+  options.forEach(opt => counts[opt] = 0);
+  votes.forEach(v => {
+    if (counts[v.option] !== undefined) {
+      counts[v.option]++;
+    }
+  });
+
+  let html = '<div class="space-y-4">';
+  options.forEach(opt => {
+    const count = counts[opt] || 0;
+    const pct = totalVotes > 0 ? (count / totalVotes) * 100 : 0;
+    
+    html += `
+      <div class="space-y-1">
+        <div class="flex justify-between items-center text-xs font-bold uppercase tracking-wider">
+          <span class="text-slate-300">${opt}</span>
+          <span class="text-indigo-400">${pct.toFixed(1)}% (${count} Suara)</span>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-white/5">
+          <div class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>
+    <p class="text-[9px] text-slate-500 uppercase font-black mt-2">
+      Total Partisipasi Alumni: ${totalVotes} Memilih
+    </p>
+  `;
+  container.innerHTML = html;
+};
+
+window.handleCreatePoll = async (e) => {
+  e.preventDefault();
+  const question = document.getElementById("set-poll-question").value.trim();
+  const optionsStr = document.getElementById("set-poll-options").value.trim();
+  const active = document.getElementById("set-poll-active").checked;
+
+  if (!question || !optionsStr) {
+    window.notify("Pertanyaan dan Opsi harus diisi!", "error");
+    return;
+  }
+
+  const options = optionsStr.split(",").map(opt => opt.trim()).filter(Boolean);
+  if (options.length < 2) {
+    window.notify("Harus ada minimal 2 opsi pilihan!", "error");
+    return;
+  }
+
+  window.toggleLoading(true, "Menyimpan konfigurasi polling...");
+  try {
+    const activeSnap = await db.collection("polls").where("active", "==", true).limit(1).get();
+    let pollId = null;
+    
+    if (!activeSnap.empty) {
+      pollId = activeSnap.docs[0].id;
+    }
+
+    const pollData = {
+      question,
+      options,
+      active,
+      updated_at: Date.now()
+    };
+
+    if (pollId) {
+      await db.collection("polls").doc(pollId).update(pollData);
+      window.notify("Polling aktif berhasil diperbarui!", "success");
+    } else {
+      pollData.created_at = Date.now();
+      await db.collection("polls").add(pollData);
+      window.notify("Polling baru berhasil dibuat!", "success");
+    }
+  } catch (err) {
+    console.error("Gagal menyimpan polling:", err);
+    window.notify("Gagal menyimpan polling. Coba lagi.", "error");
+  } finally {
+    window.toggleLoading(false);
+  }
+};
+
+window.deactivateActivePoll = async () => {
+  const ok = await window.showConfirm({
+    title: 'Nonaktifkan Polling?',
+    message: 'Yakin ingin menonaktifkan polling berjalan? Polling tidak akan lagi muncul di portal alumni.',
+    confirmText: 'Ya, Nonaktifkan',
+    danger: true
+  });
+  if (!ok) return;
+
+  window.toggleLoading(true, "Menonaktifkan polling...");
+  try {
+    const activeSnap = await db.collection("polls").where("active", "==", true).limit(1).get();
+    if (!activeSnap.empty) {
+      const pollId = activeSnap.docs[0].id;
+      await db.collection("polls").doc(pollId).update({ active: false });
+      window.notify("Polling berhasil dinonaktifkan!", "success");
+    } else {
+      window.notify("Tidak ada polling aktif berjalan.", "info");
+    }
+  } catch (err) {
+    console.error("Failed to deactivate poll:", err);
+    window.notify("Gagal menonaktifkan polling.", "error");
+  } finally {
+    window.toggleLoading(false);
+  }
 };
 
 // ==========================================
@@ -2222,6 +2368,22 @@ window.renderHome = () => {
   if (document.getElementById("stat-alumni"))
     document.getElementById("stat-alumni").innerText =
       window.STATE.alumni.length;
+
+  // Count RSVP stats
+  let rsvpHadirCount = 0;
+  let rsvpRaguCount = 0;
+  let rsvpAbsenCount = 0;
+  window.STATE.alumni.forEach((a) => {
+    if (a.rsvp === 'hadir') rsvpHadirCount++;
+    else if (a.rsvp === 'ragu') rsvpRaguCount++;
+    else if (a.rsvp === 'absen') rsvpAbsenCount++;
+  });
+  if (document.getElementById("stat-rsvp-hadir"))
+    document.getElementById("stat-rsvp-hadir").innerText = rsvpHadirCount;
+  if (document.getElementById("stat-rsvp-ragu"))
+    document.getElementById("stat-rsvp-ragu").innerText = rsvpRaguCount;
+  if (document.getElementById("stat-rsvp-absen"))
+    document.getElementById("stat-rsvp-absen").innerText = rsvpAbsenCount;
 
   const perc = Math.min((balance / window.TARGET_DANA) * 100, 100).toFixed(1);
   if (document.getElementById("target-percentage"))
@@ -3200,7 +3362,19 @@ window.renderAlumniTable = () => {
       else if (comp >= 80) badgeColor = "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
       else if (comp >= 50) badgeColor = "bg-amber-500/20 text-amber-400 border border-amber-500/30";
       const completenessBadge = `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${badgeColor}">Lengkap ${comp}%</span>`;
-      return `<tr class="border-b border-white/5 hover:bg-black/5">${cbHtml}<td class="p-5 font-bold">${a.nama}${lembagaBadge}${completenessBadge}<br><div class="text-[10px] mt-1">${window.getWALink(a.nowa, a.nama)}</div></td><td class="p-5 text-center font-black text-indigo-500">${a.angkatan}</td><td class="p-5 text-xs text-slate-400">${a.desa || "-"}, ${a.kabupaten || "-"}</td><td class="p-5 text-center cursor-pointer hover:bg-emerald-500/5 group" onclick="window.openModalHistory('${a.id}')" title="Lihat Riwayat Donasi"><div class="font-black text-emerald-400 group-hover:underline">${window.formatRupiah(a.totalDonasi)}</div><div class="text-[9px] text-slate-500 group-hover:text-emerald-300 transition-colors">${hist.length}x Partisipasi</div></td><td class="p-5 text-center"><div class="flex justify-center gap-1">${btns}</div></td></tr>`;
+      let rsvpBadge = "";
+      if (a.rsvp === "hadir") {
+        rsvpBadge = `<span class="px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">Hadir</span>`;
+      } else if (a.rsvp === "ragu") {
+        rsvpBadge = `<span class="px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/10 border border-amber-500/30 text-amber-400">Ragu-Ragu</span>`;
+      } else if (a.rsvp === "absen") {
+        rsvpBadge = `<span class="px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-500/10 border border-rose-500/30 text-rose-400">Absen</span>`;
+      } else {
+        rsvpBadge = `<span class="text-[10px] text-slate-500 font-bold uppercase">-</span>`;
+      }
+      const rsvpCell = `<td class="p-5 text-center">${rsvpBadge}</td>`;
+
+      return `<tr class="border-b border-white/5 hover:bg-black/5">${cbHtml}<td class="p-5 font-bold">${a.nama}${lembagaBadge}${completenessBadge}<br><div class="text-[10px] mt-1">${window.getWALink(a.nowa, a.nama)}</div></td><td class="p-5 text-center font-black text-indigo-500">${a.angkatan}</td><td class="p-5 text-xs text-slate-400">${a.desa || "-"}, ${a.kabupaten || "-"}</td>${rsvpCell}<td class="p-5 text-center cursor-pointer hover:bg-emerald-500/5 group" onclick="window.openModalHistory('${a.id}')" title="Lihat Riwayat Donasi"><div class="font-black text-emerald-400 group-hover:underline">${window.formatRupiah(a.totalDonasi)}</div><div class="text-[9px] text-slate-500 group-hover:text-emerald-300 transition-colors">${hist.length}x Partisipasi</div></td><td class="p-5 text-center"><div class="flex justify-center gap-1">${btns}</div></td></tr>`;
     })
     .join("");
 };
@@ -4487,7 +4661,13 @@ window.renderFinanceTable = () => {
       if (f.nominal_original && Number(f.nominal_original) !== Number(f.nominal)) {
         nominalHTML += `<div class="text-[8.5px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">MDR: -${window.formatRupiah(Number(f.nominal_original) - Number(f.nominal))} (${window.formatRupiah(f.nominal_original)})</div>`;
       }
-      return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-500">${dStr}</td><td class="p-5"><div class="font-bold">${f.nama_pembayar}</div><div class="text-[8px] text-indigo-500 font-bold uppercase tracking-wider">${f.kategori}</div>${statusBadge}</td><td class="p-5 font-black ${colorClass}">${nominalHTML}</td><td class="p-5 text-center"><div class="flex justify-center">${act}</div></td></tr>`;
+
+      let payerName = f.nama_pembayar || "-";
+      if (f.anonim === true) {
+        payerName += ` <span class="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] font-black tracking-widest ml-1.5">[ANONIM]</span>`;
+      }
+
+      return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-500">${dStr}</td><td class="p-5"><div class="font-bold">${payerName}</div><div class="text-[8px] text-indigo-500 font-bold uppercase tracking-wider">${f.kategori}</div>${statusBadge}</td><td class="p-5 font-black ${colorClass}">${nominalHTML}</td><td class="p-5 text-center"><div class="flex justify-center">${act}</div></td></tr>`;
     })
     .join("");
 };
@@ -4516,7 +4696,13 @@ window.renderRequestTable = () => {
         let act = canManageFinance
           ? `${remindBtn}<button onclick="window.openFinanceVerificationModal('${req.id}')" class="bg-indigo-600 hover:bg-indigo-500 px-3 py-2 rounded-lg text-[10px] font-bold text-white shadow-lg"><i class="fas fa-shield-alt"></i> Verifikasi</button>`
           : `<span class="text-amber-500 text-[9px]"><i class="fas fa-lock"></i> Hak Bendahara</span>`;
-        return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-400 whitespace-nowrap">${req.tanggal}</td><td class="p-5 font-bold text-emerald-400">${req.nama_pembayar}</td><td class="p-5 text-right font-black text-white whitespace-nowrap">${window.formatRupiah(req.nominal_original || req.nominal)}</td><td class="p-5 text-center"><button onclick="window.openFinanceVerificationModal('${req.id}')" class="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 text-[10px] font-bold bg-indigo-500/10 px-3 py-2 rounded-lg whitespace-nowrap"><i class="fas fa-shield-alt"></i> Tinjau Struk</button></td><td class="p-5 text-center whitespace-nowrap">${act}</td></tr>`;
+
+        let nameWithAnon = req.nama_pembayar || "-";
+        if (req.anonim === true) {
+          nameWithAnon += ` <span class="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[8px] font-black tracking-widest ml-1.5">[ANONIM]</span>`;
+        }
+
+        return `<tr class="border-b border-white/5 hover:bg-black/5"><td class="p-5 text-xs text-slate-400 whitespace-nowrap">${req.tanggal}</td><td class="p-5 font-bold text-emerald-400">${nameWithAnon}</td><td class="p-5 text-right font-black text-white whitespace-nowrap">${window.formatRupiah(req.nominal_original || req.nominal)}</td><td class="p-5 text-center"><button onclick="window.openFinanceVerificationModal('${req.id}')" class="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 text-[10px] font-bold bg-indigo-500/10 px-3 py-2 rounded-lg whitespace-nowrap"><i class="fas fa-shield-alt"></i> Tinjau Struk</button></td><td class="p-5 text-center whitespace-nowrap">${act}</td></tr>`;
       })
       .join("");
 
@@ -4852,6 +5038,24 @@ document.getElementById("form-alumni").onsubmit = async (e) => {
 document.getElementById("form-finance").onsubmit = async (e) => {
   e.preventDefault();
   const d = Object.fromEntries(new FormData(e.target).entries());
+
+  // Format description and numbers if it's an itemized expenditure
+  if (d.status === "pengeluaran" && d.jumlah) {
+    const qty = Number(d.jumlah) || 0;
+    const unitName = (d.satuan || "").trim();
+    if (qty > 0) {
+      const baseDesc = (d.nama_pembayar || "").split(" (")[0].trim();
+      d.nama_pembayar = `${baseDesc} (${qty} ${unitName})`;
+      d.jumlah = qty;
+      d.satuan = unitName;
+    } else {
+      d.jumlah = 0;
+      d.satuan = "";
+    }
+  } else {
+    d.jumlah = 0;
+    d.satuan = "";
+  }
 
   // === VALIDASI INPUT ===
   const keterangan = (d.nama_pembayar || "").trim();
@@ -5585,6 +5789,49 @@ window.handleUpdateEventInfo = async (e) => {
   }
 };
 
+window.handleUpdateAnnouncement = async (e) => {
+  e.preventDefault();
+  const activeCb = document.getElementById("set-announce-active");
+  const textInput = document.getElementById("set-announce-text");
+  
+  const active = activeCb ? activeCb.checked : false;
+  const text = textInput ? textInput.value.trim() : "";
+
+  window.toggleLoading(true, "Menyimpan Pengumuman...");
+  try {
+    await db.collection("settings").doc("announcements").set({
+      active,
+      text,
+      updated_at: new Date().toISOString()
+    }, { merge: true });
+
+    // Trigger sync state update
+    try {
+      await db.collection("settings").doc("sync_state").set({
+        announcements_version: Date.now().toString()
+      }, { merge: true });
+    } catch (syncErr) {
+      console.warn("sync_state update failed:", syncErr);
+    }
+
+    window.notify("Pengumuman portal berhasil diperbarui!", "success");
+  } catch (err) {
+    window.notify("Gagal memperbarui pengumuman: " + (err.message || ""), "error");
+  } finally {
+    window.toggleLoading(false);
+  }
+};
+
+// Checkbox label toggle listener for set-announce-active
+document.addEventListener("change", (e) => {
+  if (e.target && e.target.id === "set-announce-active") {
+    const label = document.getElementById("set-announce-active-label");
+    if (label) {
+      label.textContent = e.target.checked ? "Aktif" : "Nonaktif";
+    }
+  }
+});
+
 window.handleRundownSubmit = async (e) => {
   e.preventDefault();
   window.toggleLoading(true, "Menyimpan Rundown...");
@@ -6157,6 +6404,7 @@ window.openSettings = () => {
     const payMethodDropdown = document.getElementById("fin-payment-method");
     if (payMethodDropdown) payMethodDropdown.value = "Transfer Bank";
     if (window.updateFinanceMdrPreview) window.updateFinanceMdrPreview();
+    if (window.toggleFinanceFields) window.toggleFinanceFields();
     window.openModal("modal-finance");
   };
 
@@ -6191,7 +6439,18 @@ window.openSettings = () => {
         .getElementById("fin-nama")
         .classList.remove("opacity-70", "cursor-not-allowed");
     }
-    document.getElementById("fin-nama").value = f.nama_pembayar || "";
+    document.getElementById("fin-jumlah").value = f.jumlah || "";
+    document.getElementById("fin-satuan").value = f.satuan || "";
+
+    let displayName = f.nama_pembayar || "";
+    if (f.jumlah) {
+      const suffixMarker = ` (${f.jumlah}`;
+      const idx = displayName.indexOf(suffixMarker);
+      if (idx !== -1) {
+        displayName = displayName.substring(0, idx).trim();
+      }
+    }
+    document.getElementById("fin-nama").value = displayName;
     document.getElementById("fin-nominal").value = f.nominal_original || f.nominal || "";
     const payMethodDropdown = document.getElementById("fin-payment-method");
     if (payMethodDropdown) payMethodDropdown.value = f.payment_method || "Transfer Bank";
@@ -6199,6 +6458,7 @@ window.openSettings = () => {
     document.getElementById("fin-status").value = f.status || "pemasukan";
     document.getElementById("fin-kategori").value = f.kategori || "Donasi";
     document.getElementById("fin-file-help").classList.remove("hidden");
+    if (window.toggleFinanceFields) window.toggleFinanceFields();
     window.openModal("modal-finance");
   };
 
@@ -6270,6 +6530,41 @@ window.openSettings = () => {
       document.getElementById("hidden-fin-ref-id").value = id;
     } else {
       document.getElementById("hidden-fin-ref-id").value = "";
+    }
+  };
+
+  window.toggleFinanceFields = () => {
+    const statusEl = document.getElementById("fin-status");
+    const kategoriEl = document.getElementById("fin-kategori");
+    const detailContainer = document.getElementById("fin-detail-purchase-container");
+    
+    if (!statusEl || !kategoriEl || !detailContainer) return;
+
+    let status = statusEl.value;
+    let kategori = kategoriEl.value;
+
+    // Auto-adjust status and category to avoid mismatches
+    if (status === "pengeluaran" && (kategori === "Donasi" || kategori === "Iuran Bulanan")) {
+      kategoriEl.value = "Operasional";
+      kategori = "Operasional";
+    }
+    if (kategori === "Operasional" && status === "pemasukan") {
+      statusEl.value = "pengeluaran";
+      status = "pengeluaran";
+    }
+    if ((kategori === "Donasi" || kategori === "Iuran Bulanan") && status === "pengeluaran") {
+      statusEl.value = "pemasukan";
+      status = "pemasukan";
+    }
+
+    if (status === "pengeluaran") {
+      detailContainer.classList.remove("hidden");
+    } else {
+      detailContainer.classList.add("hidden");
+      const jmlInput = document.getElementById("fin-jumlah");
+      const satInput = document.getElementById("fin-satuan");
+      if (jmlInput) jmlInput.value = "";
+      if (satInput) satInput.value = "";
     }
   };
 
@@ -7468,51 +7763,7 @@ window.openSettings = () => {
       window.confirmCSVUpload(false);
     }
   };
-  // ==========================================
-  // FITUR PEMANTAUAN & MODERASI BUKU TAMU
-  // ==========================================
-  window.renderGuestbookTable = () => {
-    const tbody = document.getElementById("guestbook-admin-list");
-    if (!tbody) return;
 
-    const role = window.STATE.user ? window.STATE.user.role : "user";
-    // Hanya Admin Utama, Sekretaris, dan Bendahara yang bisa menghapus komentar
-    const canManage =
-      role === "admin_utama" || role === "creator" || role === "sekretaris" || role === "bendahara";
-
-    if (!window.STATE.guestbook || window.STATE.guestbook.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-500 text-xs italic">Belum ada pesan masuk di buku tamu publik.</td></tr>`;
-      return;
-    }
-
-    // Urutkan dari komentar yang paling baru masuk
-    let sortedData = [...window.STATE.guestbook].sort(
-      (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0),
-    );
-
-    tbody.innerHTML = sortedData
-      .map((g) => {
-        let waktuFmt = g.created_at
-          ? new Date(g.created_at).toLocaleString("id-ID")
-          : "-";
-        let btnHapus = canManage
-          ? `<button onclick="window.handleDelete('guestbook', '${g.id}')" class="w-7 h-7 text-red-500 bg-red-500/10 hover:bg-red-500 hover:text-white rounded-lg transition-all" title="Hapus Komentar"><i class="fas fa-trash-alt text-[10px]"></i></button>`
-          : `<span class="text-slate-600 text-xs"><i class="fas fa-lock"></i> Terkunci</span>`;
-
-        return `
-                <tr class="border-b border-white/5 hover:bg-black/5 transition-colors">
-                    <td class="p-5 text-xs text-slate-500 whitespace-nowrap">${waktuFmt}</td>
-                    <td class="p-5">
-                        <div class="font-bold text-white text-sm">${g.nama}</div>
-                        <div class="mt-1"><span class="text-[9px] text-indigo-400 bg-indigo-500/20 px-2 py-0.5 rounded font-black uppercase tracking-wider">Angkatan ${g.angkatan || "?"}</span></div>
-                    </td>
-                    <td class="p-5 text-xs text-slate-300 max-w-xl break-words leading-relaxed">${g.pesan}</td>
-                    <td class="p-5 text-center whitespace-nowrap">${btnHapus}</td>
-                </tr>
-            `;
-      })
-      .join("");
-  };
   // ==========================================
   // FITUR CEK DUPLIKAT ALUMNI (VERSI PENGECUALIAN / IGNORE)
   // ==========================================
@@ -8975,6 +9226,10 @@ Jika salah satu informasi (seperti nominal) tidak bisa terdeteksi sama sekali, k
           if (extracted.status === "pemasukan" || extracted.status === "pengeluaran") {
             statSelect.value = extracted.status;
           }
+        }
+
+        if (window.toggleFinanceFields) {
+          window.toggleFinanceFields();
         }
 
         window.notify("AI Vision berhasil memindai struk & mengisi otomatis!", "success");

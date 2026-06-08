@@ -143,7 +143,7 @@
   </div>
 
   <nav class="w-full p-4 md:p-5 relative z-20 flex justify-between items-center max-w-6xl mx-auto">
-      <a href="countdown.html" class="flex items-center gap-3 group">
+      <a href="portal.html" class="flex items-center gap-3 group">
           <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-all duration-300">
               <i class="fas fa-mosque"></i>
           </div>
@@ -420,6 +420,9 @@ try {
 } catch(e) {
     db = getFirestore(app);
 }
+window.db = db;
+window.getDoc = getDoc;
+window.doc = doc;
 const auth = getAuth(app);
 
 // Check Midtrans Online Payment Status
@@ -1103,15 +1106,51 @@ try {
     window.selectedAlumnus = null;
 
     let alumniData = [];
-    fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni.json?t=" + Date.now())
+    const loadAlumniAutocomplete = async () => {
+      try {
+        const getDb = () => window.db;
+        const getDocFn = () => window.getDoc;
+        const docFn = () => window.doc;
+        
+        let attempts = 0;
+        const checkReady = setInterval(async () => {
+          attempts++;
+          if (getDb() && getDocFn() && docFn()) {
+            clearInterval(checkReady);
+            try {
+              const docRef = docFn()(getDb(), 'settings', 'alumni_cache');
+              const docSnap = await getDocFn()(docRef);
+              if (docSnap.exists() && docSnap.data().data) {
+                alumniData = JSON.parse(docSnap.data().data);
+                console.log("[Firestore Cache Autocomplete] Loaded", alumniData.length, "approved alumni.");
+                return;
+              }
+            } catch (dbErr) {
+              console.warn("Failed to load alumni cache from Firestore autocomplete, falling back to Cloudinary:", dbErr);
+            }
+            fetchFallback();
+          } else if (attempts > 30) {
+            clearInterval(checkReady);
+            fetchFallback();
+          }
+        }, 100);
+      } catch (e) {
+        fetchFallback();
+      }
+    };
+    
+    const fetchFallback = () => {
+      fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni.json?t=" + Date.now())
         .then(res => res.json())
         .then(data => {
             alumniData = data;
-            console.log("[Cloudinary JSON] Loaded", alumniData.length, "approved alumni.");
+            console.log("[Cloudinary JSON Fallback] Loaded", alumniData.length, "approved alumni.");
         })
         .catch(err => {
             console.error("Gagal memuat alumni.json dari Cloudinary:", err);
         });
+    };
+    loadAlumniAutocomplete();
 
     window.selectAlumniName = (id) => {
         const a = window.currentSearchResults.find(x => x.id === id);
@@ -1767,7 +1806,7 @@ try {
   <!-- CEK STATUS PEMBAYARAN: fungsi global -->
   <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, where, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, getDoc, query, where, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const _app = getApps().length ? getApps()[0] : null;
     const _db = _app ? getFirestore(_app) : null;
@@ -1819,24 +1858,51 @@ try {
 
         // Fallback jika gagal memuat Firestore (misal kuota habis atau offline)
         if (!loadedFromFirestore) {
+          let loadedFromCache = false;
           try {
-            const resAlumni = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni_all.json?t=" + Date.now());
-            if (resAlumni.ok) {
-              const allAlumni = await resAlumni.json();
+            const db = _db || getFirestore(getApps()[0]);
+            const docRef = doc(db, 'settings', 'alumni_all_cache');
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists() && docSnap.data().data) {
+              const allAlumni = JSON.parse(docSnap.data().data);
               matchingAlumni = allAlumni.filter(a => window.normalizeWA(a.nowa) === normalizedWA);
-
+              
               if (matchingAlumni.length > 0) {
-                const resFinance = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/finance.json?t=" + Date.now());
-                if (resFinance.ok) {
-                  const allFinance = await resFinance.json();
+                const finRef = doc(db, 'settings', 'finance_cache');
+                const finSnap = await getDoc(finRef);
+                if (finSnap.exists() && finSnap.data().data) {
+                  const allFinance = JSON.parse(finSnap.data().data);
                   const alumniIds = matchingAlumni.map(a => a.id);
                   payments = allFinance.filter(p => alumniIds.includes(p.ref_alumni_id));
-                  console.log("[Cloudinary Cek Status] Berhasil memuat data cadangan dari Cloudinary JSON!");
+                  loadedFromCache = true;
+                  console.log("[Firestore Cache Cek Status] Berhasil memuat data dari Firestore cache!");
                 }
               }
             }
-          } catch (cloudinaryErr) {
-            console.error("[Cloudinary Cek Status] Gagal memuat dari Cloudinary juga:", cloudinaryErr);
+          } catch (cacheErr) {
+            console.warn("[Firestore Cache Cek Status] Gagal memuat cache, lanjut ke Cloudinary:", cacheErr);
+          }
+
+          if (!loadedFromCache) {
+            try {
+              const resAlumni = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/alumni_all.json?t=" + Date.now());
+              if (resAlumni.ok) {
+                const allAlumni = await resAlumni.json();
+                matchingAlumni = allAlumni.filter(a => window.normalizeWA(a.nowa) === normalizedWA);
+
+                if (matchingAlumni.length > 0) {
+                  const resFinance = await fetch("https://res.cloudinary.com/dowih3wr7/raw/upload/finance.json?t=" + Date.now());
+                  if (resFinance.ok) {
+                    const allFinance = await resFinance.json();
+                    const alumniIds = matchingAlumni.map(a => a.id);
+                    payments = allFinance.filter(p => alumniIds.includes(p.ref_alumni_id));
+                    console.log("[Cloudinary Cek Status] Berhasil memuat data cadangan dari Cloudinary JSON!");
+                  }
+                }
+              }
+            } catch (cloudinaryErr) {
+              console.error("[Cloudinary Cek Status] Gagal memuat dari Cloudinary juga:", cloudinaryErr);
+            }
           }
         }
 

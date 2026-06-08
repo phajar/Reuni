@@ -2,7 +2,7 @@
   "name": "Portal Reuni Akbar AL-FATAH",
   "short_name": "Reuni AL-FATAH",
   "description": "Portal Pendaftaran, Donasi, Rundown & Buku Tamu Digital Reuni Akbar Pondok Pesantren AL-FATAH.",
-  "start_url": "countdown.html",
+  "start_url": "portal.html",
   "display": "standalone",
   "background_color": "#060813",
   "theme_color": "#060813",

@@ -24,11 +24,11 @@
   </style>
   <div id="floating-nav-component" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] pointer-events-none" style="width:95%;max-width:35rem;">
     <nav class="glass rounded-3xl border border-white/10 p-2 flex justify-around items-center shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-xl bg-[#060813]/90 pointer-events-auto">
-      <a href="countdown.html"   data-nav="countdown.html"   class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-slate-400 hover:bg-white/5 relative">
+      <a href="portal.html"   data-nav="portal.html"   class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-slate-400 hover:bg-white/5 relative">
         <i class="fas fa-home text-lg relative z-10"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider relative z-10 mt-1">Beranda</span>
       </a>
-      <a href="pendaftaran.html" data-nav="pendaftaran.html" class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-blue-400 hover:bg-white/5 relative">
+      <a href="portal.html#daftar" data-nav="portal.html#daftar" class="nav-btn-float flex flex-col items-center gap-1 p-2 flex-1 rounded-2xl transition-all duration-300 text-blue-400 hover:bg-white/5 relative">
         <i class="fas fa-user-plus text-lg relative z-10"></i>
         <span class="text-[10px] font-bold uppercase tracking-wider relative z-10 mt-1">Daftar</span>
       </a>
@@ -59,7 +59,7 @@
   document.body.insertAdjacentHTML('beforeend', NAV_HTML);
 
   // Aktifkan tab yang sedang dibuka
-  const path = window.location.pathname.split('/').pop() || 'countdown.html';
+  const path = window.location.pathname.split('/').pop() || 'portal.html';
   document.querySelectorAll('.nav-btn-float').forEach(btn => {
     const target = btn.getAttribute('data-nav');
     if (path && path.toLowerCase() === target.toLowerCase()) {

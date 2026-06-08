@@ -199,7 +199,8 @@ service cloud.firestore {
                     || (isKorwilForOrNew(resource.data, request.resource.data) && isKorwilFor(request.resource.data))
                     || (request.resource.data.status == 'pending' && isValidAlumniCreate())
                     || (request.resource.data.status == 'approved'
-                        && request.resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_keuangan);
+                        && request.resource.data.bot_token == get(/databases/$(database)/documents/settings/whatsapp_api).data.token_keuangan)
+                    || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rsvp'])); // Izin update rsvp mandiri
       allow delete: if isSekretaris() || isKorwilFor(resource.data);
     }
 
@@ -255,7 +256,9 @@ service cloud.firestore {
                    || (docId == 'wa_bot_roles' && isAuth() && (getRole() in ['creator', 'admin_utama', 'sekretaris', 'bendahara']))
                    || (docId.startsWith('wa_session') && request.resource.data.bot_token != null)
                    || (docId == 'event_info' && isAuth() && (getRole() in ['creator', 'admin_utama', 'ketua', 'sekretaris', 'bendahara']))
-                   || (docId != 'whatsapp_api' && docId != 'sync_state' && !docId.startsWith('wa_session') && docId != 'event_info' && isAdminUtama());
+                   || (docId == 'announcements' && isAuth() && (getRole() in ['creator', 'admin_utama', 'ketua', 'sekretaris', 'bendahara']))
+                   || (docId in ['alumni_cache', 'alumni_all_cache', 'finance_cache'] && isAnyStaff())
+                   || (docId != 'whatsapp_api' && docId != 'sync_state' && !docId.startsWith('wa_session') && docId != 'event_info' && docId != 'announcements' && docId != 'alumni_cache' && docId != 'alumni_all_cache' && docId != 'finance_cache' && isAdminUtama());
     }
 
     // --- RUNDOWN ACARA -----------------------------------------------------
@@ -303,6 +306,21 @@ service cloud.firestore {
     match /rab/{docId} {
       allow read: if true;
       allow write: if isBendahara();
+    }
+
+    // --- POLLING & VOTING ALUMNI -------------------------------------------
+    match /polls/{docId} {
+      allow read: if true;
+      allow write: if isAdminUtama();
+    }
+
+    match /poll_votes/{docId} {
+      allow read: if true;
+      allow create: if !exists(/databases/$(database)/documents/poll_votes/$(docId))
+                    && request.resource.data.keys().hasAll(['pollId', 'option', 'created_at'])
+                    && request.resource.data.pollId is string
+                    && request.resource.data.option is string;
+      allow update, delete: if false;
     }
 
     // --- TUGAS PANITIA -----------------------------------------------------
