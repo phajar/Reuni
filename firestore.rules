@@ -252,6 +252,10 @@ service cloud.firestore {
     match /settings/{docId} {
       allow read: if true;
       allow write: if (docId == 'whatsapp_api' && isAuth() && (getRole() == 'creator' || getRole() == 'admin_utama'))
+                   || (docId == 'whatsapp_api'
+                       && request.resource.data.bot_token != null
+                       && request.resource.data.bot_token == resource.data.token_keuangan
+                       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['local_api_url', 'bot_token']))
                    || docId == 'sync_state'
                    || (docId == 'wa_bot_roles' && isAuth() && (getRole() in ['creator', 'admin_utama', 'sekretaris', 'bendahara']))
                    || (docId.startsWith('wa_session') && request.resource.data.bot_token != null)
