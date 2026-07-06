@@ -2976,9 +2976,15 @@
         if (qContainer) {
           qContainer.innerHTML = "";
           new QRCode(qContainer, {
-            text: dynamicQris, width: 256, height: 256,
+            text: dynamicQris, width: 192, height: 192,
             colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.M
           });
+          setTimeout(() => {
+            const canvas = qContainer.querySelector('canvas');
+            const img = qContainer.querySelector('img');
+            if(canvas) { canvas.style.width = "100%"; canvas.style.height = "auto"; }
+            if(img) { img.style.width = "100%"; img.style.height = "auto"; }
+          }, 50);
         }
       });
     };
@@ -3001,9 +3007,15 @@
       if (qContainer) {
         qContainer.innerHTML = "";
         new QRCode(qContainer, {
-          text: dynamicQris, width: 256, height: 256,
+          text: dynamicQris, width: 192, height: 192,
           colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.M
         });
+        setTimeout(() => {
+          const canvas = qContainer.querySelector('canvas');
+          const img = qContainer.querySelector('img');
+          if(canvas) { canvas.style.width = "100%"; canvas.style.height = "auto"; }
+          if(img) { img.style.width = "100%"; img.style.height = "auto"; }
+        }, 50);
 
         const label = document.getElementById(`qris-nominal-label-${idx}`);
         if(nominal > 0) {
