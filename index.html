@@ -3523,13 +3523,15 @@
       <i class="fas fa-home text-base"></i>
       <span class="text-[8px] font-bold">Beranda</span>
     </div>
-    <div onclick="window.switchMobileTab('alumni')" id="mobile-tab-alumni" class="mobile-nav-btn flex-1 py-1 flex flex-col items-center gap-1">
+    <div onclick="window.switchMobileTab('alumni')" id="mobile-tab-alumni" class="mobile-nav-btn flex-1 py-1 flex flex-col items-center gap-1 relative">
       <i class="fas fa-users text-base"></i>
       <span class="text-[8px] font-bold">Alumni</span>
+      <span id="badge-mobile-alumni" class="hidden absolute top-0.5 right-6 w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span>
     </div>
-    <div onclick="window.switchMobileTab('finance')" id="mobile-tab-finance" class="mobile-nav-btn flex-1 py-1 flex flex-col items-center gap-1">
+    <div onclick="window.switchMobileTab('finance')" id="mobile-tab-finance" class="mobile-nav-btn flex-1 py-1 flex flex-col items-center gap-1 relative">
       <i class="fas fa-wallet text-base"></i>
       <span class="text-[8px] font-bold">Keuangan</span>
+      <span id="badge-mobile-finance" class="hidden absolute top-0.5 right-6 w-4 h-4 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span>
     </div>
     <div onclick="window.toggleMobileMoreSheet(true)" id="mobile-tab-more" class="mobile-nav-btn flex-1 py-1 flex flex-col items-center gap-1 relative">
       <i class="fas fa-th-large text-base"></i>
@@ -3565,9 +3567,10 @@
             <i class="fas fa-globe text-indigo-400 text-sm mb-1"></i>
             <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Halaman Publik</span>
           </a>
-          <div id="btn-mobile-tugas" onclick="window.switchMobileTab('tugas')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px]">
+          <div id="btn-mobile-tugas" onclick="window.switchMobileTab('tugas')" class="flex flex-col items-center justify-center p-3 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all text-center cursor-pointer min-h-[72px] relative">
             <i class="fas fa-tasks text-amber-500 text-sm mb-1"></i>
             <span class="text-[8px] font-bold text-slate-300 uppercase leading-tight">Tugas Panitia</span>
+            <span id="badge-mobile-tugas" class="hidden absolute top-1.5 right-1.5 w-4 h-4 bg-amber-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">0</span>
           </div>
         </div>
       </div>

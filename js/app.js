@@ -1549,12 +1549,16 @@ window.processCombinedData = () => {
 };
 
 window.updateBadges = () => {
-  const pendingRequestsCount =
-    (window.STATE.requests ? window.STATE.requests.length : 0) +
-    (window.STATE.pendingFinance ? window.STATE.pendingFinance.length : 0);
+  const pendingAlumniCount = window.STATE.requests ? window.STATE.requests.length : 0;
+  const pendingFinanceCount = window.STATE.pendingFinance ? window.STATE.pendingFinance.length : 0;
+  const pendingRequestsCount = pendingAlumniCount + pendingFinanceCount;
 
   const pendingUsersCount = window.STATE.users
     ? window.STATE.users.filter((u) => u.role === "pending").length
+    : 0;
+
+  const pendingTasksCount = window.STATE.tugas
+    ? window.STATE.tugas.filter(t => t.status === "belum" || t.status === "proses").length
     : 0;
 
   // 1. Desktop Sidebar Alumni Badge (Parent)
@@ -1590,15 +1594,37 @@ window.updateBadges = () => {
     }
   }
   
-  // 3. Mobile bottom nav "Lainnya" (Menu) badge (sum of requests + user approvals)
+  // 3. Mobile bottom nav "Lainnya" (Menu) badge (sum of pending user approvals + pending tasks inside the Menu)
   const badgeMobileMore = document.getElementById("badge-mobile-more");
   if (badgeMobileMore) {
-    const totalMobileMore = pendingRequestsCount + pendingUsersCount;
+    const totalMobileMore = pendingUsersCount + pendingTasksCount;
     if (totalMobileMore > 0) {
       badgeMobileMore.innerText = totalMobileMore;
       badgeMobileMore.classList.remove("hidden");
     } else {
       badgeMobileMore.classList.add("hidden");
+    }
+  }
+
+  // 4. Mobile bottom nav "Alumni" badge
+  const badgeMobileAlumni = document.getElementById("badge-mobile-alumni");
+  if (badgeMobileAlumni) {
+    if (pendingAlumniCount > 0) {
+      badgeMobileAlumni.innerText = pendingAlumniCount;
+      badgeMobileAlumni.classList.remove("hidden");
+    } else {
+      badgeMobileAlumni.classList.add("hidden");
+    }
+  }
+
+  // 4.5. Mobile bottom nav "Keuangan" badge
+  const badgeMobileFinance = document.getElementById("badge-mobile-finance");
+  if (badgeMobileFinance) {
+    if (pendingFinanceCount > 0) {
+      badgeMobileFinance.innerText = pendingFinanceCount;
+      badgeMobileFinance.classList.remove("hidden");
+    } else {
+      badgeMobileFinance.classList.add("hidden");
     }
   }
 
@@ -1621,6 +1647,17 @@ window.updateBadges = () => {
       badgeMobileSettingsApprove.classList.remove("hidden");
     } else {
       badgeMobileSettingsApprove.classList.add("hidden");
+    }
+  }
+
+  // 7. Mobile sheet "Tugas Panitia" badge
+  const badgeMobileTugas = document.getElementById("badge-mobile-tugas");
+  if (badgeMobileTugas) {
+    if (pendingTasksCount > 0) {
+      badgeMobileTugas.innerText = pendingTasksCount;
+      badgeMobileTugas.classList.remove("hidden");
+    } else {
+      badgeMobileTugas.classList.add("hidden");
     }
   }
 };
@@ -11537,14 +11574,33 @@ if (typeof db !== "undefined") {
 }
 
 window.updateTugasBadge = () => {
+    const belum = window.STATE.tugas ? window.STATE.tugas.filter(t => t.status === "belum" || t.status === "proses").length : 0;
+    
+    // Desktop
     const badge = document.getElementById("badge-tugas");
-    if (!badge) return;
-    const belum = window.STATE.tugas.filter(t => t.status === "belum" || t.status === "proses").length;
-    if (belum > 0) {
-        badge.textContent = belum;
-        badge.classList.remove("hidden");
-    } else {
-        badge.classList.add("hidden");
+    if (badge) {
+        if (belum > 0) {
+            badge.textContent = belum;
+            badge.classList.remove("hidden");
+        } else {
+            badge.classList.add("hidden");
+        }
+    }
+
+    // Mobile
+    const badgeMobile = document.getElementById("badge-mobile-tugas");
+    if (badgeMobile) {
+        if (belum > 0) {
+            badgeMobile.textContent = belum;
+            badgeMobile.classList.remove("hidden");
+        } else {
+            badgeMobile.classList.add("hidden");
+        }
+    }
+
+    // Refresh Menu badge which depends on tasks count
+    if (typeof window.updateBadges === "function") {
+        window.updateBadges();
     }
 };
 
